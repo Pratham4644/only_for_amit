@@ -651,31 +651,72 @@ async function loadSettings() {
         const container = document.getElementById('mealTimingsContainer');
         container.innerHTML = '';
 
-        data.meal_timings.forEach(timing => {
+        // Filter to only show LUNCH and DINNER
+        const allowedMeals = ['LUNCH', 'DINNER'];
+        const filteredTimings = data.meal_timings.filter(timing =>
+            allowedMeals.includes(timing.meal_type)
+        );
+
+        // Helper function to convert 24-hour to 12-hour format
+        function to12Hour(time24) {
+            if (!time24) return '';
+            const [hours, minutes] = time24.split(':');
+            let hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            hour = hour % 12 || 12;
+            return `${hour}:${minutes} ${ampm}`;
+        }
+
+        // Helper function to convert 12-hour to 24-hour format
+        function to24Hour(time12) {
+            if (!time12) return '';
+            const match = time12.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            if (!match) return time12;
+
+            let [, hours, minutes, period] = match;
+            hours = parseInt(hours);
+
+            if (period.toUpperCase() === 'PM' && hours !== 12) {
+                hours += 12;
+            } else if (period.toUpperCase() === 'AM' && hours === 12) {
+                hours = 0;
+            }
+
+            return `${hours.toString().padStart(2, '0')}:${minutes}`;
+        }
+
+        filteredTimings.forEach(timing => {
+            const mealLabel = timing.meal_type === 'LUNCH' ? 'Lunch Time' : 'Dinner Time';
             const card = `
                 <div class="timing-card">
-                    <h3>${timing.meal_type}</h3>
+                    <h3>${mealLabel}</h3>
                     <div class="timing-fields">
                         <div class="form-group">
                             <label>Start Time</label>
-                            <input type="time" value="${timing.start_time}" 
-                                   onchange="updateTiming(${timing.id}, 'start_time', this.value)">
+                            <input type="text" value="${to12Hour(timing.start_time)}" 
+                                   placeholder="e.g., 12:00 PM"
+                                   onchange="updateTiming12Hour(${timing.id}, 'start_time', this.value)">
                         </div>
                         <div class="form-group">
                             <label>End Time</label>
-                            <input type="time" value="${timing.end_time}"
-                                   onchange="updateTiming(${timing.id}, 'end_time', this.value)">
+                            <input type="text" value="${to12Hour(timing.end_time)}"
+                                   placeholder="e.g., 3:00 PM"
+                                   onchange="updateTiming12Hour(${timing.id}, 'end_time', this.value)">
                         </div>
                         <div class="form-group">
                             <label>Late Warning Time</label>
-                            <input type="time" value="${timing.late_warning_time || ''}"
-                                   onchange="updateTiming(${timing.id}, 'late_warning_time', this.value)">
+                            <input type="text" value="${to12Hour(timing.late_warning_time || '')}"
+                                   placeholder="e.g., 2:30 PM"
+                                   onchange="updateTiming12Hour(${timing.id}, 'late_warning_time', this.value)">
                         </div>
                     </div>
                 </div>
             `;
             container.innerHTML += card;
         });
+
+        // Store the conversion function globally for use in updateTiming12Hour
+        window.to24Hour = to24Hour;
     } catch (error) {
         console.error('Error loading settings:', error);
     }
@@ -689,6 +730,31 @@ async function updateTiming(id, field, value) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ [field]: value })
+        });
+
+        if (response.ok) {
+            alert('Timing updated successfully');
+        } else {
+            alert('Error updating timing');
+        }
+    } catch (error) {
+        console.error('Error updating timing:', error);
+        alert('Error updating timing');
+    }
+}
+
+// New function to handle 12-hour format updates
+async function updateTiming12Hour(id, field, value12Hour) {
+    // Convert 12-hour format to 24-hour format
+    const value24Hour = window.to24Hour(value12Hour);
+
+    try {
+        const response = await fetch(`${API_BASE}/settings/meal-timings/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ [field]: value24Hour })
         });
 
         if (response.ok) {

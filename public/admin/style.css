@@ -20,7 +20,7 @@
 }
 
 html {
-    font-size: 20px;
+    font-size: 25px;
     /* Base font size (increased 25% from 16px) */
 }
 
@@ -58,7 +58,7 @@ body {
 }
 
 .logo h2 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     font-weight: 800;
     color: var(--text-primary);
     text-transform: uppercase;
@@ -80,7 +80,7 @@ body {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 12px;
     margin-bottom: 0.5rem;
-    font-size: 1.1rem;
+    font-size: 1.35rem;
     font-weight: 500;
 }
 
@@ -108,7 +108,7 @@ body {
 }
 
 .nav-item .icon {
-    font-size: 1.4rem;
+    font-size: 1.65rem;
 }
 
 .sidebar-footer {
@@ -124,7 +124,7 @@ body {
     text-decoration: none;
     border-radius: 15px;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 1.35rem;
     box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
     transition: all 0.3s;
 }
@@ -170,7 +170,7 @@ body {
 }
 
 .page-header h1 {
-    font-size: 2.5rem;
+    font-size: 2.75rem;
     /* 40px - Page Title (Dominant) */
     color: var(--text-primary);
     font-weight: 700;
@@ -179,7 +179,7 @@ body {
 
 .date {
     color: var(--text-secondary);
-    font-size: 1.125rem;
+    font-size: 1.375rem;
     font-weight: 500;
 }
 
@@ -190,7 +190,7 @@ body {
     color: var(--white);
     border: none;
     border-radius: 12px;
-    font-size: 1rem;
+    font-size: 1.25rem;
     font-weight: 700;
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(108, 92, 231, 0.2);
@@ -226,7 +226,7 @@ body {
     border: 2px solid #ffebeb;
     border-radius: 10px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 1.15rem;
     font-weight: 700;
 }
 
@@ -283,11 +283,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.2rem;
+    font-size: 2.45rem;
 }
 
 .stat-content h3 {
-    font-size: 2.5rem;
+    font-size: 2.75rem;
     color: var(--accent-purple);
     margin-bottom: 0.2rem;
     font-weight: 800;
@@ -295,7 +295,7 @@ body {
 
 .stat-content p {
     color: var(--text-secondary);
-    font-size: 1rem;
+    font-size: 1.25rem;
     font-weight: 600;
 }
 
@@ -319,7 +319,7 @@ body {
 }
 
 .meal-label {
-    font-size: 0.9rem;
+    font-size: 1.15rem;
     color: var(--text-secondary);
     font-weight: 700;
     text-transform: uppercase;
@@ -334,7 +334,7 @@ body {
     color: #00b894;
     padding: 4px 12px;
     border-radius: 20px;
-    font-size: 0.8rem;
+    font-size: 1.05rem;
     display: flex;
     align-items: center;
     gap: 5px;
@@ -373,14 +373,14 @@ body {
 }
 
 .meal-name {
-    font-size: 3rem;
+    font-size: 3.25rem;
     font-weight: 900;
     color: #2d3436;
     letter-spacing: -1px;
 }
 
 .meal-time {
-    font-size: 1.2rem;
+    font-size: 1.45rem;
     color: var(--text-secondary);
     font-weight: 500;
 }
@@ -408,7 +408,7 @@ th {
     padding: 1.5rem;
     text-align: left;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 1.15rem;
     text-transform: uppercase;
     letter-spacing: 1px;
     border-bottom: 1px solid var(--border-color);
@@ -417,7 +417,7 @@ th {
 td {
     padding: 1.5rem;
     border-bottom: 1px solid #f8f9ff;
-    font-size: 1rem;
+    font-size: 1.25rem;
     color: var(--text-primary);
     font-weight: 500;
 }
@@ -436,7 +436,7 @@ tbody tr:hover {
     align-items: center;
     gap: 8px;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 1.15rem;
 }
 
 .status-dot {
@@ -485,7 +485,7 @@ tbody tr:hover {
     background: white;
     border: 2px solid #f0f2ff;
     border-radius: 16px;
-    font-size: 1rem;
+    font-size: 1.25rem;
     box-shadow: var(--card-shadow);
     transition: all 0.3s;
 }
@@ -520,7 +520,7 @@ tbody tr:hover {
 .filter-group label {
     font-weight: 600;
     color: var(--text-primary);
-    font-size: 0.875rem;
+    font-size: 1.125rem;
     /* Meta text */
 }
 
@@ -529,7 +529,7 @@ tbody tr:hover {
     padding: 0.75rem;
     border: 0.125rem solid var(--border-color);
     border-radius: 0.625rem;
-    font-size: 1rem;
+    font-size: 1.25rem;
     width: 100%;
 }
 
@@ -542,7 +542,7 @@ tbody tr:hover {
 }
 
 .report-results h3 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     /* Card Title */
     color: var(--text-primary);
     margin-bottom: 1rem;
@@ -550,7 +550,7 @@ tbody tr:hover {
 }
 
 .report-results p {
-    font-size: 1rem;
+    font-size: 1.25rem;
     color: var(--text-secondary);
     margin-bottom: 1.25rem;
 }
@@ -567,7 +567,7 @@ tbody tr:hover {
 .settings-section h2 {
     color: #667eea;
     margin-bottom: 1.5625rem;
-    font-size: 2rem;
+    font-size: 2.25rem;
     /* Section Heading */
     font-weight: 700;
 }
@@ -582,7 +582,7 @@ tbody tr:hover {
 .timing-card h3 {
     margin-bottom: 1.25rem;
     color: var(--text-primary);
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     /* Card Title */
     font-weight: 700;
 }
@@ -624,7 +624,7 @@ tbody tr:hover {
 }
 
 .modal-content h2 {
-    font-size: 1.75rem;
+    font-size: 2rem;
     color: var(--text-primary);
     margin-bottom: 1.5625rem;
     font-weight: 700;
@@ -632,7 +632,7 @@ tbody tr:hover {
 
 .close {
     float: right;
-    font-size: 2rem;
+    font-size: 2.25rem;
     font-weight: bold;
     cursor: pointer;
     color: #999;
@@ -651,7 +651,7 @@ tbody tr:hover {
     margin-bottom: 0.625rem;
     font-weight: 600;
     color: var(--text-primary);
-    font-size: 1rem;
+    font-size: 1.25rem;
 }
 
 .form-group input,
@@ -660,7 +660,7 @@ tbody tr:hover {
     padding: 0.9375rem;
     border: 0.125rem solid var(--border-color);
     border-radius: 0.625rem;
-    font-size: 1rem;
+    font-size: 1.25rem;
     transition: border-color 0.2s;
 }
 
@@ -680,7 +680,7 @@ tbody tr:hover {
 .badge {
     padding: 0.375rem 0.75rem;
     border-radius: 1.5625rem;
-    font-size: 0.875rem;
+    font-size: 1.125rem;
     /* Meta text size */
     font-weight: 600;
     display: inline-block;
@@ -730,6 +730,6 @@ tbody tr:hover {
     }
 
     .page-header h1 {
-        font-size: 2rem;
+        font-size: 2.25rem;
     }
 }
