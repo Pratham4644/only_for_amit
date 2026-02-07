@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mess Counter - Attendance System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🍽️ MESS ATTENDANCE SYSTEM</h1>
+            <div class="header-info">
+                <div class="date-time">
+                    <div class="date" id="currentDate"></div>
+                    <div class="time" id="currentTime"></div>
+                </div>
+                <div class="meal-indicator" id="mealIndicator">
+                    <span class="meal-label">Current Meal:</span>
+                    <span class="meal-type" id="currentMeal">Loading...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="scanner-section">
+                <h2>Scan QR Code</h2>
+                <div id="qr-reader"></div>
+                <div class="scanner-status" id="scannerStatus">
+                    <p>📱 Ready to scan...</p>
+                </div>
+
+                <div class="live-session-stats" id="liveSessionStats"
+                    style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; display: none;">
+                    <h4
+                        style="margin-bottom: 10px; color: #667eea; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px;">
+                        Live Session Stats</h4>
+                    <div style="display: flex; justify-content: space-around; align-items: center;">
+                        <div style="text-align: center;">
+                            <span style="display: block; font-size: 2.5rem; font-weight: 800; color: #00b894;"
+                                id="sessionPresent">0</span>
+                            <span style="font-size: 0.8rem; font-weight: 700; color: #636e72;">PRESENT</span>
+                        </div>
+                        <div style="width: 2px; height: 40px; background: #dfe6e9;"></div>
+                        <div style="text-align: center;">
+                            <span style="display: block; font-size: 2.5rem; font-weight: 800; color: #d63031;"
+                                id="sessionAbsent">0</span>
+                            <span style="font-size: 0.8rem; font-weight: 700; color: #636e72;">ABSENT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-scans" id="recentScansContainer"
+                    style="margin-top: 20px; padding: 15px; background: #fff; border-radius: 10px; border: 1px solid #eee; display: none;">
+                    <h4
+                        style="margin-bottom: 10px; color: #667eea; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px;">
+                        Recent Scans</h4>
+                    <ul id="recentScansList"
+                        style="list-style: none; padding: 0; margin: 0; font-size: 0.9rem; max-height: 200px; overflow-y: auto;">
+                    </ul>
+                </div>
+            </div>
+
+            <div class="result-section">
+                <div class="message-box" id="messageBox">
+                    <p>Waiting for scan...</p>
+                </div>
+
+                <div class="student-info" id="studentInfo" style="display: none;">
+                    <div class="student-photo">
+                        <img id="studentPhoto" src="" alt="Student Photo">
+                    </div>
+                    <div class="student-details">
+                        <h3 id="studentName">-</h3>
+                        <p class="student-id">ID: <span id="studentId">-</span></p>
+                        <p class="student-room">Room: <span id="studentRoom">-</span></p>
+                        <p class="scan-time">Time: <span id="scanTime">-</span></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="stats-footer">
+            <h3>Today's Count</h3>
+            <div class="stats-grid">
+                <div class="stat-card lunch">
+                    <div class="stat-icon">🍛</div>
+                    <div class="stat-info">
+                        <h4>Lunch</h4>
+                        <p class="stat-count">P: <span id="lunchPresent">0</span> | A: <span id="lunchAbsent">0</span>
+                        </p>
+                        <p class="stat-detail">Total: <span id="lunchTotal">0</span></p>
+                    </div>
+                </div>
+                <div class="stat-card dinner">
+                    <div class="stat-icon">🍜</div>
+                    <div class="stat-info">
+                        <h4>Dinner</h4>
+                        <p class="stat-count">P: <span id="dinnerPresent">0</span> | A: <span id="dinnerAbsent">0</span>
+                        </p>
+                        <p class="stat-detail">Total: <span id="dinnerTotal">0</span></p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Include Html5-QRCode library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="scanner.js"></script>
+</body>
+
+</html>
