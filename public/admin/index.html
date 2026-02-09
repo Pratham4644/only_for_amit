@@ -27,6 +27,10 @@
                     <span class="icon">📈</span>
                     <span>Reports</span>
                 </a>
+                <a href="#reminders" class="nav-item" data-page="reminders">
+                    <span class="icon">📱</span>
+                    <span>Reminders</span>
+                </a>
                 <a href="#settings" class="nav-item" data-page="settings">
                     <span class="icon">⚙️</span>
                     <span>Settings</span>
@@ -143,7 +147,7 @@
                             <tr>
                                 <th>Student ID</th>
                                 <th>Name</th>
-                                <th>Room</th>
+                                <th>Department</th>
                                 <th>Meal Plan</th>
                                 <th>Today's Status</th>
                                 <th>Actions</th>
@@ -190,6 +194,66 @@
                 </div>
             </div>
 
+            <!-- Reminders Page -->
+            <div id="page-reminders" class="page">
+                <header class="page-header">
+                    <h1>WhatsApp Reminders</h1>
+                </header>
+
+                <div class="reminders-section">
+                    <div class="reminder-controls">
+                        <h2>Today's Reminders</h2>
+                        <div class="control-buttons">
+                            <button class="btn-primary" onclick="loadReminderStats()">📊 Refresh Stats</button>
+                            <button class="btn-success" onclick="triggerReminder('LUNCH')">🍛 Send Lunch
+                                Reminder</button>
+                            <button class="btn-success" onclick="triggerReminder('DINNER')">🍜 Send Dinner
+                                Reminder</button>
+                        </div>
+                    </div>
+
+                    <div class="reminders-stats">
+                        <div class="stat-card">
+                            <h3>Lunch Reminders</h3>
+                            <div class="stat-numbers">
+                                <div><span class="label">Sent:</span> <span id="lunchSent" class="number">0</span></div>
+                                <div><span class="label">Failed:</span> <span id="lunchFailed" class="number">0</span>
+                                </div>
+                                <div><span class="label">Pending:</span> <span id="lunchPending" class="number">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Dinner Reminders</h3>
+                            <div class="stat-numbers">
+                                <div><span class="label">Sent:</span> <span id="dinnerSent" class="number">0</span>
+                                </div>
+                                <div><span class="label">Failed:</span> <span id="dinnerFailed" class="number">0</span>
+                                </div>
+                                <div><span class="label">Pending:</span> <span id="dinnerPending"
+                                        class="number">0</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="absent-students">
+                        <h2>Absent Students</h2>
+                        <div class="absent-tabs">
+                            <button class="tab-button active" onclick="switchAbsentTab('LUNCH')">🍛 Lunch</button>
+                            <button class="tab-button" onclick="switchAbsentTab('DINNER')">🍜 Dinner</button>
+                        </div>
+                        <div id="absentStudentsList" class="students-list">
+                            <p class="text-center">Loading...</p>
+                        </div>
+                    </div>
+
+                    <div class="scheduler-status">
+                        <h2>Automatic Scheduler</h2>
+                        <div id="schedulerStatusBox" class="status-box">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Settings Page -->
             <div id="page-settings" class="page">
                 <header class="page-header">
@@ -219,8 +283,8 @@
                     <input type="text" name="name" required>
                 </div>
                 <div class="form-group">
-                    <label>Room Number</label>
-                    <input type="text" name="room_number">
+                    <label>Student Department</label>
+                    <input type="text" name="student_department" placeholder="e.g., Computer Science">
                 </div>
                 <div class="form-group">
                     <label>Phone Number (with country code)</label>

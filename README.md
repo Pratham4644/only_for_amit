@@ -58,7 +58,7 @@ npm start
 3. Fill in student details:
    - Student ID (required)
    - Name (required)
-   - Room Number (optional)
+   - Student Department (optional, stored as string)
    - Meal Plan (Full/Lunch Only/Dinner Only)
    - Photo (optional)
 4. Click "Add Student"
@@ -152,7 +152,7 @@ buddy,s project/
 ### Students Table
 - `student_id` - Unique student identifier
 - `name` - Student name
-- `room_number` - Room number
+- `student_department` - Student department (stored as string)
 - `photo_path` - Path to photo
 - `meal_plan` - FULL, LUNCH_ONLY, or DINNER_ONLY
 - `active` - Active status

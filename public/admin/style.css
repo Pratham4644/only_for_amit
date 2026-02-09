@@ -701,6 +701,188 @@ tbody tr:hover {
     color: #856404;
 }
 
+/* Reminders Section */
+.reminders-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.reminder-controls {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: var(--card-shadow);
+}
+
+.reminder-controls h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.control-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.control-buttons .btn-primary,
+.control-buttons .btn-success {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.control-buttons .btn-primary {
+    background: var(--accent-purple);
+    color: white;
+}
+
+.control-buttons .btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.control-buttons .btn-success {
+    background: #4CAF50;
+    color: white;
+}
+
+.control-buttons .btn-success:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+}
+
+.reminders-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: var(--card-shadow);
+}
+
+.stat-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--accent-purple);
+}
+
+.stat-numbers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.stat-numbers>div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+}
+
+.stat-numbers .label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.stat-numbers .number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-purple);
+}
+
+.absent-students {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: var(--card-shadow);
+}
+
+.absent-students h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.absent-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab-button {
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+}
+
+.tab-button.active {
+    color: var(--accent-purple);
+    border-bottom-color: var(--accent-purple);
+}
+
+.students-list {
+    overflow-x: auto;
+}
+
+.students-list table {
+    width: 100%;
+}
+
+.students-list th {
+    background-color: #f5f5f5;
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+}
+
+.students-list td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.students-list tr:hover {
+    background-color: #f8f9fa;
+}
+
+.scheduler-status {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: var(--card-shadow);
+}
+
+.scheduler-status h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.status-box {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+}
+
 /* Responsive */
 @media (max-width: 48rem) {
 

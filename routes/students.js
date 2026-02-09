@@ -64,7 +64,7 @@ router.get('/:id', (req, res) => {
 
 // POST create new student
 router.post('/', upload.single('photo'), async (req, res) => {
-    const { student_id, name, room_number, phone_number, meal_plan } = req.body;
+    const { student_id, name, student_department, phone_number, meal_plan } = req.body;
     const photo_path = req.file ? req.file.path : null;
 
     if (!student_id || !name) {
@@ -74,11 +74,11 @@ router.post('/', upload.single('photo'), async (req, res) => {
     const db = getDatabase();
 
     const query = `
-        INSERT INTO students (student_id, name, room_number, phone_number, photo_path, meal_plan)
+        INSERT INTO students (student_id, name, student_department, phone_number, photo_path, meal_plan)
         VALUES (?, ?, ?, ?, ?, ?)
     `;
 
-    db.run(query, [student_id, name, room_number, phone_number, photo_path, meal_plan || 'FULL'], function (err) {
+    db.run(query, [student_id, name, student_department, phone_number, photo_path, meal_plan || 'FULL'], function (err) {
         if (err) {
             db.close();
             return res.status(500).json({ error: err.message });
@@ -114,7 +114,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
 // PUT update student
 router.put('/:id', upload.single('photo'), (req, res) => {
     const studentId = req.params.id;
-    const { name, room_number, phone_number, meal_plan, active } = req.body;
+    const { name, student_department, phone_number, meal_plan, active } = req.body;
     const photo_path = req.file ? req.file.path : null;
 
     const db = getDatabase();
@@ -127,9 +127,9 @@ router.put('/:id', upload.single('photo'), (req, res) => {
         updates.push('name = ?');
         params.push(name);
     }
-    if (room_number !== undefined) {
-        updates.push('room_number = ?');
-        params.push(room_number);
+    if (student_department !== undefined) {
+        updates.push('student_department = ?');
+        params.push(student_department);
     }
     if (phone_number !== undefined) {
         updates.push('phone_number = ?');

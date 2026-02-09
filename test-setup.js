@@ -7,31 +7,31 @@ const sampleStudents = [
     {
         student_id: '101',
         name: 'Rahul Kumar',
-        room_number: '205',
+        student_department: 'Computer Science',
         meal_plan: 'FULL'
     },
     {
         student_id: '102',
         name: 'Priya Sharma',
-        room_number: '301',
+        student_department: 'Electronics',
         meal_plan: 'FULL'
     },
     {
         student_id: '103',
         name: 'Amit Patel',
-        room_number: '208',
+        student_department: 'Mechanical',
         meal_plan: 'FULL'
     },
     {
         student_id: '104',
         name: 'Sneha Reddy',
-        room_number: '405',
+        student_department: 'Civil',
         meal_plan: 'LUNCH_ONLY'
     },
     {
         student_id: '105',
         name: 'Rohan Singh',
-        room_number: '112',
+        student_department: 'Electrical',
         meal_plan: 'DINNER_ONLY'
     }
 ];
@@ -44,7 +44,7 @@ async function addSampleStudents() {
             const formData = new URLSearchParams();
             formData.append('student_id', student.student_id);
             formData.append('name', student.name);
-            formData.append('room_number', student.room_number);
+            formData.append('student_department', student.student_department);
             formData.append('meal_plan', student.meal_plan);
 
             const response = await fetch(`${API_BASE}/students`, {
@@ -80,7 +80,7 @@ async function listStudents() {
         console.log(`Total Students: ${data.students.length}\n`);
 
         data.students.forEach(student => {
-            console.log(`ID: ${student.student_id} | Name: ${student.name} | Room: ${student.room_number} | Plan: ${student.meal_plan}`);
+            console.log(`ID: ${student.student_id} | Name: ${student.name} | Department: ${student.student_department} | Plan: ${student.meal_plan}`);
         });
 
         console.log('\n');

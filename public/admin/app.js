@@ -181,7 +181,7 @@ async function loadStudents() {
                     <tr>
                         <td>${student.student_id}</td>
                         <td>${student.name}</td>
-                        <td>${student.room_number || 'N/A'}</td>
+                        <td>${student.student_department || 'N/A'}</td>
                         <td><span class="badge badge-warning" style="background:#e0e4ff; color:#6c5ce7;">${student.meal_plan}</span></td>
                         <td>
                             <div style="display: flex; gap: 5px;">
@@ -564,25 +564,35 @@ async function generateReport() {
     }
 
     try {
-        let url = `${API_BASE}/attendance/report?start_date=${startDate}&end_date=${endDate}`;
+        let url = `${API_BASE}/attendance/report?start_date=${startDate}&end_date=${endDate}&include_absent=true`;
         if (mealType) {
             url += `&meal_type=${mealType}`;
         }
 
         const response = await fetch(url);
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
+
+        if (!data.records) {
+            throw new Error('Invalid response format');
+        }
 
         displayReport(data);
     } catch (error) {
         console.error('Error generating report:', error);
-        alert('Error generating report');
+        alert('Error generating report: ' + error.message);
     }
 }
 
 function displayReport(data) {
     const container = document.getElementById('reportResults');
 
-    if (data.records.length === 0) {
+    if (!data.records || data.records.length === 0) {
         container.innerHTML = '<p class="text-center">No records found for selected criteria</p>';
         return;
     }
@@ -590,16 +600,17 @@ function displayReport(data) {
     let html = `
         <h3>Report: ${data.start_date} to ${data.end_date}</h3>
         <p>Total Records: ${data.count}</p>
-        <table>
+        <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
             <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Student ID</th>
-                    <th>Name</th>
-                    <th>Room</th>
-                    <th>Meal Type</th>
-                    <th>Time</th>
-                    <th>Status</th>
+                <tr style="background-color: #f5f5f5;">
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Date</th>
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Student ID</th>
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Name</th>
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Department</th>
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Meal Type</th>
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Time</th>
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -607,19 +618,23 @@ function displayReport(data) {
 
     data.records.forEach(record => {
         html += `
-            <tr>
-                <td>${record.date}</td>
-                <td>${record.student_id}</td>
-                <td>${record.name}</td>
-                <td>${record.room_number || 'N/A'}</td>
-                <td>${record.meal_type}</td>
-                <td>${record.scan_time}</td>
-                <td>${record.is_late ? 'Late' : 'On Time'}</td>
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 10px;">${record.date}</td>
+                <td style="padding: 10px;">${record.student_id}</td>
+                <td style="padding: 10px;">${record.name}</td>
+                <td style="padding: 10px;">${record.student_department || 'N/A'}</td>
+                <td style="padding: 10px;">${record.meal_type || 'N/A'}</td>
+                <td style="padding: 10px;">${record.scan_time || '-'}</td>
+                <td style="padding: 10px;"><span style="padding: 5px 10px; border-radius: 5px; font-weight: bold; ${record.status === 'Present' ? 'background-color: #4CAF50; color: white;' : record.status === 'Late' ? 'background-color: #FF9800; color: white;' : 'background-color: #f44336; color: white;'}">${record.status || 'Absent'}</span></td>
             </tr>
         `;
     });
 
-    html += '</tbody></table>';
+    html += `
+            </tbody>
+        </table>
+        </div>
+    `;
     container.innerHTML = html;
 }
 
@@ -651,11 +666,12 @@ async function loadSettings() {
         const container = document.getElementById('mealTimingsContainer');
         container.innerHTML = '';
 
-        // Filter to only show LUNCH and DINNER
-        const allowedMeals = ['LUNCH', 'DINNER'];
-        const filteredTimings = data.meal_timings.filter(timing =>
-            allowedMeals.includes(timing.meal_type)
-        );
+        // Get only one LUNCH and one DINNER timing
+        const lunchTiming = data.meal_timings.find(timing => timing.meal_type === 'LUNCH');
+        const dinnerTiming = data.meal_timings.find(timing => timing.meal_type === 'DINNER');
+        const timingsToDisplay = [];
+        if (lunchTiming) timingsToDisplay.push(lunchTiming);
+        if (dinnerTiming) timingsToDisplay.push(dinnerTiming);
 
         // Helper function to convert 24-hour to 12-hour format
         function to12Hour(time24) {
@@ -685,7 +701,7 @@ async function loadSettings() {
             return `${hours.toString().padStart(2, '0')}:${minutes}`;
         }
 
-        filteredTimings.forEach(timing => {
+        timingsToDisplay.forEach(timing => {
             const mealLabel = timing.meal_type === 'LUNCH' ? 'Lunch Time' : 'Dinner Time';
             const card = `
                 <div class="timing-card">
@@ -767,3 +783,174 @@ async function updateTiming12Hour(id, field, value12Hour) {
         alert('Error updating timing');
     }
 }
+
+// ============== REMINDERS SECTION ==============
+
+let currentAbsentTab = 'LUNCH';
+
+// Load reminder statistics for today
+async function loadReminderStats() {
+    try {
+        const response = await fetch(`${API_BASE}/reminders/stats/today`);
+        const data = await response.json();
+
+        // Update lunch stats
+        document.getElementById('lunchSent').textContent = data.lunch.sent || 0;
+        document.getElementById('lunchFailed').textContent = data.lunch.failed || 0;
+        document.getElementById('lunchPending').textContent = data.lunch.pending || 0;
+
+        // Update dinner stats
+        document.getElementById('dinnerSent').textContent = data.dinner.sent || 0;
+        document.getElementById('dinnerFailed').textContent = data.dinner.failed || 0;
+        document.getElementById('dinnerPending').textContent = data.dinner.pending || 0;
+
+        // Load absent students
+        await loadAbsentStudents(currentAbsentTab);
+        await loadSchedulerStatus();
+    } catch (error) {
+        console.error('Error loading reminder stats:', error);
+        alert('Error loading reminder statistics');
+    }
+}
+
+// Load absent students for a meal type
+async function loadAbsentStudents(mealType) {
+    try {
+        const response = await fetch(`${API_BASE}/reminders/absent/${mealType}`);
+        const data = await response.json();
+
+        const listContainer = document.getElementById('absentStudentsList');
+
+        if (data.students.length === 0) {
+            listContainer.innerHTML = `<p class="text-center">✅ All students marked attendance for ${mealType}!</p>`;
+            return;
+        }
+
+        let html = `
+            <p class="text-center" style="color: #666; margin-bottom: 15px;">
+                ${data.total_absent} students haven't reported yet
+            </p>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background-color: #f5f5f5;">
+                        <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Student ID</th>
+                        <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Name</th>
+                        <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Phone</th>
+                        <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Plan</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        data.students.forEach(student => {
+            html += `
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px;">${student.student_id}</td>
+                    <td style="padding: 10px;">${student.name}</td>
+                    <td style="padding: 10px;">${student.phone_number || 'N/A'}</td>
+                    <td style="padding: 10px;"><span style="background: #e0e4ff; color: #6c5ce7; padding: 5px 10px; border-radius: 5px;">${student.meal_plan}</span></td>
+                </tr>
+            `;
+        });
+
+        html += `
+                </tbody>
+            </table>
+        `;
+
+        listContainer.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading absent students:', error);
+        document.getElementById('absentStudentsList').innerHTML = '<p class="text-center" style="color: red;">Error loading absent students</p>';
+    }
+}
+
+// Switch absent students tab
+function switchAbsentTab(mealType) {
+    currentAbsentTab = mealType;
+
+    // Update button active states
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    // Load absent students
+    loadAbsentStudents(mealType);
+}
+
+// Trigger manual reminder
+async function triggerReminder(mealType) {
+    if (!confirm(`Send manual ${mealType} reminder to all absent students?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/reminders/trigger/${mealType}`, {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert(`✅ ${data.mealType} reminders sent!\n\nSent: ${data.sent}\nFailed: ${data.failed}`);
+            await loadReminderStats();
+        } else {
+            alert(`❌ Error: ${data.error}`);
+        }
+    } catch (error) {
+        console.error('Error triggering reminder:', error);
+        alert('Error sending reminders');
+    }
+}
+
+// Load scheduler status
+async function loadSchedulerStatus() {
+    try {
+        const response = await fetch(`${API_BASE}/reminders/scheduler/status`);
+        const data = await response.json();
+
+        const statusBox = document.getElementById('schedulerStatusBox');
+        let html = '';
+
+        if (data.running) {
+            html += `
+                <div style="background: #e8f5e9; border-left: 4px solid #4CAF50; padding: 15px; border-radius: 5px;">
+                    <p style="color: #2e7d32; font-weight: bold;">✅ Scheduler is RUNNING</p>
+                    <div style="margin-top: 10px; font-size: 0.9rem; color: #555;">
+            `;
+
+            data.nextReminders.forEach(reminder => {
+                html += `<p>⏰ ${reminder.type}: ${new Date(reminder.nextRun).toLocaleString()}</p>`;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+        } else {
+            html += `
+                <div style="background: #ffebee; border-left: 4px solid #f44336; padding: 15px; border-radius: 5px;">
+                    <p style="color: #c62828; font-weight: bold;">❌ Scheduler is STOPPED</p>
+                    <p style="font-size: 0.9rem; color: #555; margin-top: 10px;">Automatic reminders are not active.</p>
+                </div>
+            `;
+        }
+
+        statusBox.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading scheduler status:', error);
+    }
+}
+
+// Add reminders to page load
+(function () {
+    const originalLoadPageData = window.loadPageData;
+    window.loadPageData = function (pageName) {
+        originalLoadPageData(pageName);
+
+        if (pageName === 'reminders') {
+            loadReminderStats();
+        }
+    };
+})();

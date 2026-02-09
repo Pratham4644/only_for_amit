@@ -37,7 +37,7 @@ router.get('/today', (req, res) => {
     const today = new Date().toISOString().split('T')[0];
 
     const query = `
-        SELECT a.*, s.name, s.room_number, s.photo_path
+        SELECT a.*, s.name, s.student_department, s.photo_path
         FROM attendance a
         JOIN students s ON a.student_id = s.student_id
         WHERE a.date = ?
@@ -138,7 +138,7 @@ router.get('/report', (req, res) => {
             SELECT 
                 s.student_id, 
                 s.name, 
-                s.room_number, 
+                s.student_department, 
                 a.meal_type, 
                 a.scan_time, 
                 a.is_late,
@@ -158,7 +158,7 @@ router.get('/report', (req, res) => {
                 SELECT 
                     s.student_id, 
                     s.name, 
-                    s.room_number, 
+                    s.student_department, 
                     '${meal_type}' as target_meal_type,
                     a.meal_type as actual_meal_type, 
                     a.scan_time, 
@@ -196,7 +196,7 @@ router.get('/report', (req, res) => {
                     date: row.date,
                     student_id: row.student_id,
                     name: row.name,
-                    room_number: row.room_number,
+                    student_department: row.student_department,
                     meal_type: type || (meal_type || 'N/A'),
                     scan_time: row.scan_time || '-',
                     is_late: row.is_late,
@@ -217,7 +217,7 @@ router.get('/report', (req, res) => {
     } else {
         // Standard Report (Only Present)
         let query = `
-            SELECT a.*, s.name, s.room_number
+            SELECT a.*, s.name, s.student_department
             FROM attendance a
             JOIN students s ON a.student_id = s.student_id
             WHERE a.date BETWEEN ? AND ?
@@ -342,7 +342,7 @@ router.get('/export-excel', async (req, res) => {
             SELECT 
                 s.student_id, 
                 s.name, 
-                s.room_number,
+                s.student_department,
                 a.meal_type, 
                 a.scan_time, 
                 a.is_late,
@@ -358,7 +358,7 @@ router.get('/export-excel', async (req, res) => {
                 SELECT 
                     s.student_id, 
                     s.name, 
-                    s.room_number, 
+                    s.student_department, 
                     '${meal_type}' as target_meal_type,
                     a.meal_type as actual_meal_type, 
                     a.scan_time, 
@@ -374,7 +374,7 @@ router.get('/export-excel', async (req, res) => {
         query += ' ORDER BY s.student_id';
     } else {
         query = `
-            SELECT a.*, s.name, s.room_number
+            SELECT a.*, s.name, s.student_department
             FROM attendance a
             JOIN students s ON a.student_id = s.student_id
             WHERE a.date BETWEEN ? AND ?
@@ -414,7 +414,7 @@ router.get('/export-excel', async (req, res) => {
 
         // Add Headers
         const headerRow = worksheet.getRow(3);
-        headerRow.values = ['Date', 'Student ID', 'Name', 'Room', 'Meal Type', 'Scan Time', 'Status'];
+        headerRow.values = ['Date', 'Student ID', 'Name', 'Department', 'Meal Type', 'Scan Time', 'Status'];
         headerRow.eachCell((cell) => {
             cell.style = headerStyle;
         });
@@ -439,7 +439,7 @@ router.get('/export-excel', async (req, res) => {
                 row.date,
                 row.student_id,
                 row.name,
-                row.room_number || 'N/A',
+                row.student_department || 'N/A',
                 type,
                 time,
                 status

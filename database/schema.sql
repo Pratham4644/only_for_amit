@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS students (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id TEXT UNIQUE NOT NULL,  -- Unique student ID (e.g., "101", "102")
     name TEXT NOT NULL,
-    room_number TEXT,
+    student_department TEXT,
     phone_number TEXT,  -- Phone number for WhatsApp
     photo_path TEXT,  -- Path to student photo
     meal_plan TEXT DEFAULT 'FULL',  -- FULL, LUNCH_ONLY, DINNER_ONLY
@@ -36,6 +36,21 @@ CREATE TABLE IF NOT EXISTS attendance (
     UNIQUE(student_id, date, meal_type)  -- Prevent duplicate scans
 );
 
+-- Reminder tracking table
+CREATE TABLE IF NOT EXISTS reminders_sent (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id TEXT NOT NULL,
+    date DATE NOT NULL,
+    meal_type TEXT NOT NULL,  -- LUNCH or DINNER
+    phone_number TEXT NOT NULL,
+    reminder_type TEXT DEFAULT 'WARNING',  -- WARNING, FINAL_CALL
+    sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    delivery_status TEXT DEFAULT 'PENDING',  -- PENDING, SENT, FAILED
+    error_message TEXT,
+    FOREIGN KEY (student_id) REFERENCES students(student_id),
+    UNIQUE(student_id, date, meal_type, reminder_type)
+);
+
 -- System settings
 CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
@@ -48,6 +63,8 @@ CREATE INDEX IF NOT EXISTS idx_attendance_date ON attendance(date);
 CREATE INDEX IF NOT EXISTS idx_attendance_student ON attendance(student_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_meal ON attendance(meal_type);
 CREATE INDEX IF NOT EXISTS idx_students_active ON students(active);
+CREATE INDEX IF NOT EXISTS idx_reminders_sent ON reminders_sent(student_id, date, meal_type);
+CREATE INDEX IF NOT EXISTS idx_reminders_delivery ON reminders_sent(delivery_status);
 
 -- Insert default meal timings
 INSERT OR IGNORE INTO meal_timings (meal_type, start_time, end_time, late_warning_time) VALUES

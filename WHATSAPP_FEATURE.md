@@ -56,7 +56,7 @@ Thank you!
 3. Fill in details:
    - Student ID: `106`
    - Name: `Test Student`
-   - Room: `301`
+   - Department: `Computer Science`
    - **Phone Number: `+919876543210`** (with country code!)
    - Meal Plan: Full
 4. Click "Add Student"
@@ -104,14 +104,14 @@ https://wa.me/[phone_number]?text=[encoded_message]
 ### Student Table
 Before:
 ```
-| ID  | Name  | Room | Meal Plan | Status | Actions        |
+| ID  | Name  | Department | Meal Plan | Status | Actions        |
 |-----|-------|------|-----------|--------|----------------|
 | 101 | Rahul | 205  | FULL      | Active | QR | Delete     |
 ```
 
 After:
 ```
-| ID  | Name  | Room | Phone         | Meal Plan | Status | Actions              |
+| ID  | Name  | Department | Phone         | Meal Plan | Status | Actions              |
 |-----|-------|------|---------------|-----------|--------|----------------------|
 | 101 | Rahul | 205  | +919876543210 | FULL      | Active | 📱 WhatsApp | Delete |
 | 102 | Priya | 301  | N/A           | FULL      | Active | QR | Delete           |

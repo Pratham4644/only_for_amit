@@ -23,7 +23,7 @@ You should see:
 4. Fill in details:
    - Student ID: `101`
    - Name: `Rahul Kumar`
-   - Room: `205`
+   - Department: `Computer Science`
    - Meal Plan: `Full (Lunch + Dinner)`
 5. Click **"Add Student"**
 6. QR code will open in new window - **Print it!**
@@ -41,7 +41,7 @@ You should see:
 
 We've already added 5 test students for you:
 
-| ID | Name | Room | Meal Plan |
+| ID | Name | Department | Meal Plan |
 |----|------|------|-----------|
 | 101 | Rahul Kumar | 205 | Full |
 | 102 | Priya Sharma | 301 | Full |
@@ -149,7 +149,7 @@ Second scan (1:10 PM):
 ├─────────────────────────────────────┤
 │  ✅ LAST SCAN:                      │
 │  [Photo] Rahul Kumar (101)          │
-│          Room: 205                  │
+│          Department: Computer Science     │
 │          LUNCH marked at 1:15 PM    │
 ├─────────────────────────────────────┤
 │  Today's Count:                     │

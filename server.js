@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { initDatabase } = require('./database/db');
+const { startScheduler } = require('./utils/meal-scheduler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,6 +20,7 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/students', require('./routes/students'));
 app.use('/api/attendance', require('./routes/attendance'));
 app.use('/api/settings', require('./routes/settings'));
+app.use('/api/reminders', require('./routes/reminders'));
 
 // Root route
 app.get('/', (req, res) => {
@@ -44,7 +46,12 @@ initDatabase()
             console.log(`   Counter Screen: http://localhost:${PORT}/counter`);
             console.log(`   Admin Panel:    http://localhost:${PORT}/admin`);
             console.log(`   API:            http://localhost:${PORT}/api`);
+            console.log(`   API Reminders:  http://localhost:${PORT}/api/reminders`);
             console.log(`\n✅ Server started on port ${PORT}\n`);
+
+            // Start the meal reminder scheduler
+            console.log('Starting meal reminder scheduler...');
+            startScheduler();
         });
     })
     .catch(err => {

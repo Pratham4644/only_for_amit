@@ -183,7 +183,7 @@ function showSuccess(data) {
     // Show student info
     document.getElementById('studentName').textContent = data.student.name;
     document.getElementById('studentId').textContent = data.student.student_id;
-    document.getElementById('studentRoom').textContent = data.student.room_number || 'N/A';
+    document.getElementById('studentDepartment').textContent = data.student.student_department || 'N/A';
     document.getElementById('scanTime').textContent = data.attendance.scan_time;
 
     // Set photo
@@ -247,7 +247,7 @@ function showError(data) {
         if (data.student) {
             document.getElementById('studentName').textContent = data.student.name;
             document.getElementById('studentId').textContent = data.student.student_id;
-            document.getElementById('studentRoom').textContent = data.student.room_number || 'N/A';
+            document.getElementById('studentDepartment').textContent = data.student.student_department || 'N/A';
             document.getElementById('scanTime').textContent = data.existingRecord.scan_time;
 
             const photoElement = document.getElementById('studentPhoto');
