@@ -31,6 +31,10 @@
                     <span class="icon">📱</span>
                     <span>Reminders</span>
                 </a>
+                <a href="#leave" class="nav-item" data-page="leave">
+                    <span class="icon">🗓️</span>
+                    <span>Leave Credits</span>
+                </a>
                 <a href="#settings" class="nav-item" data-page="settings">
                     <span class="icon">⚙️</span>
                     <span>Settings</span>
@@ -254,6 +258,133 @@
                 </div>
             </div>
 
+            <!-- Leave Credits Page -->
+            <div id="page-leave" class="page">
+                <header class="page-header">
+                    <h1>Leave Credits</h1>
+                    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                        <button class="btn-primary" id="btnNewLeaveRequest" onclick="showLeaveRequestModal()">+ New Leave Request</button>
+                        <button class="btn-secondary" onclick="showComputeModal()">⚙️ Compute Credits</button>
+                    </div>
+                </header>
+
+                <!-- Stats row -->
+                <div class="leave-stats-row" id="leaveStatsRow">
+                    <div class="leave-stat-card" id="leaveStat_pending">
+                        <div class="lsc-icon">⏳</div>
+                        <div class="lsc-body">
+                            <div class="lsc-num" id="leaveStatPending">—</div>
+                            <div class="lsc-label">Pending Requests</div>
+                        </div>
+                    </div>
+                    <div class="leave-stat-card" id="leaveStat_approved">
+                        <div class="lsc-icon">✅</div>
+                        <div class="lsc-body">
+                            <div class="lsc-num" id="leaveStatApproved">—</div>
+                            <div class="lsc-label">Approved Requests</div>
+                        </div>
+                    </div>
+                    <div class="leave-stat-card" id="leaveStat_credits">
+                        <div class="lsc-icon">💰</div>
+                        <div class="lsc-body">
+                            <div class="lsc-num" id="leaveStatCredits">—</div>
+                            <div class="lsc-label">Credits Computed</div>
+                        </div>
+                    </div>
+                    <div class="leave-stat-card" id="leaveStat_applied">
+                        <div class="lsc-icon">🏦</div>
+                        <div class="lsc-body">
+                            <div class="lsc-num" id="leaveStatApplied">—</div>
+                            <div class="lsc-label">Credits Applied</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="leave-tabs">
+                    <button class="leave-tab-btn active" id="leaveTab_requests" onclick="switchLeaveTab('requests')">📋 Leave Requests</button>
+                    <button class="leave-tab-btn" id="leaveTab_credits" onclick="switchLeaveTab('credits')">💰 Credit Records</button>
+                </div>
+
+                <!-- Leave Requests Panel -->
+                <div id="leavePanel_requests" class="leave-panel active">
+                    <div class="leave-filters">
+                        <div class="filter-group">
+                            <label>Status</label>
+                            <select id="leaveFilterStatus" onchange="loadLeaveRequests()">
+                                <option value="">All</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="APPROVED">Approved</option>
+                                <option value="REJECTED">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Month</label>
+                            <input type="month" id="leaveFilterMonth" onchange="loadLeaveRequests()">
+                        </div>
+                        <button class="btn-secondary" onclick="loadLeaveRequests()">🔄 Refresh</button>
+                    </div>
+                    <div class="table-container" style="margin-top:1rem;">
+                        <table id="leaveRequestsTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Student</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Days</th>
+                                    <th>Type</th>
+                                    <th>Month</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaveRequestsBody">
+                                <tr><td colspan="10" class="text-center">Loading…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Credit Records Panel -->
+                <div id="leavePanel_credits" class="leave-panel">
+                    <div class="leave-filters">
+                        <div class="filter-group">
+                            <label>Leave Month</label>
+                            <input type="month" id="creditFilterMonth" onchange="loadCreditRecords()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Status</label>
+                            <select id="creditFilterStatus" onchange="loadCreditRecords()">
+                                <option value="">All</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="APPLIED">Applied</option>
+                            </select>
+                        </div>
+                        <button class="btn-secondary" onclick="loadCreditRecords()">🔄 Refresh</button>
+                    </div>
+                    <div class="table-container" style="margin-top:1rem;">
+                        <table id="creditRecordsTable">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Leave Month</th>
+                                    <th>Credit Month</th>
+                                    <th>Absent Days</th>
+                                    <th>Credit Days</th>
+                                    <th>Source</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="creditRecordsBody">
+                                <tr><td colspan="7" class="text-center">Loading…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- Settings Page -->
             <div id="page-settings" class="page">
                 <header class="page-header">
@@ -307,6 +438,70 @@
                     <button type="button" class="btn-secondary" onclick="closeAddStudentModal()">Cancel</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Leave Request Modal -->
+    <div id="leaveRequestModal" class="modal">
+        <div class="modal-content" style="max-width:40rem;">
+            <span class="close" onclick="closeLeaveRequestModal()">&times;</span>
+            <h2>🗓️ New Leave Request</h2>
+            <form id="leaveRequestForm" onsubmit="submitLeaveRequest(event)">
+                <div class="form-group">
+                    <label>Student ID *</label>
+                    <input type="text" id="leaveStudentId" name="student_id" required placeholder="e.g., 101">
+                </div>
+                <div class="form-group">
+                    <label>From Date *</label>
+                    <input type="date" id="leaveFromDate" name="from_date" required>
+                </div>
+                <div class="form-group">
+                    <label>To Date *</label>
+                    <input type="date" id="leaveToDate" name="to_date" required>
+                </div>
+                <div class="form-group">
+                    <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;">
+                        <input type="checkbox" id="leaveIsHalfDay" name="is_half_day"
+                               onchange="toggleHalfDayMeal()" style="width:auto;margin:0;">
+                        Half-Day Leave
+                    </label>
+                </div>
+                <div class="form-group" id="halfDayMealGroup" style="display:none;">
+                    <label>Which Meal is Missed? *</label>
+                    <select id="leaveHalfDayMeal" name="half_day_meal">
+                        <option value="lunch">Lunch (morning off)</option>
+                        <option value="dinner">Dinner (evening off)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Reason</label>
+                    <input type="text" id="leaveReason" name="reason" placeholder="Optional reason">
+                </div>
+                <div id="leaveDayPreview" class="leave-day-preview" style="display:none;"></div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Submit Request</button>
+                    <button type="button" class="btn-secondary" onclick="closeLeaveRequestModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Compute Credits Modal -->
+    <div id="computeModal" class="modal">
+        <div class="modal-content" style="max-width:36rem;">
+            <span class="close" onclick="closeComputeModal()">&times;</span>
+            <h2>⚙️ Compute / Apply Credits</h2>
+            <div class="form-group">
+                <label>Month (YYYY-MM)</label>
+                <input type="month" id="computeMonth">
+            </div>
+            <div class="compute-actions">
+                <button class="btn-primary" onclick="triggerCompute('auto')">🔍 Auto Compute</button>
+                <button class="btn-primary" onclick="triggerCompute('manual')">📋 Manual Compute</button>
+                <button class="btn-primary" onclick="triggerCompute('merged')">🔀 Merged Compute</button>
+                <button class="btn-success" style="width:100%;margin-top:0.5rem;" onclick="triggerApply()">💰 Apply Credits to Next Month</button>
+            </div>
+            <div id="computeResult" style="margin-top:1.5rem;"></div>
         </div>
     </div>
 

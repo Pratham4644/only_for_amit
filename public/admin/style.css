@@ -915,3 +915,325 @@ tbody tr:hover {
         font-size: 2.25rem;
     }
 }
+
+/* ============================================================
+   LEAVE CREDITS PAGE
+   ============================================================ */
+
+/* ── Stat Cards Row ─────────────────────────────────────────── */
+.leave-stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.leave-stat-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 1.75rem 2rem;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border: 2px solid transparent;
+}
+
+.leave-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(108, 92, 231, 0.1);
+    border-color: rgba(108, 92, 231, 0.12);
+}
+
+.lsc-icon {
+    font-size: 2.2rem;
+    width: 56px;
+    height: 56px;
+    background: #f0f2ff;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.lsc-num {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--accent-purple);
+    line-height: 1;
+}
+
+.lsc-label {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-top: 0.25rem;
+}
+
+/* ── Tabs ──────────────────────────────────────────────────── */
+.leave-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    background: var(--white);
+    padding: 0.5rem;
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+    width: fit-content;
+}
+
+.leave-tab-btn {
+    padding: 0.75rem 1.75rem;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 1.15rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.leave-tab-btn:hover {
+    background: #f0f2ff;
+    color: var(--accent-purple);
+}
+
+.leave-tab-btn.active {
+    background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+}
+
+/* ── Panels ────────────────────────────────────────────────── */
+.leave-panel {
+    display: none;
+    animation: fadeIn 0.25s ease;
+}
+
+.leave-panel.active {
+    display: block;
+}
+
+/* ── Filters bar ───────────────────────────────────────────── */
+.leave-filters {
+    background: var(--white);
+    padding: 1.25rem 1.5rem;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+/* ── Larger month pickers in leave filters & compute modal ─── */
+.leave-filters input[type="month"],
+#computeMonth {
+    font-size: 1.6rem;
+    padding: 1rem 1.25rem;
+    height: 3.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    width: 100%;
+    background: #fff;
+    color: var(--text-primary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    /* Zoom scales the native calendar popup proportionally */
+    zoom: 1.35;
+}
+
+.leave-filters input[type="month"]:focus,
+#computeMonth:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+}
+
+/* Keep the filter-group that wraps month pickers wide enough */
+.leave-filters .filter-group:has(input[type="month"]) {
+    min-width: 18rem;
+}
+
+/* Compute modal month picker wrapper */
+#computeModal .form-group:has(#computeMonth) {
+    overflow: visible;
+}
+
+/* ── Status Badges ─────────────────────────────────────────── */
+.leave-status-badge {
+    display: inline-block;
+    padding: 0.3rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.leave-status-pending {
+    background: #fff8e1;
+    color: #f59f00;
+    border: 1.5px solid #ffe066;
+}
+
+.leave-status-approved {
+    background: #e6fffa;
+    color: #00b894;
+    border: 1.5px solid #b2f5ea;
+}
+
+.leave-status-rejected {
+    background: #fff0f0;
+    color: #d63031;
+    border: 1.5px solid #ffbcbc;
+}
+
+/* ── Credit days cell ──────────────────────────────────────── */
+.leave-credit-days {
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+/* ── Leave Request Modal ───────────────────────────────────── */
+.leave-day-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1.25rem;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.preview-qualifies {
+    background: #e6fffa;
+    color: #00b894;
+    border: 1.5px solid #b2f5ea;
+}
+
+.preview-pending {
+    background: #fff8e1;
+    color: #d6830a;
+    border: 1.5px solid #ffe066;
+}
+
+/* ── Compute Modal ─────────────────────────────────────────── */
+.compute-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.compute-actions .btn-primary {
+    font-size: 1rem;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+}
+
+.compute-actions .btn-success {
+    border-radius: 12px;
+    padding: 0.9rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+    font-weight: 700;
+    background: linear-gradient(135deg, #00b894, #00cec9);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 184, 148, 0.25);
+    transition: all 0.25s;
+}
+
+.compute-actions .btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 184, 148, 0.35);
+}
+
+.compute-loading {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 1.15rem;
+    padding: 1rem;
+}
+
+.compute-result-box {
+    padding: 1.25rem 1.5rem;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    line-height: 1.7;
+}
+
+.compute-result-box.success {
+    background: #e6fffa;
+    border-left: 4px solid #00b894;
+    color: #065f46;
+}
+
+.compute-result-box.error {
+    background: #fff0f0;
+    border-left: 4px solid #d63031;
+    color: #7b1d1d;
+}
+
+.compute-result-box ul {
+    margin-top: 0.5rem;
+    padding-left: 1.25rem;
+}
+
+.compute-result-box li {
+    margin-bottom: 0.3rem;
+}
+
+/* ── Toast Notification ────────────────────────────────────── */
+.leave-toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #2d3436;
+    color: #fff;
+    padding: 1rem 1.75rem;
+    border-radius: 14px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    max-width: 480px;
+}
+
+.leave-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ── Responsive tweaks for leave page ─────────────────────── */
+@media (max-width: 48rem) {
+    .leave-stats-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .leave-tabs {
+        width: 100%;
+    }
+
+    .leave-tab-btn {
+        flex: 1;
+        text-align: center;
+        font-size: 1rem;
+        padding: 0.6rem 0.5rem;
+    }
+
+    .compute-actions {
+        grid-template-columns: 1fr;
+    }
+}

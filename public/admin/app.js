@@ -58,6 +58,9 @@ function loadPageData(pageName) {
         case 'settings':
             loadSettings();
             break;
+        case 'leave':
+            initLeavePage();
+            break;
     }
 }
 
@@ -954,3 +957,389 @@ async function loadSchedulerStatus() {
         }
     };
 })();
+
+// ====================================================================
+// LEAVE CREDITS MODULE
+// ====================================================================
+
+// ── State ────────────────────────────────────────────────────────────
+let activeLeaveTab = 'requests';
+
+// ── Init ─────────────────────────────────────────────────────────────
+function initLeavePage() {
+    // Default filter month = current month
+    const today = new Date();
+    const ym = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    document.getElementById('leaveFilterMonth').value  = ym;
+    document.getElementById('creditFilterMonth').value = ym;
+    document.getElementById('computeMonth') && (document.getElementById('computeMonth').value = ym);
+
+    loadLeaveStats();
+    loadLeaveRequests();
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────
+async function loadLeaveStats() {
+    try {
+        const [reqRes, credRes] = await Promise.all([
+            fetch(`${API_BASE}/leave/requests`),
+            fetch(`${API_BASE}/leave/credits`),
+        ]);
+        const reqData  = await reqRes.json();
+        const credData = await credRes.json();
+
+        const pending  = (reqData.requests  || []).filter(r => r.status === 'PENDING').length;
+        const approved = (reqData.requests  || []).filter(r => r.status === 'APPROVED').length;
+        const computed = (credData.credits  || []).length;
+        const applied  = (credData.credits  || []).filter(c => c.status === 'APPLIED').length;
+
+        document.getElementById('leaveStatPending').textContent  = pending;
+        document.getElementById('leaveStatApproved').textContent = approved;
+        document.getElementById('leaveStatCredits').textContent  = computed;
+        document.getElementById('leaveStatApplied').textContent  = applied;
+    } catch (e) {
+        console.error('Error loading leave stats:', e);
+    }
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────────
+function switchLeaveTab(tab) {
+    activeLeaveTab = tab;
+
+    document.querySelectorAll('.leave-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.leave-panel').forEach(panel => panel.classList.remove('active'));
+
+    document.getElementById(`leaveTab_${tab}`).classList.add('active');
+    document.getElementById(`leavePanel_${tab}`).classList.add('active');
+
+    if (tab === 'requests') loadLeaveRequests();
+    else loadCreditRecords();
+}
+
+// ── Leave Requests ────────────────────────────────────────────────────
+async function loadLeaveRequests() {
+    const status = document.getElementById('leaveFilterStatus').value;
+    const month  = document.getElementById('leaveFilterMonth').value;
+
+    let url = `${API_BASE}/leave/requests?`;
+    if (status) url += `status=${status}&`;
+    if (month)  url += `month=${month}&`;
+
+    const tbody = document.getElementById('leaveRequestsBody');
+    tbody.innerHTML = '<tr><td colspan="10" class="text-center">Loading…</td></tr>';
+
+    try {
+        const res  = await fetch(url);
+        const data = await res.json();
+        const rows = data.requests || [];
+
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center">No leave requests found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = rows.map(r => {
+            const statusClass = r.status === 'APPROVED' ? 'leave-status-approved'
+                              : r.status === 'REJECTED' ? 'leave-status-rejected'
+                              : 'leave-status-pending';
+
+            const typeLabel = r.is_half_day
+                ? `<span class="badge badge-warning">½ ${r.half_day_meal || ''}</span>`
+                : `<span class="badge badge-success">Full</span>`;
+
+            const actions = r.status === 'PENDING' ? `
+                <div style="display:flex;gap:0.4rem;">
+                    <button class="btn-success" style="padding:4px 10px;font-size:0.9rem;"
+                        onclick="approveLeave(${r.id})">✓ Approve</button>
+                    <button class="btn-danger" style="padding:4px 10px;font-size:0.9rem;"
+                        onclick="rejectLeave(${r.id})">✗ Reject</button>
+                    <button class="btn-secondary" style="padding:4px 8px;font-size:0.85rem;"
+                        onclick="deleteLeave(${r.id})">🗑</button>
+                </div>` : '—';
+
+            return `
+                <tr>
+                    <td>${r.id}</td>
+                    <td>
+                        <strong>${r.student_id}</strong>
+                        ${r.student_name ? `<br><small style="color:var(--text-secondary)">${r.student_name}</small>` : ''}
+                    </td>
+                    <td>${r.from_date}</td>
+                    <td>${r.to_date}</td>
+                    <td><strong>${r.total_days}</strong></td>
+                    <td>${typeLabel}</td>
+                    <td>${r.month}</td>
+                    <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.reason || ''}">${r.reason || '—'}</td>
+                    <td><span class="leave-status-badge ${statusClass}">${r.status}</span></td>
+                    <td>${actions}</td>
+                </tr>
+            `;
+        }).join('');
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center" style="color:red">Error: ${err.message}</td></tr>`;
+    }
+}
+
+async function approveLeave(id) {
+    if (!confirm(`Approve leave request #${id}?`)) return;
+    try {
+        const res  = await fetch(`${API_BASE}/leave/requests/${id}/approve`, { method: 'PUT' });
+        const data = await res.json();
+        if (res.ok) {
+            showLeaveToast(`✅ Approved! ${data.days_credited} day(s) → credit month: ${data.credit_month}`);
+            loadLeaveRequests();
+            loadLeaveStats();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (err) { alert('Error: ' + err.message); }
+}
+
+async function rejectLeave(id) {
+    if (!confirm(`Reject leave request #${id}?`)) return;
+    try {
+        const res = await fetch(`${API_BASE}/leave/requests/${id}/reject`, { method: 'PUT' });
+        if (res.ok) {
+            showLeaveToast('❌ Request rejected.');
+            loadLeaveRequests();
+            loadLeaveStats();
+        } else {
+            const d = await res.json();
+            alert('Error: ' + d.error);
+        }
+    } catch (err) { alert('Error: ' + err.message); }
+}
+
+async function deleteLeave(id) {
+    if (!confirm(`Delete pending request #${id}?`)) return;
+    try {
+        const res = await fetch(`${API_BASE}/leave/requests/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            showLeaveToast('🗑 Request deleted.');
+            loadLeaveRequests();
+            loadLeaveStats();
+        } else {
+            const d = await res.json();
+            alert('Error: ' + d.error);
+        }
+    } catch (err) { alert('Error: ' + err.message); }
+}
+
+// ── Credit Records ────────────────────────────────────────────────────
+async function loadCreditRecords() {
+    const month  = document.getElementById('creditFilterMonth').value;
+    const status = document.getElementById('creditFilterStatus').value;
+
+    let url = `${API_BASE}/leave/credits?`;
+    if (month)  url += `month=${month}&`;
+    if (status) url += `status=${status}&`;
+
+    const tbody = document.getElementById('creditRecordsBody');
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading…</td></tr>';
+
+    try {
+        const res  = await fetch(url);
+        const data = await res.json();
+        const rows = data.credits || [];
+
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No credit records found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = rows.map(r => {
+            const srcBadgeClass = r.source === 'manual' ? 'badge-warning'
+                                : r.source === 'merged' ? 'badge-success'
+                                : '';
+            const statusClass = r.status === 'APPLIED' ? 'leave-status-approved' : 'leave-status-pending';
+
+            return `
+                <tr>
+                    <td>
+                        <strong>${r.student_id}</strong>
+                        ${r.student_name ? `<br><small style="color:var(--text-secondary)">${r.student_name}</small>` : ''}
+                    </td>
+                    <td>${r.leave_month}</td>
+                    <td>${r.credit_month}</td>
+                    <td class="leave-credit-days">${r.absent_days}</td>
+                    <td class="leave-credit-days" style="color:var(--success);">${r.credit_days}</td>
+                    <td><span class="badge ${srcBadgeClass}" style="text-transform:uppercase;">${r.source}</span></td>
+                    <td><span class="leave-status-badge ${statusClass}">${r.status}</span></td>
+                </tr>
+            `;
+        }).join('');
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color:red">Error: ${err.message}</td></tr>`;
+    }
+}
+
+// ── Leave Request Modal ───────────────────────────────────────────────
+function showLeaveRequestModal() {
+    document.getElementById('leaveRequestForm').reset();
+    document.getElementById('halfDayMealGroup').style.display = 'none';
+    document.getElementById('leaveDayPreview').style.display  = 'none';
+    document.getElementById('leaveRequestModal').classList.add('active');
+}
+
+function closeLeaveRequestModal() {
+    document.getElementById('leaveRequestModal').classList.remove('active');
+}
+
+function toggleHalfDayMeal() {
+    const isHalfDay = document.getElementById('leaveIsHalfDay').checked;
+    document.getElementById('halfDayMealGroup').style.display = isHalfDay ? 'block' : 'none';
+    updateLeaveDayPreview();
+}
+
+function updateLeaveDayPreview() {
+    const from = document.getElementById('leaveFromDate').value;
+    const to   = document.getElementById('leaveToDate').value;
+    const isHD = document.getElementById('leaveIsHalfDay').checked;
+    const prev = document.getElementById('leaveDayPreview');
+
+    if (!from || !to) { prev.style.display = 'none'; return; }
+
+    let totalDays;
+    if (isHD) {
+        totalDays = 0.5;
+    } else {
+        const ms    = new Date(to) - new Date(from);
+        totalDays   = Math.round(ms / 86400000) + 1;
+    }
+
+    const qualifies = totalDays >= 4;
+    prev.style.display = 'block';
+    prev.className = `leave-day-preview ${qualifies ? 'preview-qualifies' : 'preview-pending'}`;
+    prev.innerHTML = `
+        <span>📅 ${totalDays} day(s)</span>
+        <span>${qualifies ? '✅ Qualifies for credit (≥ 4 days)' : `⚠️ ${(4 - totalDays).toFixed(1)} more day(s) needed`}</span>
+    `;
+}
+
+async function submitLeaveRequest(event) {
+    event.preventDefault();
+    const student_id    = document.getElementById('leaveStudentId').value.trim();
+    const from_date     = document.getElementById('leaveFromDate').value;
+    const to_date       = document.getElementById('leaveToDate').value;
+    const is_half_day   = document.getElementById('leaveIsHalfDay').checked;
+    const half_day_meal = document.getElementById('leaveHalfDayMeal').value;
+    const reason        = document.getElementById('leaveReason').value.trim();
+
+    try {
+        const res  = await fetch(`${API_BASE}/leave/request`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ student_id, from_date, to_date, is_half_day, half_day_meal, reason }),
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            closeLeaveRequestModal();
+            showLeaveToast(`✅ Leave submitted! ${data.total_days} day(s) — ${data.month} — PENDING`);
+            loadLeaveRequests();
+            loadLeaveStats();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (err) { alert('Error: ' + err.message); }
+}
+
+// ── Compute Modal ─────────────────────────────────────────────────────
+function showComputeModal() {
+    const today = new Date();
+    const ym    = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    document.getElementById('computeMonth').value  = ym;
+    document.getElementById('computeResult').innerHTML = '';
+    document.getElementById('computeModal').classList.add('active');
+}
+
+function closeComputeModal() {
+    document.getElementById('computeModal').classList.remove('active');
+}
+
+async function triggerCompute(mode) {
+    const ym     = document.getElementById('computeMonth').value;
+    const result = document.getElementById('computeResult');
+
+    if (!ym) { alert('Please select a month first.'); return; }
+
+    result.innerHTML = `<div class="compute-loading">⏳ Computing…</div>`;
+
+    try {
+        const url = `${API_BASE}/leave/credits/compute${mode === 'auto' ? '' : '-' + mode}/${ym}`;
+        const res  = await fetch(url, { method: 'POST' });
+        const data = await res.json();
+
+        if (res.ok) {
+            const list = (data.students || []).map(s =>
+                `<li><strong>${s.student_id}</strong> — ${s.absent_days} absent day(s) → ${s.credit_days} credit(s) <span class="badge">${s.source}</span></li>`
+            ).join('');
+
+            result.innerHTML = `
+                <div class="compute-result-box success">
+                    <p>✅ <strong>${data.mode ? data.mode.toUpperCase() : mode.toUpperCase()}</strong> computation done for <strong>${ym}</strong></p>
+                    <p>Credit Month: <strong>${data.credit_month}</strong> &nbsp;|&nbsp; Saved: <strong>${data.saved}</strong></p>
+                    ${list ? `<ul style="margin-top:0.5rem;">${list}</ul>` : '<p>No students qualified.</p>'}
+                </div>
+            `;
+            loadLeaveStats();
+            if (activeLeaveTab === 'credits') loadCreditRecords();
+        } else {
+            result.innerHTML = `<div class="compute-result-box error">❌ ${data.error}</div>`;
+        }
+    } catch (err) {
+        result.innerHTML = `<div class="compute-result-box error">❌ ${err.message}</div>`;
+    }
+}
+
+async function triggerApply() {
+    const ym     = document.getElementById('computeMonth').value;
+    const result = document.getElementById('computeResult');
+
+    if (!ym) { alert('Please select a month first.'); return; }
+
+    if (!confirm(`Apply all PENDING credits for credit_month ${ym}? This marks them as APPLIED.`)) return;
+
+    result.innerHTML = `<div class="compute-loading">⏳ Applying…</div>`;
+
+    try {
+        const res  = await fetch(`${API_BASE}/leave/credits/apply/${ym}`, { method: 'POST' });
+        const data = await res.json();
+
+        if (res.ok) {
+            result.innerHTML = `
+                <div class="compute-result-box success">
+                    ✅ Applied <strong>${data.applied}</strong> credit record(s) for credit_month <strong>${ym}</strong>.
+                </div>
+            `;
+            loadLeaveStats();
+            if (activeLeaveTab === 'credits') loadCreditRecords();
+        } else {
+            result.innerHTML = `<div class="compute-result-box error">❌ ${data.error}</div>`;
+        }
+    } catch (err) {
+        result.innerHTML = `<div class="compute-result-box error">❌ ${err.message}</div>`;
+    }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────
+function showLeaveToast(msg) {
+    let toast = document.getElementById('leaveToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'leaveToast';
+        toast.className = 'leave-toast';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+// ── Wire up date fields to live preview ───────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    ['leaveFromDate', 'leaveToDate'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', updateLeaveDayPreview);
+    });
+});
