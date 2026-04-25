@@ -45,6 +45,32 @@ router.get('/', (req, res) => {
     });
 });
 
+// SEARCH students by ID or Name
+router.get('/search', (req, res) => {
+    const db = getDatabase();
+    const query = req.query.q;
+
+    if (!query) {
+        db.close();
+        return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    const sql = `
+        SELECT * FROM students 
+        WHERE student_id = ? OR name LIKE ? OR student_department LIKE ?
+        LIMIT 10
+    `;
+    const searchTerm = `%${query}%`;
+
+    db.all(sql, [query, searchTerm, searchTerm], (err, rows) => {
+        db.close();
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ students: rows });
+    });
+});
+
 // GET single student
 router.get('/:id', (req, res) => {
     const db = getDatabase();

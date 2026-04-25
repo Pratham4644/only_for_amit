@@ -572,11 +572,17 @@ tbody tr:hover {
     font-weight: 700;
 }
 
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18.75rem, 1fr));
+    gap: 1.5rem;
+}
+
 .timing-card {
     background: #f9f9f9;
     padding: 1.5625rem;
     border-radius: 0.75rem;
-    margin-bottom: 1.25rem;
+    height: 100%;
 }
 
 .timing-card h3 {

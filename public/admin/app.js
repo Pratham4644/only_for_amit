@@ -61,6 +61,9 @@ function loadPageData(pageName) {
         case 'leave':
             initLeavePage();
             break;
+        case 'profile':
+            document.getElementById('profileSearchInput').focus();
+            break;
     }
 }
 
@@ -662,6 +665,11 @@ function exportExcel() {
 
 // Settings
 async function loadSettings() {
+    loadMealTimings();
+    loadMealPrices();
+}
+
+async function loadMealTimings() {
     try {
         const response = await fetch(`${API_BASE}/settings/meal-timings`);
         const data = await response.json();
@@ -738,6 +746,68 @@ async function loadSettings() {
         window.to24Hour = to24Hour;
     } catch (error) {
         console.error('Error loading settings:', error);
+    }
+}
+
+async function loadMealPrices() {
+    try {
+        const response = await fetch(`${API_BASE}/settings/meal-prices`);
+        const data = await response.json();
+
+        const container = document.getElementById('mealPricesContainer');
+        container.innerHTML = '';
+
+        if (!data.meal_prices || data.meal_prices.length === 0) {
+            container.innerHTML = '<p>No meal prices defined</p>';
+            return;
+        }
+
+        data.meal_prices.forEach(item => {
+            const planLabel = item.meal_plan.replace('_', ' ');
+            const card = `
+                <div class="timing-card">
+                    <h3 style="text-transform: capitalize;">${planLabel.toLowerCase()}</h3>
+                    <div class="timing-fields">
+                        <div class="form-group" style="display: flex; gap: 10px; align-items: flex-end;">
+                            <div style="flex: 1;">
+                                <label>Price (₹)</label>
+                                <input type="number" id="priceInput_${item.meal_plan}" value="${item.price}">
+                            </div>
+                            <button class="btn-primary" style="padding: 10px 20px; font-size: 1rem; height: 53px;" 
+                                    onclick="updateMealPrice('${item.meal_plan}', document.getElementById('priceInput_${item.meal_plan}').value)">
+                                Update
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += card;
+        });
+
+    } catch (error) {
+        console.error('Error loading meal prices:', error);
+    }
+}
+
+async function updateMealPrice(mealPlan, price) {
+    try {
+        const response = await fetch(`${API_BASE}/settings/meal-prices/${mealPlan}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ price: parseInt(price) })
+        });
+
+        if (response.ok) {
+            alert(`Price for ${mealPlan} updated successfully`);
+        } else {
+            const data = await response.json();
+            alert('Error updating price: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error updating meal price:', error);
+        alert('Error updating meal price');
     }
 }
 
@@ -1343,3 +1413,117 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.addEventListener('change', updateLeaveDayPreview);
     });
 });
+
+// ==========================================
+// Deep Student Profile Feature
+// ==========================================
+
+async function searchStudentProfile() {
+    const searchInput = document.getElementById('profileSearchInput').value.trim();
+    if (!searchInput) {
+        alert('Please enter a Student ID to search');
+        return;
+    }
+
+    const contentContainer = document.getElementById('profileContentContainer');
+    const errorContainer = document.getElementById('profileErrorContainer');
+
+    // Reset UI
+    contentContainer.style.display = 'none';
+    errorContainer.style.display = 'none';
+
+    try {
+        // Use the new search endpoint
+        const searchRes = await fetch(`${API_BASE}/students/search?q=${encodeURIComponent(searchInput)}`);
+        const searchData = await searchRes.json();
+
+        if (!searchRes.ok || !searchData.students || searchData.students.length === 0) {
+            errorContainer.style.display = 'block';
+            return;
+        }
+
+        // Use the first student found
+        const student = searchData.students[0];
+        const studentId = student.student_id;
+
+        // Fetch QR Code
+        const qrRes = await fetch(`${API_BASE}/students/${studentId}/qr`);
+        const qrData = await qrRes.json();
+
+        // Fetch Attendance History
+        const historyRes = await fetch(`${API_BASE}/attendance/student/${studentId}`);
+        const historyData = await historyRes.json();
+
+        // Populate UI
+        document.getElementById('profileName').textContent = student.name;
+        document.getElementById('profileStudentId').textContent = student.student_id;
+        document.getElementById('profileDept').textContent = student.student_department;
+        document.getElementById('profilePhone').textContent = student.phone_number || 'N/A';
+        
+        const mealPlanLabel = student.meal_plan ? student.meal_plan.replace('_', ' ') : 'FULL';
+        document.getElementById('profileMealPlan').textContent = mealPlanLabel;
+
+        const photoImg = document.getElementById('profilePhoto');
+        if (student.photo_path) {
+            photoImg.src = '/' + student.photo_path.replace(/\\/g, '/');
+        } else {
+            photoImg.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23e0e4ff'/><text x='50' y='50' font-family='Arial' font-size='40' fill='%236c5ce7' text-anchor='middle' dy='.3em'>👤</text></svg>";
+        }
+
+        const statusBadge = document.getElementById('profileStatusBadge');
+        if (student.active) {
+            statusBadge.className = 'badge badge-success';
+            statusBadge.textContent = 'Active';
+        } else {
+            statusBadge.className = 'badge badge-danger';
+            statusBadge.textContent = 'Inactive';
+        }
+
+        const qrImg = document.getElementById('profileQrCode');
+        const qrPlaceholder = document.getElementById('profileQrPlaceholder');
+        if (qrRes.ok && qrData.qr_code) {
+            qrImg.src = qrData.qr_code;
+            qrImg.style.display = 'block';
+            qrPlaceholder.style.display = 'none';
+        } else {
+            qrImg.style.display = 'none';
+            qrPlaceholder.style.display = 'block';
+        }
+
+        // Populate History
+        const tbody = document.getElementById('profileHistoryBody');
+        tbody.innerHTML = '';
+
+        if (!historyRes.ok || !historyData.history || historyData.history.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">No recent attendance found.</td></tr>';
+        } else {
+            historyData.history.forEach(record => {
+                const statusClass = record.is_late ? 'status-late' : 'status-present';
+                const statusIcon = record.is_late ? '!' : '✓';
+                const mealBadgeClass = record.meal_type === 'LUNCH' ? 'badge-warning' : 'badge-success';
+                
+                const row = `
+                    <tr>
+                        <td>${record.date}</td>
+                        <td><span class="badge ${mealBadgeClass}">${record.meal_type}</span></td>
+                        <td>${record.scan_time || '-'}</td>
+                        <td>
+                            <div class="status-badge ${statusClass}">
+                                <div class="status-dot">${statusIcon}</div>
+                                <span>${record.status}</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        contentContainer.style.display = 'block';
+
+    } catch (error) {
+        console.error('Error fetching profile data:', error);
+        alert('Failed to load profile details. See console for errors.');
+    }
+}
+

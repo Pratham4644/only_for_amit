@@ -76,3 +76,16 @@ INSERT OR IGNORE INTO settings (key, value) VALUES
 ('system_name', 'Mess Attendance System'),
 ('duplicate_prevention', 'true'),
 ('show_late_warnings', 'true');
+
+-- Meal prices configuration
+CREATE TABLE IF NOT EXISTS meal_prices (
+    meal_plan TEXT PRIMARY KEY, -- FULL, LUNCH_ONLY, DINNER_ONLY
+    price INTEGER NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert default meal prices
+INSERT OR IGNORE INTO meal_prices (meal_plan, price) VALUES
+('FULL', 2500),
+('LUNCH_ONLY', 1500),
+('DINNER_ONLY', 1600);

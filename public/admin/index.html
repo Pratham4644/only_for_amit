@@ -39,6 +39,10 @@
                     <span class="icon">⚙️</span>
                     <span>Settings</span>
                 </a>
+                <a href="#profile" class="nav-item" data-page="profile">
+                    <span class="icon">👤</span>
+                    <span>Profile</span>
+                </a>
             </nav>
             <div class="sidebar-footer">
                 <a href="/counter" class="btn-counter" target="_blank">
@@ -394,6 +398,80 @@
                 <div class="settings-section">
                     <h2>Meal Timings</h2>
                     <div id="mealTimingsContainer"></div>
+                </div>
+
+                <div class="settings-section">
+                    <h2>Meal Prices (Monthly)</h2>
+                    <div id="mealPricesContainer" class="settings-grid"></div>
+                </div>
+            </div>
+
+            <!-- Profile Page -->
+            <div id="page-profile" class="page">
+                <header class="page-header">
+                    <h1>Profile</h1>
+                </header>
+
+                <div class="search-bar" style="margin-bottom: 2rem;">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="profileSearchInput" placeholder="Search by Student ID or Name..." style="flex: 1;" onkeypress="if(event.key === 'Enter') searchStudentProfile()">
+                        <button class="btn-primary" onclick="searchStudentProfile()">Search</button>
+                    </div>
+                </div>
+
+                <div id="profileContentContainer" style="display: none;">
+                    <div class="profile-header" style="display: flex; align-items: center; gap: 20px; background: var(--white); padding: 2rem; border-radius: 24px; box-shadow: var(--card-shadow);">
+                        <div class="profile-avatar">
+                            <img id="profilePhoto" src="" alt="Student" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23e0e4ff\\'/><text x=\\'50\\' y=\\'50\\' font-family=\\'Arial\\' font-size=\\'40\\' fill=\\'%236c5ce7\\' text-anchor=\\'middle\\' dy=\\'.3em\\'>👤</text></svg>'" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #e0e4ff;">
+                        </div>
+                        <div class="profile-title">
+                            <h2 id="profileName" style="font-size: 2.5rem; color: #2d3436; margin-bottom: 5px;">-</h2>
+                            <p class="student-id" style="color: #6c5ce7; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px;">ID: <span id="profileStudentId">-</span></p>
+                            <span id="profileStatusBadge" class="badge badge-success">Active</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-grid" style="margin-top: 2rem;">
+                        <div class="timing-card">
+                            <h3>Student Details</h3>
+                            <div style="font-size: 1.2rem; line-height: 1.8;">
+                                <p><strong>Department:</strong> <span id="profileDept">-</span></p>
+                                <p><strong>Phone:</strong> <span id="profilePhone">-</span></p>
+                                <p><strong>Meal Plan:</strong> <span id="profileMealPlan" class="badge badge-warning">-</span></p>
+                            </div>
+                        </div>
+                        <div class="timing-card" style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                            <h3>QR Code</h3>
+                            <img id="profileQrCode" src="" alt="QR Code" style="max-width: 150px; display: none; margin: 10px auto;">
+                            <p id="profileQrPlaceholder" style="color: #999;">No QR generated</p>
+                        </div>
+                    </div>
+
+                    <div class="recent-activity" style="margin-top: 2rem;">
+                        <h2>Recent Attendance (Last 30 Days)</h2>
+                        <div class="table-container">
+                            <table id="profileHistoryTable">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Meal Type</th>
+                                        <th>Scan Time</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="profileHistoryBody">
+                                    <tr>
+                                        <td colspan="4" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="profileErrorContainer" style="display: none; background: #fff0f0; border: 2px solid #ffebeb; padding: 2rem; border-radius: 15px; color: #d63031; text-align: center; margin-top: 20px;">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 10px;">Student Not Found</h3>
+                    <p>Please check the Student ID and try again.</p>
                 </div>
             </div>
         </main>

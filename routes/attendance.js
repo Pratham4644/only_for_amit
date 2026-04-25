@@ -461,4 +461,38 @@ router.get('/export-excel', async (req, res) => {
     });
 });
 
+// GET student specific attendance history (last 30 days)
+router.get('/student/:id', (req, res) => {
+    const studentId = req.params.id;
+    const db = getDatabase();
+
+    // Fetch the last 30 records for this student
+    const query = `
+        SELECT *
+        FROM attendance
+        WHERE student_id = ?
+        ORDER BY date DESC, scan_time DESC
+        LIMIT 30
+    `;
+
+    db.all(query, [studentId], (err, rows) => {
+        db.close();
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        
+        // Add status field for consistency
+        const processedRows = rows.map(row => ({
+            ...row,
+            status: row.is_late ? 'Late' : 'Present'
+        }));
+
+        res.json({
+            student_id: studentId,
+            history: processedRows,
+            count: rows.length
+        });
+    });
+});
+
 module.exports = router;

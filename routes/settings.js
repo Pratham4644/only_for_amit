@@ -118,4 +118,58 @@ router.put('/:key', (req, res) => {
     });
 });
 
+// GET meal prices
+router.get('/meal-prices', (req, res) => {
+    const db = getDatabase();
+
+    db.all('SELECT * FROM meal_prices', [], (err, rows) => {
+        db.close();
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ meal_prices: rows });
+    });
+});
+
+// PUT update meal price
+router.put('/meal-prices/:meal_plan', (req, res) => {
+    const meal_plan = req.params.meal_plan;
+    const { price } = req.body;
+
+    if (price === undefined) {
+        return res.status(400).json({ error: 'Price is required' });
+    }
+
+    const db = getDatabase();
+
+    const query = `
+        UPDATE meal_prices 
+        SET price = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE meal_plan = ?
+    `;
+
+    db.run(query, [price, meal_plan], function (err) {
+        if (err) {
+            db.close();
+            return res.status(500).json({ error: err.message });
+        }
+
+        if (this.changes === 0) {
+            db.close();
+            return res.status(404).json({ error: 'Meal plan not found' });
+        }
+
+        db.get('SELECT * FROM meal_prices WHERE meal_plan = ?', [meal_plan], (err, row) => {
+            db.close();
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            res.json({
+                message: 'Meal price updated successfully',
+                meal_price: row
+            });
+        });
+    });
+});
+
 module.exports = router;
