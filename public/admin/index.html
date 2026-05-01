@@ -39,6 +39,14 @@
                     <span class="icon">₹</span>
                     <span>Payments</span>
                 </a>
+                <a href="#profiles" class="nav-item" data-page="profiles">
+                    <span class="icon">👤</span>
+                    <span>Profiles</span>
+                </a>
+                <a href="/counter" class="nav-item" target="_blank">
+                    <span class="icon">📷</span>
+                    <span>QR Scanner</span>
+                </a>
                 <a href="#settings" class="nav-item" data-page="settings">
                     <span class="icon">⚙️</span>
                     <span>Settings</span>
@@ -398,6 +406,19 @@
                 </div>
             </div>
 
+            <!-- Profiles Page -->
+            <div id="page-profiles" class="page">
+                <header class="page-header">
+                    <h1>Student Profiles</h1>
+                </header>
+                <div class="search-bar" style="margin-bottom: 1.5rem;">
+                    <input type="text" id="profileSearch" placeholder="Search profiles by name, ID, phone..." onkeyup="filterProfilesGrid()">
+                </div>
+                <div id="profilesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                    <!-- Profile cards generated via JS -->
+                </div>
+            </div>
+
             <!-- Settings Page -->
             <div id="page-settings" class="page">
                 <header class="page-header">
@@ -585,43 +606,72 @@
         </div>
     </div>
 
-    <!-- Student Payment Details Modal -->
-    <div id="studentPaymentModal" class="modal">
+    <!-- Student Profile & Payment Modal -->
+    <div id="studentProfileModal" class="modal">
         <div class="modal-content pay-student-modal-content">
-            <span class="close" onclick="closeStudentPaymentModal()">×</span>
+            <span class="close" onclick="closeStudentProfileModal()">×</span>
             <div class="pay-modal-header">
-                <div>
-                    <h2 id="payModalStudentName">Student</h2>
-                    <p id="payModalStudentMeta" style="color:var(--text-secondary);font-size:1rem;"></p>
+                <div style="display:flex; gap:1.5rem; align-items:center;">
+                    <div id="profileModalPhoto" style="width: 80px; height: 80px; border-radius: 50%; background-color: var(--border-color); display:flex; align-items:center; justify-content:center; font-size: 2.5rem; color: var(--text-secondary); overflow:hidden;">👤</div>
+                    <div>
+                        <h2 id="payModalStudentName">Student</h2>
+                        <p id="payModalStudentMeta" style="color:var(--text-secondary);font-size:1rem;"></p>
+                    </div>
                 </div>
                 <div class="pay-balance-chip" id="payBalanceChip">Loading…</div>
             </div>
 
-            <!-- Balance Summary -->
-            <div class="pay-balance-cards" id="payBalanceCards">
-                <div class="pay-bal-card">
-                    <div class="pay-bal-label">Total Billed</div>
-                    <div class="pay-bal-val" id="payTotalBilled">—</div>
-                </div>
-                <div class="pay-bal-card">
-                    <div class="pay-bal-label">Total Paid</div>
-                    <div class="pay-bal-val" id="payTotalPaid">—</div>
-                </div>
-                <div class="pay-bal-card pay-bal-card-balance">
-                    <div class="pay-bal-label">Balance</div>
-                    <div class="pay-bal-val" id="payBalance">—</div>
-                </div>
+            <!-- Tabs -->
+            <div class="pay-modal-tabs" style="flex-wrap: wrap;">
+                <button class="pay-modal-tab active" id="pmtab_overview" onclick="switchProfileTab('overview')">ℹ️ Overview</button>
+                <button class="pay-modal-tab" id="pmtab_addpay" onclick="switchProfileTab('addpay')">➕ Add Payment</button>
+                <button class="pay-modal-tab" id="pmtab_bills" onclick="switchProfileTab('bills')">🧾 Bills</button>
+                <button class="pay-modal-tab" id="pmtab_history" onclick="switchProfileTab('history')">📋 Payment History</button>
             </div>
 
-            <!-- Tabs -->
-            <div class="pay-modal-tabs">
-                <button class="pay-modal-tab active" id="pmtab_addpay" onclick="switchPayTab('addpay')">➕ Add Payment</button>
-                <button class="pay-modal-tab" id="pmtab_bills" onclick="switchPayTab('bills')">🧾 Bills</button>
-                <button class="pay-modal-tab" id="pmtab_history" onclick="switchPayTab('history')">📋 Payment History</button>
+            <!-- Tab: Overview -->
+            <div id="payTab_overview" class="pay-modal-tab-panel active">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                     <!-- Info card -->
+                     <div class="pay-gen-bill-box" style="margin:0;">
+                         <h3 style="margin-bottom:1rem; border-bottom:1px solid #e0e4ff; padding-bottom:0.5rem;">Student Details</h3>
+                         <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                             <p><strong>Phone:</strong> <span id="profPhone">—</span></p>
+                             <p><strong>Department:</strong> <span id="profDept">—</span></p>
+                             <p><strong>Meal Plan:</strong> <span id="profPlan">—</span></p>
+                             <p><strong>Joined:</strong> <span id="profJoined">—</span></p>
+                             <p><strong>Status:</strong> <span id="profStatus">—</span></p>
+                         </div>
+                     </div>
+                     <!-- QR Card -->
+                     <div class="pay-gen-bill-box" style="margin:0; text-align:center;">
+                         <h3 style="margin-bottom:1rem; border-bottom:1px solid #e0e4ff; padding-bottom:0.5rem;">QR Code</h3>
+                         <div id="profQRCode" style="display:inline-block; padding:0.5rem; background:#fff; border-radius:8px;"></div>
+                         <div style="margin-top:0.5rem;">
+                             <button class="btn-primary" onclick="downloadProfileQR()" style="padding:0.4rem 1rem; font-size:0.9rem;">⬇️ Download</button>
+                         </div>
+                     </div>
+                </div>
+
+                <!-- Balance Summary -->
+                <div class="pay-balance-cards" id="payBalanceCards">
+                    <div class="pay-bal-card">
+                        <div class="pay-bal-label">Total Billed</div>
+                        <div class="pay-bal-val" id="payTotalBilled">—</div>
+                    </div>
+                    <div class="pay-bal-card">
+                        <div class="pay-bal-label">Total Paid</div>
+                        <div class="pay-bal-val" id="payTotalPaid">—</div>
+                    </div>
+                    <div class="pay-bal-card pay-bal-card-balance">
+                        <div class="pay-bal-label">Balance</div>
+                        <div class="pay-bal-val" id="payBalance">—</div>
+                    </div>
+                </div>
             </div>
 
             <!-- Tab: Add Payment -->
-            <div id="payTab_addpay" class="pay-modal-tab-panel active">
+            <div id="payTab_addpay" class="pay-modal-tab-panel">
                 <form id="addPaymentForm" onsubmit="submitAddPayment(event)">
                     <div class="form-group">
                         <label>Date of Payment *</label>

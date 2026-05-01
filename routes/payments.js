@@ -150,6 +150,10 @@ router.post('/bills/generate', (req, res) => {
     if (absent_days < 0) {
         return res.status(400).json({ success: false, error: 'INVALID_ABSENT_DAYS', message: 'absent_days must be >= 0' });
     }
+    // absent_days must be in 0.5 increments (half-days allowed)
+    if ((absent_days * 2) % 1 !== 0) {
+        return res.status(400).json({ success: false, error: 'INVALID_ABSENT_DAYS', message: 'absent_days must be in 0.5 increments' });
+    }
 
     const db = getDatabase();
 
@@ -161,16 +165,24 @@ router.post('/bills/generate', (req, res) => {
             if (err2) { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err2.message }); }
             if (!fee) { db.close(); return res.status(404).json({ success: false, error: 'FEE_NOT_FOUND', message: `No fee settings found for plan ${student.meal_plan}` }); }
 
-            const totalDays = daysInMonth(month);
+            const totalDays = daysInMonth(month);  // actual calendar days (28/30/31)
             const baseFee   = fee.monthly_fee;
             const threshold = fee.vacation_threshold_days;
 
+            /*
+             * BILL CALCULATION LOGIC:
+             *   per_day_rate = base_fee / total_days_in_month
+             *   IF absent_days > threshold (STRICT >):
+             *       deduction = round(per_day_rate × absent_days, 2)
+             *   ELSE: deduction = 0 (student pays full fee)
+             *   final_bill = max(0, base_fee - deduction)
+             */
             let deduction = 0;
             if (absent_days > threshold) {
                 const perDay = baseFee / totalDays;
                 deduction = Math.round(perDay * absent_days * 100) / 100;
             }
-            const finalBill = Math.round((baseFee - deduction) * 100) / 100;
+            const finalBill = Math.max(0, Math.round((baseFee - deduction) * 100) / 100);
 
             db.run(
                 `INSERT INTO monthly_bills

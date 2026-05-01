@@ -1378,12 +1378,13 @@ function initPaymentsPage() {
     loadUnpaidSummary();
 }
 
-// ── Patch loadPageData to handle 'payments' ────────────────────────────
+// ── Patch loadPageData to handle 'payments' & 'profiles' ──────────────────
 (function () {
     const _orig = window.loadPageData;
     window.loadPageData = function (pageName) {
         _orig(pageName);
         if (pageName === 'payments') initPaymentsPage();
+        if (pageName === 'profiles') loadProfiles();
     };
 })();
 
@@ -1494,7 +1495,7 @@ async function loadUnpaidWidget() {
                 ? fmt(s.balance)
                 : (s.current_month_bill ? fmt(-s.current_month_bill) : '—');
             return `
-                <div class="unpaid-widget-row" onclick="openStudentPaymentModalDirect('${s.student_id}','${s.name.replace(/'/g,"\\'")}')">
+                <div class="unpaid-widget-row" onclick="openStudentProfile('${s.student_id}','${s.name.replace(/'/g,"\\'")}')">
                     <span class="uw-name">${s.name}</span>
                     <span class="uw-plan">${s.meal_plan}</span>
                     <span class="uw-balance">${balText}</span>
@@ -1538,7 +1539,7 @@ async function loadUnpaidSummary() {
                     <td><span class="pay-status-badge ${statusClass}">${s.status}</span></td>
                     <td>
                         <button class="btn-primary" style="padding:0.4rem 1rem;font-size:0.95rem;"
-                            onclick="openStudentPaymentModalDirect('${s.student_id}','${s.name.replace(/'/g,"\\'")}')">
+                            onclick="openStudentProfile('${s.student_id}','${s.name.replace(/'/g,"\\'")}')">
                             Open Account
                         </button>
                     </td>
@@ -1551,7 +1552,7 @@ async function loadUnpaidSummary() {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// STUDENT PAYMENT MODAL — Open / Close / Tabs
+// STUDENT PROFILE & PAYMENT MODAL — Open / Close / Tabs
 // ─────────────────────────────────────────────────────────────────────
 
 function openPayStudentSearch() {
@@ -1568,10 +1569,10 @@ async function openStudentPaymentModal() {
     const sid = document.getElementById('paySearchStudentId').value.trim();
     if (!sid) { alert('Please enter a student ID'); return; }
     closePayStudentSearch();
-    await openStudentPaymentModalDirect(sid);
+    await openStudentProfile(sid);
 }
 
-async function openStudentPaymentModalDirect(sid, name = '') {
+async function openStudentProfile(sid, name = '') {
     _payStudentId   = sid;
     _payStudentName = name || sid;
 
@@ -1580,9 +1581,18 @@ async function openStudentPaymentModalDirect(sid, name = '') {
     document.getElementById('payModalStudentMeta').textContent = `ID: ${sid}`;
     document.getElementById('payBalanceChip').textContent = 'Loading…';
     document.getElementById('payBalanceChip').className = 'pay-balance-chip';
+    
+    // Overview defaults
+    document.getElementById('profPhone').textContent = '—';
+    document.getElementById('profDept').textContent = '—';
+    document.getElementById('profPlan').textContent = '—';
+    document.getElementById('profJoined').textContent = '—';
+    document.getElementById('profStatus').textContent = '—';
+    document.getElementById('profQRCode').innerHTML = '';
+    document.getElementById('profileModalPhoto').innerHTML = '👤';
 
-    // Reset to first tab
-    switchPayTab('addpay');
+    // Reset to first tab (overview)
+    switchProfileTab('overview');
 
     // Set today's date in payment form
     document.getElementById('payDate').value = new Date().toISOString().split('T')[0];
@@ -1596,34 +1606,49 @@ async function openStudentPaymentModalDirect(sid, name = '') {
     document.getElementById('genBillAbsent').value = '0';
     document.getElementById('genBillNotes').value = '';
 
-    document.getElementById('studentPaymentModal').classList.add('active');
+    document.getElementById('studentProfileModal').classList.add('active');
 
-    // Fetch student name if not provided
-    if (!name) {
-        try {
-            const sRes  = await fetch(`${API_BASE}/students/${sid}`);
-            const sData = await sRes.json();
-            if (sData.student) {
-                _payStudentName = sData.student.name;
-                document.getElementById('payModalStudentName').textContent = _payStudentName;
-                document.getElementById('payModalStudentMeta').textContent =
-                    `ID: ${sid} · ${sData.student.meal_plan} · ${sData.student.student_department || ''}`;
+    // Fetch full student details
+    try {
+        const sRes  = await fetch(`${API_BASE}/students/${sid}`);
+        const sData = await sRes.json();
+        if (sData.student) {
+            const st = sData.student;
+            _payStudentName = st.name;
+            document.getElementById('payModalStudentName').textContent = _payStudentName;
+            document.getElementById('payModalStudentMeta').textContent =
+                `ID: ${sid} · ${st.meal_plan} · ${st.student_department || ''}`;
+                
+            document.getElementById('profPhone').textContent = st.phone_number || 'N/A';
+            document.getElementById('profDept').textContent = st.student_department || 'N/A';
+            document.getElementById('profPlan').textContent = st.meal_plan || 'N/A';
+            document.getElementById('profJoined').textContent = new Date(st.created_at).toLocaleDateString('en-IN');
+            document.getElementById('profStatus').innerHTML = st.active ? '<span style="color:#00b894;font-weight:bold;">Active</span>' : '<span style="color:#d63031;font-weight:bold;">Inactive</span>';
+            
+            if (st.photo_path) {
+                document.getElementById('profileModalPhoto').innerHTML = `<img src="/uploads/photos/${st.photo_path.split(/\\|\//).pop()}" style="width:100%; height:100%; object-fit:cover;">`;
             }
-        } catch (_) {}
+            
+            // Generate QR
+            const qrUrl = `${API_BASE}/students/${sid}/qr`;
+            document.getElementById('profQRCode').innerHTML = `<img src="${qrUrl}" alt="QR Code" style="max-width:150px;">`;
+        }
+    } catch (e) {
+        console.error('Error fetching student profile:', e);
     }
 
-    // Load balance + first tab data
+    // Load balance + bills
     await refreshPayBalance();
     loadStudentBills();
 }
 
-function closeStudentPaymentModal() {
-    document.getElementById('studentPaymentModal').classList.remove('active');
+function closeStudentProfileModal() {
+    document.getElementById('studentProfileModal').classList.remove('active');
     _payStudentId   = null;
     _payStudentName = '';
 }
 
-function switchPayTab(tab) {
+function switchProfileTab(tab) {
     document.querySelectorAll('.pay-modal-tab').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.pay-modal-tab-panel').forEach(p => p.classList.remove('active'));
     document.getElementById(`pmtab_${tab}`).classList.add('active');
@@ -1631,6 +1656,16 @@ function switchPayTab(tab) {
 
     if (tab === 'bills')   loadStudentBills();
     if (tab === 'history') loadPaymentHistory();
+}
+
+function downloadProfileQR() {
+    if (!_payStudentId) return;
+    const a = document.createElement('a');
+    a.href = `${API_BASE}/students/${_payStudentId}/qr?download=true`;
+    a.download = `QR_${_payStudentId}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -1830,3 +1865,70 @@ async function deletePaymentRecord(id) {
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// PROFILES PAGE LOGIC
+// ─────────────────────────────────────────────────────────────────────
+
+async function loadProfiles() {
+    const grid = document.getElementById('profilesGrid');
+    if (!grid) return;
+    grid.innerHTML = '<p class="text-center" style="grid-column: 1 / -1; color: var(--text-secondary);">Loading profiles...</p>';
+
+    try {
+        const response = await fetch(`${API_BASE}/students`);
+        const data = await response.json();
+        
+        if (data.students.length === 0) {
+            grid.innerHTML = '<p class="text-center" style="grid-column: 1 / -1;">No students found</p>';
+            return;
+        }
+
+        grid.innerHTML = data.students.map(st => {
+            const statusClass = st.active ? 'badge-success' : 'badge-danger';
+            const statusText = st.active ? 'Active' : 'Inactive';
+            const photoSrc = st.photo_path ? `/uploads/photos/${st.photo_path.split(/\\|\//).pop()}` : '';
+            const photoEl = photoSrc 
+                ? `<img src="${photoSrc}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">`
+                : `<div style="width: 60px; height: 60px; border-radius: 50%; background: #e0e4ff; color: #6c5ce7; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">${st.name.charAt(0).toUpperCase()}</div>`;
+            
+            return `
+                <div class="profile-card" data-search="${(st.name + ' ' + st.student_id + ' ' + (st.phone_number || '')).toLowerCase()}" onclick="openStudentProfile('${st.student_id}', '${st.name.replace(/'/g,"\\'")}')" style="background: var(--white); border-radius: 12px; padding: 1.5rem; box-shadow: var(--card-shadow); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 1rem;">
+                    ${photoEl}
+                    <div style="flex: 1; min-width: 0;">
+                        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.2rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${st.name}</h3>
+                        <p style="margin: 0 0 0.25rem 0; color: var(--text-secondary); font-size: 0.9rem;">ID: ${st.student_id} • <span class="badge ${statusClass}" style="font-size: 0.7rem; padding: 2px 6px;">${statusText}</span></p>
+                        <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem;"><span class="badge badge-warning" style="background:#f8f9ff; color:var(--accent-purple); font-size:0.75rem;">${st.meal_plan}</span></p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Add hover effect via JS since inline hover is tricky
+        document.querySelectorAll('.profile-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-3px)';
+                card.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'none';
+                card.style.boxShadow = 'var(--card-shadow)';
+            });
+        });
+        
+    } catch (error) {
+        grid.innerHTML = `<p class="text-center" style="grid-column: 1 / -1; color: red;">Error: ${error.message}</p>`;
+    }
+}
+
+function filterProfilesGrid() {
+    const searchValue = document.getElementById('profileSearch').value.toLowerCase();
+    const cards = document.querySelectorAll('.profile-card');
+    cards.forEach(card => {
+        const text = card.getAttribute('data-search');
+        if (text.includes(searchValue)) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
