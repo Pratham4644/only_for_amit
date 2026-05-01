@@ -1343,3 +1343,490 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.addEventListener('change', updateLeaveDayPreview);
     });
 });
+
+// ====================================================================
+// PAYMENTS MODULE
+// ====================================================================
+
+// ── State ─────────────────────────────────────────────────────────────
+let _payStudentId   = null;   // currently open student in payment modal
+let _payStudentName = '';
+
+// ── Helper: toast (reuse the leave toast element) ─────────────────────
+function showPayToast(msg, isError = false) {
+    let toast = document.getElementById('leaveToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'leaveToast';
+        toast.className = 'leave-toast';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.style.background = isError ? '#d63031' : '#2d3436';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+// ── Helper: format rupees ──────────────────────────────────────────────
+function fmt(n) {
+    return '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ── Init payments page ─────────────────────────────────────────────────
+function initPaymentsPage() {
+    loadFeeSettings();
+    loadUnpaidSummary();
+}
+
+// ── Patch loadPageData to handle 'payments' ────────────────────────────
+(function () {
+    const _orig = window.loadPageData;
+    window.loadPageData = function (pageName) {
+        _orig(pageName);
+        if (pageName === 'payments') initPaymentsPage();
+    };
+})();
+
+// ── Also load unpaid widget on dashboard load ──────────────────────────
+(function () {
+    const _origDash = window.loadDashboard;
+    window.loadDashboard = async function () {
+        await _origDash();
+        loadUnpaidWidget();
+    };
+})();
+
+// ─────────────────────────────────────────────────────────────────────
+// FEE SETTINGS
+// ─────────────────────────────────────────────────────────────────────
+
+async function loadFeeSettings() {
+    const tbody = document.getElementById('feeSettingsBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="3" class="text-center">Loading…</td></tr>';
+    try {
+        const res  = await fetch(`${API_BASE}/payments/fee-settings`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        const planLabels = { FULL: 'Full (Lunch + Dinner)', LUNCH_ONLY: 'Lunch Only', DINNER_ONLY: 'Dinner Only' };
+
+        tbody.innerHTML = (data.data || []).map(row => `
+            <tr>
+                <td><strong>${planLabels[row.meal_plan] || row.meal_plan}</strong></td>
+                <td><input class="fee-input" type="number" min="1" step="0.01"
+                        id="fee_${row.meal_plan}" value="${row.monthly_fee}"></td>
+                <td><input class="fee-input" type="number" min="0" step="1"
+                        id="thresh_${row.meal_plan}" value="${row.vacation_threshold_days}"></td>
+            </tr>
+        `).join('');
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center" style="color:red;">Error: ${e.message}</td></tr>`;
+    }
+}
+
+async function saveFeeSettings() {
+    const plans = ['FULL', 'LUNCH_ONLY', 'DINNER_ONLY'];
+    const payload = [];
+
+    for (const p of plans) {
+        const feeEl    = document.getElementById(`fee_${p}`);
+        const threshEl = document.getElementById(`thresh_${p}`);
+        if (!feeEl || !threshEl) continue;
+        payload.push({
+            meal_plan:               p,
+            monthly_fee:             parseFloat(feeEl.value),
+            vacation_threshold_days: parseInt(threshEl.value, 10),
+        });
+    }
+
+    try {
+        const res  = await fetch(`${API_BASE}/payments/fee-settings`, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+        showPayToast('✅ Fee settings saved!');
+        loadFeeSettings();
+    } catch (e) {
+        showPayToast('❌ ' + e.message, true);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// UNPAID WIDGET (Dashboard)
+// ─────────────────────────────────────────────────────────────────────
+
+async function loadUnpaidWidget() {
+    const body  = document.getElementById('unpaidWidgetBody');
+    const badge = document.getElementById('unpaidCountBadge');
+    if (!body) return;
+
+    body.innerHTML = '<p class="text-center" style="color:var(--text-secondary);">Loading…</p>';
+
+    try {
+        const res  = await fetch(`${API_BASE}/payments/unpaid-current-month`);
+        const data = await res.json();
+
+        if (!data.success) throw new Error(data.message);
+
+        const list = data.data || [];
+
+        if (badge) {
+            if (list.length > 0) {
+                badge.textContent = `${list.length} pending`;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        if (list.length === 0) {
+            body.innerHTML = '<p style="color:#00b894;font-weight:700;">✅ All students paid for this month!</p>';
+            return;
+        }
+
+        body.innerHTML = list.map(s => {
+            const statusClass = s.status === 'DUE' ? 'pay-status-due' : 'pay-status-nobill';
+            const balText = s.status === 'DUE'
+                ? fmt(s.balance)
+                : (s.current_month_bill ? fmt(-s.current_month_bill) : '—');
+            return `
+                <div class="unpaid-widget-row" onclick="openStudentPaymentModalDirect('${s.student_id}','${s.name.replace(/'/g,"\\'")}')">
+                    <span class="uw-name">${s.name}</span>
+                    <span class="uw-plan">${s.meal_plan}</span>
+                    <span class="uw-balance">${balText}</span>
+                    <span class="pay-status-badge ${statusClass}">${s.status}</span>
+                </div>
+            `;
+        }).join('');
+    } catch (e) {
+        body.innerHTML = `<p style="color:red;">Error loading unpaid students: ${e.message}</p>`;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// UNPAID SUMMARY (Payments Page)
+// ─────────────────────────────────────────────────────────────────────
+
+async function loadUnpaidSummary() {
+    const tbody = document.getElementById('unpaidSummaryBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading…</td></tr>';
+
+    try {
+        const res  = await fetch(`${API_BASE}/payments/unpaid-current-month`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        const list = data.data || [];
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="color:#00b894;font-weight:700;">✅ All students paid for this month!</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = list.map(s => {
+            const statusClass = s.status === 'DUE' ? 'pay-status-due' : 'pay-status-nobill';
+            return `
+                <tr>
+                    <td><strong>${s.name}</strong><br><small style="color:var(--text-secondary);">${s.student_id}</small></td>
+                    <td><span class="badge badge-warning" style="background:#e0e4ff;color:#6c5ce7;">${s.meal_plan}</span></td>
+                    <td>${s.current_month_bill != null ? fmt(s.current_month_bill) : '—'}</td>
+                    <td style="color:${s.balance < 0 ? '#d63031' : '#636e72'};font-weight:700;">${fmt(s.balance)}</td>
+                    <td><span class="pay-status-badge ${statusClass}">${s.status}</span></td>
+                    <td>
+                        <button class="btn-primary" style="padding:0.4rem 1rem;font-size:0.95rem;"
+                            onclick="openStudentPaymentModalDirect('${s.student_id}','${s.name.replace(/'/g,"\\'")}')">
+                            Open Account
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="color:red;">Error: ${e.message}</td></tr>`;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// STUDENT PAYMENT MODAL — Open / Close / Tabs
+// ─────────────────────────────────────────────────────────────────────
+
+function openPayStudentSearch() {
+    document.getElementById('paySearchStudentId').value = '';
+    document.getElementById('payStudentSearchModal').classList.add('active');
+    setTimeout(() => document.getElementById('paySearchStudentId').focus(), 100);
+}
+
+function closePayStudentSearch() {
+    document.getElementById('payStudentSearchModal').classList.remove('active');
+}
+
+async function openStudentPaymentModal() {
+    const sid = document.getElementById('paySearchStudentId').value.trim();
+    if (!sid) { alert('Please enter a student ID'); return; }
+    closePayStudentSearch();
+    await openStudentPaymentModalDirect(sid);
+}
+
+async function openStudentPaymentModalDirect(sid, name = '') {
+    _payStudentId   = sid;
+    _payStudentName = name || sid;
+
+    // Set defaults
+    document.getElementById('payModalStudentName').textContent = _payStudentName;
+    document.getElementById('payModalStudentMeta').textContent = `ID: ${sid}`;
+    document.getElementById('payBalanceChip').textContent = 'Loading…';
+    document.getElementById('payBalanceChip').className = 'pay-balance-chip';
+
+    // Reset to first tab
+    switchPayTab('addpay');
+
+    // Set today's date in payment form
+    document.getElementById('payDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('payAmount').value = '';
+    document.getElementById('payNote').value = '';
+
+    // Set default month in bill generator
+    const today = new Date();
+    document.getElementById('genBillMonth').value =
+        `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    document.getElementById('genBillAbsent').value = '0';
+    document.getElementById('genBillNotes').value = '';
+
+    document.getElementById('studentPaymentModal').classList.add('active');
+
+    // Fetch student name if not provided
+    if (!name) {
+        try {
+            const sRes  = await fetch(`${API_BASE}/students/${sid}`);
+            const sData = await sRes.json();
+            if (sData.student) {
+                _payStudentName = sData.student.name;
+                document.getElementById('payModalStudentName').textContent = _payStudentName;
+                document.getElementById('payModalStudentMeta').textContent =
+                    `ID: ${sid} · ${sData.student.meal_plan} · ${sData.student.student_department || ''}`;
+            }
+        } catch (_) {}
+    }
+
+    // Load balance + first tab data
+    await refreshPayBalance();
+    loadStudentBills();
+}
+
+function closeStudentPaymentModal() {
+    document.getElementById('studentPaymentModal').classList.remove('active');
+    _payStudentId   = null;
+    _payStudentName = '';
+}
+
+function switchPayTab(tab) {
+    document.querySelectorAll('.pay-modal-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.pay-modal-tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`pmtab_${tab}`).classList.add('active');
+    document.getElementById(`payTab_${tab}`).classList.add('active');
+
+    if (tab === 'bills')   loadStudentBills();
+    if (tab === 'history') loadPaymentHistory();
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// BALANCE SUMMARY
+// ─────────────────────────────────────────────────────────────────────
+
+async function refreshPayBalance() {
+    if (!_payStudentId) return;
+    try {
+        const res  = await fetch(`${API_BASE}/payments/balance/${_payStudentId}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+        const d = data.data;
+
+        document.getElementById('payTotalBilled').textContent = fmt(d.total_billed);
+        document.getElementById('payTotalPaid').textContent   = fmt(d.total_paid);
+
+        const balEl = document.getElementById('payBalance');
+        balEl.textContent = fmt(d.balance);
+        balEl.className   = 'pay-bal-val ' +
+            (d.status === 'DUE' ? 'val-due' : d.status === 'ADVANCE' ? 'val-advance' : 'val-settled');
+
+        const chip = document.getElementById('payBalanceChip');
+        const chipMap = { DUE: 'chip-due', ADVANCE: 'chip-advance', SETTLED: 'chip-settled' };
+        chip.className   = 'pay-balance-chip ' + (chipMap[d.status] || '');
+        chip.textContent = d.status === 'DUE'
+            ? `Owes ${fmt(-d.balance)}`
+            : d.status === 'ADVANCE'
+            ? `Advance ${fmt(d.balance)}`
+            : 'Settled ✓';
+    } catch (e) {
+        document.getElementById('payBalanceChip').textContent = 'Error';
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// ADD PAYMENT
+// ─────────────────────────────────────────────────────────────────────
+
+async function submitAddPayment(event) {
+    event.preventDefault();
+    if (!_payStudentId) return;
+
+    const btn = document.getElementById('submitPayBtn');
+    btn.disabled = true;
+    btn.textContent = 'Recording…';
+
+    const payload = {
+        student_id:     _payStudentId,
+        payment_date:   document.getElementById('payDate').value,
+        amount:         parseFloat(document.getElementById('payAmount').value),
+        payment_mode:   document.getElementById('payMode').value,
+        reference_note: document.getElementById('payNote').value.trim() || undefined,
+    };
+
+    try {
+        const res  = await fetch(`${API_BASE}/payments/add`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        showPayToast(`✅ Payment of ${fmt(data.data.amount)} recorded!`);
+        document.getElementById('addPaymentForm').reset();
+        document.getElementById('payDate').value = new Date().toISOString().split('T')[0];
+        await refreshPayBalance();
+        loadUnpaidWidget();
+        loadUnpaidSummary();
+    } catch (e) {
+        showPayToast('❌ ' + e.message, true);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '✅ Record Payment';
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// BILLS
+// ─────────────────────────────────────────────────────────────────────
+
+async function loadStudentBills() {
+    const tbody = document.getElementById('studentBillsBody');
+    if (!tbody || !_payStudentId) return;
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading…</td></tr>';
+
+    try {
+        const res  = await fetch(`${API_BASE}/payments/bills/${_payStudentId}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        const rows = data.data || [];
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No bills generated yet.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = rows.map(b => `
+            <tr>
+                <td><strong>${b.month}</strong></td>
+                <td><span class="badge badge-warning" style="background:#e0e4ff;color:#6c5ce7;">${b.meal_plan}</span></td>
+                <td>${fmt(b.base_fee)}</td>
+                <td>${b.absent_days}</td>
+                <td style="color:${b.deduction > 0 ? '#d63031' : '#636e72'};">${fmt(b.deduction)}</td>
+                <td><strong>${fmt(b.final_bill)}</strong></td>
+                <td style="max-width:10rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${b.notes || ''}">${b.notes || '—'}</td>
+            </tr>
+        `).join('');
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color:red;">Error: ${e.message}</td></tr>`;
+    }
+}
+
+async function generateStudentBill() {
+    if (!_payStudentId) return;
+
+    const month       = document.getElementById('genBillMonth').value;
+    const absent_days = parseFloat(document.getElementById('genBillAbsent').value) || 0;
+    const notes       = document.getElementById('genBillNotes').value.trim();
+
+    if (!month) { alert('Please select a month.'); return; }
+
+    try {
+        const res  = await fetch(`${API_BASE}/payments/bills/generate`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ student_id: _payStudentId, month, absent_days, notes: notes || undefined }),
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        const b = data.data;
+        showPayToast(`✅ Bill generated for ${month}: ${fmt(b.final_bill)}`);
+        loadStudentBills();
+        await refreshPayBalance();
+        loadUnpaidWidget();
+        loadUnpaidSummary();
+    } catch (e) {
+        showPayToast('❌ ' + e.message, true);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// PAYMENT HISTORY
+// ─────────────────────────────────────────────────────────────────────
+
+async function loadPaymentHistory() {
+    const tbody = document.getElementById('payHistoryBody');
+    if (!tbody || !_payStudentId) return;
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading…</td></tr>';
+
+    try {
+        const res  = await fetch(`${API_BASE}/payments/history/${_payStudentId}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        const rows = data.data || [];
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No payments recorded yet.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = rows.map(p => `
+            <tr>
+                <td>${p.payment_date}</td>
+                <td><strong style="color:#00b894;">${fmt(p.amount)}</strong></td>
+                <td><span class="badge badge-success">${p.payment_mode}</span></td>
+                <td style="max-width:12rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.reference_note || ''}">${p.reference_note || '—'}</td>
+                <td style="color:var(--text-secondary);font-size:0.9rem;">${new Date(p.recorded_at).toLocaleDateString('en-IN')}</td>
+                <td>
+                    <button class="btn-danger" style="padding:0.3rem 0.8rem;font-size:0.9rem;"
+                        onclick="deletePaymentRecord(${p.id})">🗑</button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="color:red;">Error: ${e.message}</td></tr>`;
+    }
+}
+
+async function deletePaymentRecord(id) {
+    if (!confirm('Delete this payment record? This cannot be undone.')) return;
+
+    try {
+        const res  = await fetch(`${API_BASE}/payments/record/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        showPayToast('🗑 Payment record deleted.');
+        loadPaymentHistory();
+        await refreshPayBalance();
+        loadUnpaidWidget();
+        loadUnpaidSummary();
+    } catch (e) {
+        showPayToast('❌ ' + e.message, true);
+    }
+}
+

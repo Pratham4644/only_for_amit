@@ -76,3 +76,59 @@ INSERT OR IGNORE INTO settings (key, value) VALUES
 ('system_name', 'Mess Attendance System'),
 ('duplicate_prevention', 'true'),
 ('show_late_warnings', 'true');
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PAYMENT TRACKING SYSTEM
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- Fee settings: monthly fee per meal plan and vacation threshold
+CREATE TABLE IF NOT EXISTS fee_settings (
+    meal_plan TEXT PRIMARY KEY,                  -- 'FULL', 'LUNCH_ONLY', 'DINNER_ONLY'
+    monthly_fee REAL NOT NULL,                   -- fee in rupees (e.g. 3000.00)
+    vacation_threshold_days INTEGER DEFAULT 6,   -- If absent_days > threshold → deduct; else 0
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO fee_settings (meal_plan, monthly_fee, vacation_threshold_days) VALUES
+    ('FULL',         3000, 6),
+    ('LUNCH_ONLY',   1800, 6),
+    ('DINNER_ONLY',  1500, 6);
+
+-- Monthly bills: one row per student per month
+CREATE TABLE IF NOT EXISTS monthly_bills (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id TEXT NOT NULL,
+    month TEXT NOT NULL,                          -- 'YYYY-MM'
+    meal_plan TEXT NOT NULL,                      -- snapshot of plan at billing time
+    base_fee REAL NOT NULL,                       -- fee_settings.monthly_fee at billing time
+    total_days_in_month INTEGER NOT NULL,         -- e.g. 31 for May
+    absent_days REAL NOT NULL DEFAULT 0,          -- can be 0.5 increments
+    vacation_threshold_days INTEGER NOT NULL,
+    deduction REAL NOT NULL DEFAULT 0,
+    -- IF absent_days > vacation_threshold_days:
+    --     deduction = round((base_fee / total_days_in_month) * absent_days, 2)
+    -- ELSE: deduction = 0
+    final_bill REAL NOT NULL,                     -- base_fee - deduction
+    notes TEXT,
+    generated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(student_id),
+    UNIQUE(student_id, month)
+);
+
+-- Payment records: every individual payment made by a student
+CREATE TABLE IF NOT EXISTS payment_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id TEXT NOT NULL,
+    payment_date DATE NOT NULL,                   -- 'YYYY-MM-DD'
+    amount REAL NOT NULL,                         -- amount paid in rupees
+    payment_mode TEXT NOT NULL,                   -- 'CASH', 'UPI', 'BANK_TRANSFER', 'OTHER'
+    reference_note TEXT,                          -- optional UPI ref, cheque no, or any note
+    recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(student_id)
+);
+
+-- Indexes for payment tables
+CREATE INDEX IF NOT EXISTS idx_monthly_bills_student ON monthly_bills(student_id);
+CREATE INDEX IF NOT EXISTS idx_monthly_bills_month   ON monthly_bills(month);
+CREATE INDEX IF NOT EXISTS idx_payment_records_student ON payment_records(student_id);
+CREATE INDEX IF NOT EXISTS idx_payment_records_date    ON payment_records(payment_date);

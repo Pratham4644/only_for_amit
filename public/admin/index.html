@@ -35,6 +35,10 @@
                     <span class="icon">🗓️</span>
                     <span>Leave Credits</span>
                 </a>
+                <a href="#payments" class="nav-item" data-page="payments">
+                    <span class="icon">₹</span>
+                    <span>Payments</span>
+                </a>
                 <a href="#settings" class="nav-item" data-page="settings">
                     <span class="icon">⚙️</span>
                     <span>Settings</span>
@@ -94,6 +98,15 @@
                         <div class="meal-name" id="currentMealDash">-</div>
                         <div class="meal-time" id="currentMealTime"></div>
                     </div>
+                </div>
+
+                <!-- Pending Payments Widget -->
+                <div class="unpaid-widget" id="unpaidWidget">
+                    <div class="unpaid-widget-header">
+                        <span>⚠️ Pending Payments — Current Month</span>
+                        <span class="unpaid-count-badge" id="unpaidCountBadge" style="display:none;"></span>
+                    </div>
+                    <div id="unpaidWidgetBody"><p class="text-center" style="color:var(--text-secondary);">Loading…</p></div>
                 </div>
 
                 <div class="recent-activity">
@@ -396,7 +409,74 @@
                     <div id="mealTimingsContainer"></div>
                 </div>
             </div>
+
+            <!-- Payments Page -->
+            <div id="page-payments" class="page">
+                <header class="page-header">
+                    <h1>💰 Payments</h1>
+                    <button class="btn-primary" onclick="openPayStudentSearch()">🔍 Open Student Account</button>
+                </header>
+
+                <!-- Fee Settings Card -->
+                <div class="pay-section-card">
+                    <div class="pay-section-header">
+                        <h2>⚙️ Fee Settings</h2>
+                        <button class="btn-primary" style="padding:0.6rem 1.4rem;font-size:1rem;" onclick="saveFeeSettings()">💾 Save All</button>
+                    </div>
+                    <div class="table-container" style="margin-top:1rem;">
+                        <table id="feeSettingsTable">
+                            <thead><tr>
+                                <th>Meal Plan</th>
+                                <th>Monthly Fee (₹)</th>
+                                <th>Vacation Threshold Days</th>
+                            </tr></thead>
+                            <tbody id="feeSettingsBody">
+                                <tr><td colspan="3" class="text-center">Loading…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Unpaid Summary Card -->
+                <div class="pay-section-card" style="margin-top:1.5rem;">
+                    <div class="pay-section-header">
+                        <h2>⚠️ Pending Payments — Current Month</h2>
+                        <button class="btn-secondary" style="padding:0.6rem 1.2rem;font-size:1rem;" onclick="loadUnpaidSummary()">🔄 Refresh</button>
+                    </div>
+                    <div class="table-container" style="margin-top:1rem;">
+                        <table id="unpaidSummaryTable">
+                            <thead><tr>
+                                <th>Student</th>
+                                <th>Meal Plan</th>
+                                <th>This Month's Bill (₹)</th>
+                                <th>Balance (₹)</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr></thead>
+                            <tbody id="unpaidSummaryBody">
+                                <tr><td colspan="6" class="text-center">Loading…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </main>
+
+        <!-- Student Payment Modal -->
+        <div id="payStudentSearchModal" class="modal">
+            <div class="modal-content" style="max-width:28rem;">
+                <span class="close" onclick="closePayStudentSearch()">×</span>
+                <h2>🔍 Open Student Account</h2>
+                <div class="form-group">
+                    <label>Student ID</label>
+                    <input type="text" id="paySearchStudentId" placeholder="e.g. 101" onkeydown="if(event.key==='Enter') openStudentPaymentModal()">
+                </div>
+                <div class="form-actions">
+                    <button class="btn-primary" onclick="openStudentPaymentModal()">Open Account</button>
+                    <button class="btn-secondary" onclick="closePayStudentSearch()">Cancel</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Add Student Modal -->
@@ -502,6 +582,131 @@
                 <button class="btn-success" style="width:100%;margin-top:0.5rem;" onclick="triggerApply()">💰 Apply Credits to Next Month</button>
             </div>
             <div id="computeResult" style="margin-top:1.5rem;"></div>
+        </div>
+    </div>
+
+    <!-- Student Payment Details Modal -->
+    <div id="studentPaymentModal" class="modal">
+        <div class="modal-content pay-student-modal-content">
+            <span class="close" onclick="closeStudentPaymentModal()">×</span>
+            <div class="pay-modal-header">
+                <div>
+                    <h2 id="payModalStudentName">Student</h2>
+                    <p id="payModalStudentMeta" style="color:var(--text-secondary);font-size:1rem;"></p>
+                </div>
+                <div class="pay-balance-chip" id="payBalanceChip">Loading…</div>
+            </div>
+
+            <!-- Balance Summary -->
+            <div class="pay-balance-cards" id="payBalanceCards">
+                <div class="pay-bal-card">
+                    <div class="pay-bal-label">Total Billed</div>
+                    <div class="pay-bal-val" id="payTotalBilled">—</div>
+                </div>
+                <div class="pay-bal-card">
+                    <div class="pay-bal-label">Total Paid</div>
+                    <div class="pay-bal-val" id="payTotalPaid">—</div>
+                </div>
+                <div class="pay-bal-card pay-bal-card-balance">
+                    <div class="pay-bal-label">Balance</div>
+                    <div class="pay-bal-val" id="payBalance">—</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="pay-modal-tabs">
+                <button class="pay-modal-tab active" id="pmtab_addpay" onclick="switchPayTab('addpay')">➕ Add Payment</button>
+                <button class="pay-modal-tab" id="pmtab_bills" onclick="switchPayTab('bills')">🧾 Bills</button>
+                <button class="pay-modal-tab" id="pmtab_history" onclick="switchPayTab('history')">📋 Payment History</button>
+            </div>
+
+            <!-- Tab: Add Payment -->
+            <div id="payTab_addpay" class="pay-modal-tab-panel active">
+                <form id="addPaymentForm" onsubmit="submitAddPayment(event)">
+                    <div class="form-group">
+                        <label>Date of Payment *</label>
+                        <input type="date" id="payDate" name="payment_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (₹) *</label>
+                        <input type="number" id="payAmount" name="amount" min="1" step="0.01" placeholder="e.g. 3000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Mode *</label>
+                        <select id="payMode" name="payment_mode" required>
+                            <option value="CASH">💵 Cash</option>
+                            <option value="UPI">📱 UPI</option>
+                            <option value="BANK_TRANSFER">🏦 Bank Transfer</option>
+                            <option value="OTHER">🔄 Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Note / Reference (optional)</label>
+                        <input type="text" id="payNote" name="reference_note" placeholder="e.g. UPI ref 123456 or 2 months advance">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary" id="submitPayBtn">✅ Record Payment</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tab: Bills -->
+            <div id="payTab_bills" class="pay-modal-tab-panel">
+                <!-- Generate Bill Form -->
+                <div class="pay-gen-bill-box">
+                    <h3 style="margin-bottom:0.8rem;">+ Generate / Update Bill</h3>
+                    <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;">
+                        <div class="form-group" style="margin:0;flex:1;min-width:10rem;">
+                            <label>Month</label>
+                            <input type="month" id="genBillMonth">
+                        </div>
+                        <div class="form-group" style="margin:0;flex:1;min-width:9rem;">
+                            <label>Absent Days</label>
+                            <input type="number" id="genBillAbsent" min="0" step="0.5" value="0" placeholder="0">
+                        </div>
+                        <div class="form-group" style="margin:0;flex:2;min-width:12rem;">
+                            <label>Notes (optional)</label>
+                            <input type="text" id="genBillNotes" placeholder="Any note…">
+                        </div>
+                        <button class="btn-primary" style="padding:0.75rem 1.2rem;" onclick="generateStudentBill()">Generate</button>
+                    </div>
+                </div>
+                <div class="table-container" style="margin-top:1rem;overflow-x:auto;">
+                    <table id="studentBillsTable">
+                        <thead><tr>
+                            <th>Month</th>
+                            <th>Plan</th>
+                            <th>Base Fee (₹)</th>
+                            <th>Absent Days</th>
+                            <th>Deduction (₹)</th>
+                            <th>Final Bill (₹)</th>
+                            <th>Notes</th>
+                        </tr></thead>
+                        <tbody id="studentBillsBody">
+                            <tr><td colspan="7" class="text-center">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Payment History -->
+            <div id="payTab_history" class="pay-modal-tab-panel">
+                <div class="table-container" style="overflow-x:auto;">
+                    <table id="payHistoryTable">
+                        <thead><tr>
+                            <th>Date</th>
+                            <th>Amount (₹)</th>
+                            <th>Mode</th>
+                            <th>Note</th>
+                            <th>Recorded</th>
+                            <th>Delete</th>
+                        </tr></thead>
+                        <tbody id="payHistoryBody">
+                            <tr><td colspan="6" class="text-center">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
