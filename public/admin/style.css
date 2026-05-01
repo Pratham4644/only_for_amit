@@ -1242,4 +1242,298 @@ tbody tr:hover {
     .compute-actions {
         grid-template-columns: 1fr;
     }
-}
+}
+
+/* ============================================================
+   PAYMENT TRACKING MODULE
+   ============================================================ */
+
+/* ── Dashboard Unpaid Widget ───────────────────────────────── */
+.unpaid-widget {
+    background: var(--white);
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
+    border-left: 5px solid #fdcb6e;
+}
+
+.unpaid-widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #b8860b;
+    margin-bottom: 1rem;
+}
+
+.unpaid-count-badge {
+    background: #d63031;
+    color: white;
+    border-radius: 20px;
+    padding: 0.25rem 0.85rem;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.unpaid-widget-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 0.9rem;
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.unpaid-widget-row:hover {
+    background: #fef9e7;
+}
+
+.unpaid-widget-row .uw-name {
+    font-weight: 700;
+    color: var(--text-primary);
+    min-width: 10rem;
+}
+
+.unpaid-widget-row .uw-plan {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    min-width: 7rem;
+}
+
+.unpaid-widget-row .uw-balance {
+    font-weight: 700;
+    color: #d63031;
+    min-width: 7rem;
+    text-align: right;
+}
+
+/* ── Payment Page Section Cards ─────────────────────────────── */
+.pay-section-card {
+    background: var(--white);
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    padding: 1.75rem 2rem;
+}
+
+.pay-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.pay-section-header h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* ── Fee Settings inline inputs ─────────────────────────────── */
+.fee-input {
+    padding: 0.5rem 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1.1rem;
+    width: 9rem;
+    text-align: right;
+    transition: border-color 0.2s;
+}
+
+.fee-input:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+}
+
+/* ── Payment Status Badges ──────────────────────────────────── */
+.pay-status-badge {
+    display: inline-block;
+    padding: 0.3rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.pay-status-due {
+    background: #fff0f0;
+    color: #d63031;
+    border: 1.5px solid #ffbcbc;
+}
+
+.pay-status-nobill {
+    background: #fff8e1;
+    color: #d6830a;
+    border: 1.5px solid #ffe066;
+}
+
+.pay-status-settled {
+    background: #e6fffa;
+    color: #00b894;
+    border: 1.5px solid #b2f5ea;
+}
+
+.pay-status-advance {
+    background: #e0e4ff;
+    color: #6c5ce7;
+    border: 1.5px solid #b2b8ff;
+}
+
+/* ── Student Payment Modal ───────────────────────────────────── */
+.pay-student-modal-content {
+    max-width: 56rem !important;
+    width: 95% !important;
+    padding: 2.5rem !important;
+}
+
+.pay-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.pay-modal-header h2 {
+    font-size: 1.75rem;
+    margin-bottom: 0 !important;
+}
+
+/* ── Balance Chip ────────────────────────────────────────────── */
+.pay-balance-chip {
+    padding: 0.5rem 1.25rem;
+    border-radius: 30px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.pay-balance-chip.chip-due      { background: #fff0f0; color: #d63031; border: 2px solid #ffbcbc; }
+.pay-balance-chip.chip-advance  { background: #e0e4ff; color: #6c5ce7; border: 2px solid #b2b8ff; }
+.pay-balance-chip.chip-settled  { background: #e6fffa; color: #00b894; border: 2px solid #b2f5ea; }
+
+/* ── Balance Cards Row ──────────────────────────────────────── */
+.pay-balance-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.pay-bal-card {
+    background: #f8f9ff;
+    border-radius: 14px;
+    padding: 1.1rem 1.4rem;
+    text-align: center;
+    border: 1.5px solid #e0e4ff;
+}
+
+.pay-bal-label {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.4rem;
+}
+
+.pay-bal-val {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--accent-purple);
+}
+
+.pay-bal-card-balance .pay-bal-val.val-due     { color: #d63031; }
+.pay-bal-card-balance .pay-bal-val.val-advance { color: #00b894; }
+.pay-bal-card-balance .pay-bal-val.val-settled { color: #636e72; }
+
+/* ── Payment Modal Tabs ──────────────────────────────────────── */
+.pay-modal-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    background: #f8f9ff;
+    padding: 0.4rem;
+    border-radius: 12px;
+    width: fit-content;
+}
+
+.pay-modal-tab {
+    padding: 0.6rem 1.4rem;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pay-modal-tab:hover {
+    background: #e0e4ff;
+    color: var(--accent-purple);
+}
+
+.pay-modal-tab.active {
+    background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+}
+
+/* ── Tab Panels ──────────────────────────────────────────────── */
+.pay-modal-tab-panel {
+    display: none;
+    animation: fadeIn 0.2s ease;
+}
+
+.pay-modal-tab-panel.active {
+    display: block;
+}
+
+/* ── Generate Bill Box ───────────────────────────────────────── */
+.pay-gen-bill-box {
+    background: #f8f9ff;
+    border: 1.5px solid #e0e4ff;
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.pay-gen-bill-box h3 {
+    font-size: 1.25rem;
+    color: var(--accent-purple);
+    font-weight: 700;
+}
+
+/* ── Responsive tweaks ───────────────────────────────────────── */
+@media (max-width: 48rem) {
+    .pay-balance-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .pay-modal-tabs {
+        width: 100%;
+    }
+
+    .pay-modal-tab {
+        flex: 1;
+        text-align: center;
+        font-size: 0.9rem;
+        padding: 0.5rem 0.5rem;
+    }
+
+    .unpaid-widget-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+

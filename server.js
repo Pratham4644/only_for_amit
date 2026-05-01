@@ -22,6 +22,7 @@ app.use('/api/attendance', require('./routes/attendance'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/reminders', require('./routes/reminders'));
 app.use('/api/leave', require('./routes/leave'));
+app.use('/api/payments', require('./routes/payments'));
 
 // Root route
 app.get('/', (req, res) => {
