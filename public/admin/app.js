@@ -1920,28 +1920,39 @@ async function submitAddPayment(event) {
         loadUnpaidWidget();
         loadUnpaidSummary();
 
-        // Prompt to send WhatsApp receipt
+        // Show WhatsApp Receipt Modal
         const phoneText = document.getElementById('profPhone').textContent;
         if (phoneText && phoneText !== 'N/A' && phoneText.trim() !== '') {
-            const sendWa = confirm(`Payment recorded successfully!\n\nDo you want to send a WhatsApp receipt to ${_payStudentName}?`);
-            if (sendWa) {
-                // Formatting the mode of payment nicely
-                const modes = {
-                    'CASH': 'Cash 💵',
-                    'UPI': 'UPI 📱',
-                    'BANK_TRANSFER': 'Bank Transfer 🏦',
-                    'OTHER': 'Other 🔄'
-                };
-                const modeStr = modes[data.data.payment_mode] || data.data.payment_mode;
-                
-                // Format the date (assuming YYYY-MM-DD from the input)
-                const dateParts = data.data.payment_date.split('-');
-                const formattedDate = dateParts.length === 3 ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : data.data.payment_date;
+            // Formatting the mode of payment nicely
+            const modes = {
+                'CASH': 'Cash 💵',
+                'UPI': 'UPI 📱',
+                'BANK_TRANSFER': 'Bank Transfer 🏦',
+                'OTHER': 'Other 🔄'
+            };
+            const modeStr = modes[data.data.payment_mode] || data.data.payment_mode;
+            
+            // Format the date
+            const dateParts = data.data.payment_date.split('-');
+            const formattedDate = dateParts.length === 3 ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : data.data.payment_date;
 
+            // Populate Modal
+            document.getElementById('waReceiptStudentName').textContent = _payStudentName;
+            document.getElementById('waReceiptAmount').textContent = fmt(data.data.amount);
+            document.getElementById('waReceiptDate').textContent = formattedDate;
+            document.getElementById('waReceiptMode').textContent = modeStr;
+
+            // Set up button click
+            const btnSend = document.getElementById('btnSendWaReceipt');
+            btnSend.onclick = () => {
                 const message = `Hello ${_payStudentName}! 👋\n\nWe have successfully received your payment of *${fmt(data.data.amount)}* on *${formattedDate}* via *${modeStr}*.\n\nThank you!\n- Mess Administration`;
                 const whatsappUrl = `https://wa.me/${phoneText.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
                 window.open(whatsappUrl, '_blank');
-            }
+                closeWhatsappReceiptModal();
+            };
+
+            // Show Modal
+            document.getElementById('whatsappReceiptModal').classList.add('active');
         }
     } catch (e) {
         showPayToast('❌ ' + e.message, true);
@@ -2140,3 +2151,6 @@ function filterProfilesGrid() {
     });
 }
 
+function closeWhatsappReceiptModal() {
+    document.getElementById('whatsappReceiptModal').classList.remove('active');
+}
