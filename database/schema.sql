@@ -77,7 +77,6 @@ INSERT OR IGNORE INTO settings (key, value) VALUES
 ('duplicate_prevention', 'true'),
 ('show_late_warnings', 'true');
 
-<<<<<<< HEAD
 -- Meal prices configuration
 CREATE TABLE IF NOT EXISTS meal_prices (
     meal_plan TEXT PRIMARY KEY, -- FULL, LUNCH_ONLY, DINNER_ONLY
@@ -90,7 +89,6 @@ INSERT OR IGNORE INTO meal_prices (meal_plan, price) VALUES
 ('FULL', 2500),
 ('LUNCH_ONLY', 1500),
 ('DINNER_ONLY', 1600);
-=======
 -- ─────────────────────────────────────────────────────────────────────────────
 -- PAYMENT TRACKING SYSTEM
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -146,4 +144,3 @@ CREATE INDEX IF NOT EXISTS idx_monthly_bills_student ON monthly_bills(student_id
 CREATE INDEX IF NOT EXISTS idx_monthly_bills_month   ON monthly_bills(month);
 CREATE INDEX IF NOT EXISTS idx_payment_records_student ON payment_records(student_id);
 CREATE INDEX IF NOT EXISTS idx_payment_records_date    ON payment_records(payment_date);
->>>>>>> c7621c166fffeabd9ba1e87cb80b86210db18554

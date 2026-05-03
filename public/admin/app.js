@@ -1414,7 +1414,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-<<<<<<< HEAD
 // ==========================================
 // Deep Student Profile Feature
 // ==========================================
@@ -1528,7 +1527,6 @@ async function searchStudentProfile() {
     }
 }
 
-=======
 // ====================================================================
 // PAYMENTS MODULE
 // ====================================================================
@@ -1921,6 +1919,30 @@ async function submitAddPayment(event) {
         await refreshPayBalance();
         loadUnpaidWidget();
         loadUnpaidSummary();
+
+        // Prompt to send WhatsApp receipt
+        const phoneText = document.getElementById('profPhone').textContent;
+        if (phoneText && phoneText !== 'N/A' && phoneText.trim() !== '') {
+            const sendWa = confirm(`Payment recorded successfully!\n\nDo you want to send a WhatsApp receipt to ${_payStudentName}?`);
+            if (sendWa) {
+                // Formatting the mode of payment nicely
+                const modes = {
+                    'CASH': 'Cash 💵',
+                    'UPI': 'UPI 📱',
+                    'BANK_TRANSFER': 'Bank Transfer 🏦',
+                    'OTHER': 'Other 🔄'
+                };
+                const modeStr = modes[data.data.payment_mode] || data.data.payment_mode;
+                
+                // Format the date (assuming YYYY-MM-DD from the input)
+                const dateParts = data.data.payment_date.split('-');
+                const formattedDate = dateParts.length === 3 ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : data.data.payment_date;
+
+                const message = `Hello ${_payStudentName}! 👋\n\nWe have successfully received your payment of *${fmt(data.data.amount)}* on *${formattedDate}* via *${modeStr}*.\n\nThank you!\n- Mess Administration`;
+                const whatsappUrl = `https://wa.me/${phoneText.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+            }
+        }
     } catch (e) {
         showPayToast('❌ ' + e.message, true);
     } finally {
@@ -2117,4 +2139,4 @@ function filterProfilesGrid() {
         }
     });
 }
->>>>>>> c7621c166fffeabd9ba1e87cb80b86210db18554
+
