@@ -1925,10 +1925,10 @@ async function submitAddPayment(event) {
         if (phoneText && phoneText !== 'N/A' && phoneText.trim() !== '') {
             // Formatting the mode of payment nicely
             const modes = {
-                'CASH': 'Cash 💵',
-                'UPI': 'UPI 📱',
-                'BANK_TRANSFER': 'Bank Transfer 🏦',
-                'OTHER': 'Other 🔄'
+                'CASH': 'Cash',
+                'UPI': 'UPI',
+                'BANK_TRANSFER': 'Bank Transfer',
+                'OTHER': 'Other'
             };
             const modeStr = modes[data.data.payment_mode] || data.data.payment_mode;
             
@@ -1945,7 +1945,7 @@ async function submitAddPayment(event) {
             // Set up button click
             const btnSend = document.getElementById('btnSendWaReceipt');
             btnSend.onclick = () => {
-                const message = `Hello ${_payStudentName}! 👋\n\nWe have successfully received your payment of *${fmt(data.data.amount)}* on *${formattedDate}* via *${modeStr}*.\n\nThank you!\n- Mess Administration`;
+                const message = `Dear ${_payStudentName},\n\nThis is a confirmation that we have successfully received your payment of ${fmt(data.data.amount)} on ${formattedDate} via ${modeStr}.\n\nThank you.\n\nRegards,\nBuddy's Kitchen`;
                 const whatsappUrl = `https://wa.me/${phoneText.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
                 window.open(whatsappUrl, '_blank');
                 closeWhatsappReceiptModal();
