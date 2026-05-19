@@ -44,7 +44,6 @@ function initDatabase() {
 
 // Run database migrations
 function runMigrations(db, callback) {
-    // Check if room_number column exists
     db.all("PRAGMA table_info(students)", (err, columns) => {
         if (err) {
             console.error('Error checking table schema:', err);
@@ -54,26 +53,112 @@ function runMigrations(db, callback) {
 
         const hasRoomNumber = columns && columns.some(col => col.name === 'room_number');
         const hasStudentDept = columns && columns.some(col => col.name === 'student_department');
+        const hasJoinDate = columns && columns.some(col => col.name === 'join_date');
+        const hasMessPrice = columns && columns.some(col => col.name === 'mess_price');
 
-        if (hasRoomNumber && !hasStudentDept) {
-            // Migrate room_number to student_department
-            console.log('Migrating room_number to student_department...');
-            db.run('ALTER TABLE students RENAME COLUMN room_number TO student_department', (err) => {
+        // Step 1: Migrate room_number to student_department if needed
+        const migrateRoomNumber = (next) => {
+            if (hasRoomNumber && !hasStudentDept) {
+                console.log('Migrating room_number to student_department...');
+                db.run('ALTER TABLE students RENAME COLUMN room_number TO student_department', (err) => {
+                    if (err) {
+                        console.error('Error migrating column room_number:', err);
+                        next(err);
+                        return;
+                    }
+                    console.log('Migration completed: room_number → student_department');
+                    next(null);
+                });
+            } else {
+                next(null);
+            }
+        };
+
+        // Step 2: Add join_date column if missing
+        const migrateJoinDate = (next) => {
+            if (!hasJoinDate) {
+                console.log('Migrating: Adding join_date column to students table...');
+                db.run('ALTER TABLE students ADD COLUMN join_date TEXT', (err) => {
+                    if (err) {
+                        console.error('Error adding join_date column:', err);
+                        next(err);
+                        return;
+                    }
+                    console.log('Migration completed: join_date column added successfully');
+                    next(null);
+                });
+            } else {
+                next(null);
+            }
+        };
+
+        // Step 3: Add mess_price column if missing
+        const migrateMessPrice = (next) => {
+            if (!hasMessPrice) {
+                console.log('Migrating: Adding mess_price column to students table...');
+                db.run('ALTER TABLE students ADD COLUMN mess_price REAL', (err) => {
+                    if (err) {
+                        console.error('Error adding mess_price column:', err);
+                        next(err);
+                        return;
+                    }
+                    console.log('Migration completed: mess_price column added successfully');
+                    
+                    // Backfill mess_price values based on fee_settings or default plan fallback
+                    console.log('Backfilling default mess_price values for existing students...');
+                    db.run(`
+                        UPDATE students 
+                        SET mess_price = (
+                            SELECT monthly_fee FROM fee_settings 
+                            WHERE fee_settings.meal_plan = students.meal_plan
+                        )
+                        WHERE mess_price IS NULL
+                    `, (err2) => {
+                        if (err2) {
+                            console.error('Warning backfilling mess_price from fee_settings:', err2);
+                        }
+                        
+                        // Perform static fallbacks for safety if subquery returned NULL or fee_settings was missing rows
+                        db.run(`
+                            UPDATE students 
+                            SET mess_price = CASE 
+                                WHEN meal_plan = 'LUNCH_ONLY' THEN 1800.0
+                                WHEN meal_plan = 'DINNER_ONLY' THEN 1500.0
+                                ELSE 3000.0
+                            END
+                            WHERE mess_price IS NULL
+                        `, (err3) => {
+                            if (err3) {
+                                console.error('Error in static backfill fallback:', err3);
+                                next(err3);
+                                return;
+                            }
+                            console.log('Static mess_price backfill completed successfully');
+                            next(null);
+                        });
+                    });
+                });
+            } else {
+                next(null);
+            }
+        };
+
+        // Run migrations sequentially
+        migrateRoomNumber((err) => {
+            if (err) {
+                callback(err);
+                return;
+            }
+            migrateJoinDate((err) => {
                 if (err) {
-                    console.error('Error migrating column:', err);
                     callback(err);
                     return;
                 }
-                console.log('Migration completed: room_number → student_department');
-                callback(null);
+                migrateMessPrice((err) => {
+                    callback(err);
+                });
             });
-        } else if (!hasStudentDept && !hasRoomNumber) {
-            // Column doesn't exist yet, schema will add it
-            callback(null);
-        } else {
-            // Column already exists or no migration needed
-            callback(null);
-        }
+        });
     });
 }
 

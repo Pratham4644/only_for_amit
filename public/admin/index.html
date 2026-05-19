@@ -458,10 +458,13 @@
                         <div class="profile-avatar">
                             <img id="profilePhoto" src="" alt="Student" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23e0e4ff\\'/><text x=\\'50\\' y=\\'50\\' font-family=\\'Arial\\' font-size=\\'40\\' fill=\\'%236c5ce7\\' text-anchor=\\'middle\\' dy=\\'.3em\\'>👤</text></svg>'" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #e0e4ff;">
                         </div>
-                        <div class="profile-title">
+                        <div class="profile-title" style="flex: 1;">
                             <h2 id="profileName" style="font-size: 2.5rem; color: #2d3436; margin-bottom: 5px;">-</h2>
                             <p class="student-id" style="color: #6c5ce7; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px;">ID: <span id="profileStudentId">-</span></p>
-                            <span id="profileStatusBadge" class="badge badge-success">Active</span>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <span id="profileStatusBadge" class="badge badge-success">Active</span>
+                                <button class="btn-primary" id="editProfileBtn" onclick="triggerEditFromProfile()" style="padding: 0.4rem 1rem; font-size: 0.9rem; background-color: #0984e3; display: flex; align-items: center; gap: 5px;">Edit Profile</button>
+                            </div>
                         </div>
                     </div>
 
@@ -609,12 +612,79 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Join Date *</label>
+                    <input type="date" name="join_date" id="addStudentJoinDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Mess Price (Monthly Fee in Rs)</label>
+                    <input type="number" name="mess_price" id="addStudentMessPrice" step="0.01" min="0" placeholder="Default: 3000 Rs">
+                </div>
+                <div class="form-group">
                     <label>Photo</label>
                     <input type="file" name="photo" accept="image/*">
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn-primary">Add Student</button>
                     <button type="button" class="btn-secondary" onclick="closeAddStudentModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div id="editStudentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditStudentModal()">&times;</span>
+            <h2>Edit Student Profile</h2>
+            <form id="editStudentForm" onsubmit="submitEditStudentForm(event)">
+                <input type="hidden" id="editStudentOriginalId">
+                
+                <div class="form-group">
+                    <label>Student ID *</label>
+                    <input type="text" name="student_id" id="editStudentId" required>
+                </div>
+                <div class="form-group">
+                    <label>Name *</label>
+                    <input type="text" name="name" id="editStudentName" required>
+                </div>
+                <div class="form-group">
+                    <label>Student Department</label>
+                    <input type="text" name="student_department" id="editStudentDept" placeholder="e.g., Computer Science">
+                </div>
+                <div class="form-group">
+                    <label>Phone Number (with country code)</label>
+                    <input type="tel" name="phone_number" id="editStudentPhone" placeholder="+919876543210">
+                </div>
+                <div class="form-group">
+                    <label>Meal Plan</label>
+                    <select name="meal_plan" id="editStudentMealPlan">
+                        <option value="FULL">Full (Lunch + Dinner)</option>
+                        <option value="LUNCH_ONLY">Lunch Only</option>
+                        <option value="DINNER_ONLY">Dinner Only</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mess Price (Monthly Fee in Rs)</label>
+                    <input type="number" name="mess_price" id="editStudentMessPrice" step="0.01" min="0" placeholder="e.g., 3000">
+                </div>
+                <div class="form-group">
+                    <label>Join Date *</label>
+                    <input type="date" name="join_date" id="editStudentJoinDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="active" id="editStudentActive">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Photo <span style="font-size: 0.8rem; color: #888;">(Leave blank to keep existing photo)</span></label>
+                    <input type="file" name="photo" accept="image/*">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                    <button type="button" class="btn-secondary" onclick="closeEditStudentModal()">Cancel</button>
                 </div>
             </form>
         </div>
@@ -712,11 +782,15 @@
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
                      <!-- Info card -->
                      <div class="pay-gen-bill-box" style="margin:0;">
-                         <h3 style="margin-bottom:1rem; border-bottom:1px solid #e0e4ff; padding-bottom:0.5rem;">Student Details</h3>
+                         <h3 style="margin-bottom:1rem; border-bottom:1px solid #e0e4ff; padding-bottom:0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                             <span>Student Details</span>
+                             <button class="btn-primary" onclick="triggerEditFromAccountModal()" style="padding: 4px 8px; font-size: 0.8rem; background-color: #0984e3; border: none; border-radius: 4px; color: white; cursor: pointer;">Edit</button>
+                         </h3>
                          <div style="display:flex; flex-direction:column; gap:0.5rem;">
                              <p><strong>Phone:</strong> <span id="profPhone">—</span></p>
                              <p><strong>Department:</strong> <span id="profDept">—</span></p>
                              <p><strong>Meal Plan:</strong> <span id="profPlan">—</span></p>
+                             <p><strong>Mess Price (Rs):</strong> <span id="profMessPrice">—</span></p>
                              <p><strong>Joined:</strong> <span id="profJoined">—</span></p>
                              <p><strong>Status:</strong> <span id="profStatus">—</span></p>
                          </div>

@@ -90,115 +90,195 @@ router.get('/:id', (req, res) => {
 
 // POST create new student
 router.post('/', upload.single('photo'), async (req, res) => {
-    const { student_id, name, student_department, phone_number, meal_plan } = req.body;
+    let { student_id, name, student_department, phone_number, meal_plan, join_date, mess_price } = req.body;
     const photo_path = req.file ? req.file.path : null;
 
     if (!student_id || !name) {
         return res.status(400).json({ error: 'Student ID and name are required' });
     }
 
+    if (!join_date) {
+        join_date = new Date().toISOString().split('T')[0];
+    }
+
     const db = getDatabase();
 
-    const query = `
-        INSERT INTO students (student_id, name, student_department, phone_number, photo_path, meal_plan)
-        VALUES (?, ?, ?, ?, ?, ?)
-    `;
+    const insertStudent = (price) => {
+        const query = `
+            INSERT INTO students (student_id, name, student_department, phone_number, photo_path, meal_plan, join_date, mess_price)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `;
 
-    db.run(query, [student_id, name, student_department, phone_number, photo_path, meal_plan || 'FULL'], function (err) {
-        if (err) {
-            db.close();
-            return res.status(500).json({ error: err.message });
-        }
-
-        const insertId = this.lastID;
-
-        db.get('SELECT * FROM students WHERE id = ?', [insertId], async (err, row) => {
-            db.close();
+        db.run(query, [student_id, name, student_department, phone_number, photo_path, meal_plan || 'FULL', join_date, price], function (err) {
             if (err) {
+                db.close();
                 return res.status(500).json({ error: err.message });
             }
 
-            // Generate QR code
-            try {
-                const qrDataUrl = await generateQRCode(student_id);
-                res.json({
-                    message: 'Student created successfully',
-                    student: row,
-                    qr_code: qrDataUrl
-                });
-            } catch (qrError) {
-                res.json({
-                    message: 'Student created but QR generation failed',
-                    student: row,
-                    error: qrError.message
-                });
+            const insertId = this.lastID;
+
+            db.get('SELECT * FROM students WHERE id = ?', [insertId], async (err, row) => {
+                db.close();
+                if (err) {
+                    return res.status(500).json({ error: err.message });
+                }
+
+                // Generate QR code
+                try {
+                    const qrDataUrl = await generateQRCode(student_id);
+                    res.json({
+                        message: 'Student created successfully',
+                        student: row,
+                        qr_code: qrDataUrl
+                    });
+                } catch (qrError) {
+                    res.json({
+                        message: 'Student created but QR generation failed',
+                        student: row,
+                        error: qrError.message
+                    });
+                }
+            });
+        });
+    };
+
+    let numericPrice = parseFloat(mess_price);
+    if (!isNaN(numericPrice) && numericPrice < 0) {
+        return res.status(400).json({ error: 'Mess price cannot be negative' });
+    }
+    if (isNaN(numericPrice) || numericPrice === null || numericPrice === undefined) {
+        db.get('SELECT monthly_fee FROM fee_settings WHERE meal_plan = ?', [meal_plan || 'FULL'], (err, row) => {
+            if (err || !row) {
+                let fallback = 3000.0;
+                if (meal_plan === 'LUNCH_ONLY') fallback = 1800.0;
+                else if (meal_plan === 'DINNER_ONLY') fallback = 1500.0;
+                insertStudent(fallback);
+            } else {
+                insertStudent(row.monthly_fee);
             }
         });
-    });
+    } else {
+        insertStudent(numericPrice);
+    }
 });
 
 // PUT update student
 router.put('/:id', upload.single('photo'), (req, res) => {
+    console.log('PUT student request body:', req.body);
     const studentId = req.params.id;
-    const { name, student_department, phone_number, meal_plan, active } = req.body;
+    const { student_id, name, student_department, phone_number, meal_plan, active, join_date, mess_price } = req.body;
     const photo_path = req.file ? req.file.path : null;
 
     const db = getDatabase();
+    const targetStudentId = student_id || studentId;
 
-    let query = 'UPDATE students SET ';
-    const params = [];
-    const updates = [];
+    const proceedWithUpdate = () => {
+        let query = 'UPDATE students SET ';
+        const params = [];
+        const updates = [];
 
-    if (name) {
-        updates.push('name = ?');
-        params.push(name);
-    }
-    if (student_department !== undefined) {
-        updates.push('student_department = ?');
-        params.push(student_department);
-    }
-    if (phone_number !== undefined) {
-        updates.push('phone_number = ?');
-        params.push(phone_number);
-    }
-    if (meal_plan) {
-        updates.push('meal_plan = ?');
-        params.push(meal_plan);
-    }
-    if (active !== undefined) {
-        updates.push('active = ?');
-        params.push(active);
-    }
-    if (photo_path) {
-        updates.push('photo_path = ?');
-        params.push(photo_path);
-    }
-
-    if (updates.length === 0) {
-        db.close();
-        return res.status(400).json({ error: 'No fields to update' });
-    }
-
-    query += updates.join(', ') + ' WHERE student_id = ?';
-    params.push(studentId);
-
-    db.run(query, params, function (err) {
-        if (err) {
-            db.close();
-            return res.status(500).json({ error: err.message });
+        if (name) {
+            updates.push('name = ?');
+            params.push(name);
+        }
+        if (student_department !== undefined) {
+            updates.push('student_department = ?');
+            params.push(student_department);
+        }
+        if (phone_number !== undefined) {
+            updates.push('phone_number = ?');
+            params.push(phone_number);
+        }
+        if (meal_plan) {
+            updates.push('meal_plan = ?');
+            params.push(meal_plan);
+        }
+        if (active !== undefined) {
+            updates.push('active = ?');
+            params.push(active === 'true' || active === 1 || active === '1' ? 1 : 0);
+        }
+        if (photo_path) {
+            updates.push('photo_path = ?');
+            params.push(photo_path);
+        }
+        if (join_date !== undefined) {
+            updates.push('join_date = ?');
+            params.push(join_date);
+        }
+        if (mess_price !== undefined) {
+            const parsedPrice = mess_price === '' || mess_price === null ? null : parseFloat(mess_price);
+            if (parsedPrice !== null && parsedPrice < 0) {
+                db.close();
+                return res.status(400).json({ error: 'Mess price cannot be negative' });
+            }
+            updates.push('mess_price = ?');
+            params.push(parsedPrice);
         }
 
-        db.get('SELECT * FROM students WHERE student_id = ?', [studentId], (err, row) => {
-            db.close();
+        if (updates.length === 0) {
+            db.get('SELECT * FROM students WHERE student_id = ?', [targetStudentId], (err, row) => {
+                db.close();
+                if (err) return res.status(500).json({ error: err.message });
+                return res.json({ message: 'No fields to update', student: row });
+            });
+            return;
+        }
+
+        query += updates.join(', ') + ' WHERE student_id = ?';
+        params.push(targetStudentId);
+
+        db.run(query, params, function (err) {
             if (err) {
+                db.close();
                 return res.status(500).json({ error: err.message });
             }
-            res.json({
-                message: 'Student updated successfully',
-                student: row
+
+            db.get('SELECT * FROM students WHERE student_id = ?', [targetStudentId], (err, row) => {
+                db.close();
+                if (err) {
+                    return res.status(500).json({ error: err.message });
+                }
+                res.json({
+                    message: 'Student updated successfully',
+                    student: row
+                });
             });
         });
-    });
+    };
+
+    if (student_id && student_id !== studentId) {
+        // Cascading ID update across all SQLite tables
+        db.serialize(() => {
+            db.run('PRAGMA foreign_keys = OFF');
+            db.run('UPDATE students SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                if (err) console.error('Error cascading students:', err);
+            });
+            db.run('UPDATE attendance SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                if (err) console.error('Error cascading attendance:', err);
+            });
+            db.run('UPDATE payments SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                if (err) console.error('Error cascading payments:', err);
+            });
+            db.run('UPDATE monthly_bills SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                if (err) console.error('Error cascading monthly_bills:', err);
+            });
+            db.run('UPDATE leave_requests SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                if (err) console.error('Error cascading leave_requests:', err);
+            });
+            db.run('UPDATE reminders_sent SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                if (err) console.error('Error cascading reminders_sent:', err);
+            });
+            db.run('PRAGMA foreign_keys = ON', (err) => {
+                if (err) {
+                    db.close();
+                    return res.status(500).json({ error: 'Failed to re-enable foreign keys: ' + err.message });
+                }
+                proceedWithUpdate();
+            });
+        });
+    } else {
+        proceedWithUpdate();
+    }
 });
 
 // DELETE student

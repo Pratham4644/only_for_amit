@@ -166,7 +166,7 @@ router.post('/bills/generate', (req, res) => {
             if (!fee) { db.close(); return res.status(404).json({ success: false, error: 'FEE_NOT_FOUND', message: `No fee settings found for plan ${student.meal_plan}` }); }
 
             const totalDays = daysInMonth(month);  // actual calendar days (28/30/31)
-            const baseFee   = fee.monthly_fee;
+            const baseFee   = (student.mess_price !== null && student.mess_price !== undefined) ? student.mess_price : fee.monthly_fee;
             const threshold = fee.vacation_threshold_days;
 
             /*

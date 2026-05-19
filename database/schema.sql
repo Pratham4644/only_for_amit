@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS students (
     photo_path TEXT,  -- Path to student photo
     meal_plan TEXT DEFAULT 'FULL',  -- FULL, LUNCH_ONLY, DINNER_ONLY
     active INTEGER DEFAULT 1,  -- 1 = active, 0 = inactive
+    join_date TEXT,  -- Student official enrollment/joining date
+    mess_price REAL,  -- Individual monthly price override for the mess
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

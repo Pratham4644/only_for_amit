@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     loadDashboard();
     updateDate();
+    initMealPlanPriceListener();
 });
 
 // Update date display
@@ -231,6 +232,11 @@ function filterStudents() {
 
 // Add Student Modal
 function showAddStudentModal() {
+    const today = new Date().toISOString().split('T')[0];
+    const joinDateInput = document.getElementById('addStudentJoinDate');
+    if (joinDateInput) {
+        joinDateInput.value = today;
+    }
     document.getElementById('addStudentModal').classList.add('active');
 }
 
@@ -1533,6 +1539,7 @@ async function searchStudentProfile() {
 
 // ── State ─────────────────────────────────────────────────────────────
 let _payStudentId   = null;   // currently open student in payment modal
+let _activeStudentId = null;
 let _payStudentName = '';
 
 // ── Helper: toast (reuse the leave toast element) ─────────────────────
@@ -1756,6 +1763,8 @@ async function openStudentPaymentModal() {
 }
 
 async function openStudentProfile(sid, name = '') {
+    // Save details locally
+    _activeStudentId = sid;
     _payStudentId   = sid;
     _payStudentName = name || sid;
 
@@ -1769,6 +1778,7 @@ async function openStudentProfile(sid, name = '') {
     document.getElementById('profPhone').textContent = '—';
     document.getElementById('profDept').textContent = '—';
     document.getElementById('profPlan').textContent = '—';
+    document.getElementById('profMessPrice').textContent = '—';
     document.getElementById('profJoined').textContent = '—';
     document.getElementById('profStatus').textContent = '—';
     document.getElementById('profQRCode').innerHTML = '';
@@ -1793,7 +1803,8 @@ async function openStudentProfile(sid, name = '') {
 
     // Fetch full student details
     try {
-        const sRes  = await fetch(`${API_BASE}/students/${sid}`);
+        const cleanSid = String(sid).trim();
+        const sRes  = await fetch(`${API_BASE}/students/${encodeURIComponent(cleanSid)}`);
         const sData = await sRes.json();
         if (sData.student) {
             const st = sData.student;
@@ -1805,7 +1816,15 @@ async function openStudentProfile(sid, name = '') {
             document.getElementById('profPhone').textContent = st.phone_number || 'N/A';
             document.getElementById('profDept').textContent = st.student_department || 'N/A';
             document.getElementById('profPlan').textContent = st.meal_plan || 'N/A';
-            document.getElementById('profJoined').textContent = new Date(st.created_at).toLocaleDateString('en-IN');
+            
+            // Populate mess price text display
+            const priceVal = st.mess_price !== null && st.mess_price !== undefined ? st.mess_price : 'Default';
+            document.getElementById('profMessPrice').textContent = priceVal;
+            
+            // Format Join Date from st.join_date, fallback to st.created_at
+            const rawJoinDate = st.join_date || st.created_at;
+            document.getElementById('profJoined').textContent = rawJoinDate ? new Date(rawJoinDate).toLocaleDateString('en-IN') : 'N/A';
+            
             document.getElementById('profStatus').innerHTML = st.active ? '<span style="color:#00b894;font-weight:bold;">Active</span>' : '<span style="color:#d63031;font-weight:bold;">Inactive</span>';
             
             if (st.photo_path) {
@@ -2153,4 +2172,198 @@ function filterProfilesGrid() {
 
 function closeWhatsappReceiptModal() {
     document.getElementById('whatsappReceiptModal').classList.remove('active');
+}
+
+// Pre-fill placeholder and value on meal plan select
+function initMealPlanPriceListener() {
+    const mealPlanSelect = document.querySelector('select[name="meal_plan"]');
+    const priceInput = document.getElementById('addStudentMessPrice');
+    
+    if (mealPlanSelect && priceInput) {
+        const updatePlaceholder = () => {
+            const plan = mealPlanSelect.value;
+            let defaultPrice = 3000;
+            if (plan === 'LUNCH_ONLY') defaultPrice = 1800;
+            else if (plan === 'DINNER_ONLY') defaultPrice = 1500;
+            priceInput.placeholder = `Default: ${defaultPrice} Rs`;
+            priceInput.value = defaultPrice;
+        };
+        
+        mealPlanSelect.addEventListener('change', updatePlaceholder);
+        // Set initial placeholder
+        updatePlaceholder();
+    }
+}
+
+// Update single student mess price
+async function updateStudentMessPrice() {
+    if (!_activeStudentId) {
+        alert('No active student loaded');
+        return;
+    }
+    
+    const priceInput = document.getElementById('profMessPriceInput');
+    if (!priceInput) return;
+    
+    const newPrice = parseFloat(priceInput.value);
+    if (isNaN(newPrice) || newPrice < 0) {
+        alert('Please enter a valid price (>= 0)');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/students/${_activeStudentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ mess_price: newPrice })
+        });
+        
+        const data = await response.json();
+        if (response.ok) {
+            showPayToast('✅ Student mess price updated successfully!');
+            // Refresh student profile view
+            openStudentProfile(_activeStudentId);
+        } else {
+            alert('Error updating price: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error updating mess price:', error);
+        alert('Error updating mess price');
+    }
+}
+
+// Trigger student edit modal from active deep profile page
+function triggerEditFromProfile() {
+    const sidElement = document.getElementById('profileStudentId');
+    const sid = sidElement ? sidElement.textContent.trim() : '';
+    if (!sid || sid === '-') {
+        alert('No student loaded');
+        return;
+    }
+    showEditStudentModal(sid);
+}
+
+// Safely formats any date string to YYYY-MM-DD for datepicker inputs
+function formatToYYYYMMDD(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const match = String(dateStr).match(/^(\d{4}-\d{2}-\d{2})/);
+        if (match) return match[1];
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+            return d.toISOString().split('T')[0];
+        }
+    } catch (e) {
+        console.error('Error parsing date string:', dateStr, e);
+    }
+    return '';
+}
+
+// Show edit student modal pre-filled with student details
+async function showEditStudentModal(sid) {
+    try {
+        if (!sid) throw new Error('Student ID is missing');
+        const cleanSid = String(sid).trim();
+        const res = await fetch(`${API_BASE}/students/${encodeURIComponent(cleanSid)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Student not found');
+        
+        const st = data.student || data.data;
+        
+        document.getElementById('editStudentOriginalId').value = st.student_id;
+        document.getElementById('editStudentId').value = st.student_id;
+        document.getElementById('editStudentName').value = st.name;
+        document.getElementById('editStudentDept').value = st.student_department || '';
+        document.getElementById('editStudentPhone').value = st.phone_number || '';
+        document.getElementById('editStudentMealPlan').value = st.meal_plan || 'FULL';
+        document.getElementById('editStudentMessPrice').value = st.mess_price !== null && st.mess_price !== undefined ? st.mess_price : '';
+        
+        // Safely extract YYYY-MM-DD join date with fallbacks to avoid blank date inputs
+        const rawDate = st.join_date || st.created_at || new Date().toISOString().split('T')[0];
+        document.getElementById('editStudentJoinDate').value = formatToYYYYMMDD(rawDate);
+        
+        document.getElementById('editStudentActive').value = st.active ? '1' : '0';
+        
+        // Attach live meal plan price listener to the Edit dropdown too
+        const editPlanSelect = document.getElementById('editStudentMealPlan');
+        const editPriceInput = document.getElementById('editStudentMessPrice');
+        if (editPlanSelect && editPriceInput) {
+            const updatePlaceholder = (e) => {
+                const plan = editPlanSelect.value;
+                let defaultPrice = 3000;
+                if (plan === 'LUNCH_ONLY') defaultPrice = 1800;
+                else if (plan === 'DINNER_ONLY') defaultPrice = 1500;
+                editPriceInput.placeholder = `Default: ${defaultPrice} Rs`;
+                if (e) editPriceInput.value = defaultPrice;
+            };
+            editPlanSelect.removeEventListener('change', editPlanSelect._handler);
+            editPlanSelect._handler = updatePlaceholder;
+            editPlanSelect.addEventListener('change', updatePlaceholder);
+            updatePlaceholder();
+        }
+        
+        document.getElementById('editStudentModal').classList.add('active');
+    } catch (error) {
+        console.error('Error opening edit student modal:', error);
+        alert('Error fetching student details: ' + error.message);
+    }
+}
+
+// Close edit student modal
+function closeEditStudentModal() {
+    document.getElementById('editStudentModal').classList.remove('active');
+}
+
+// Submit edit student profile form
+async function submitEditStudentForm(event) {
+    event.preventDefault();
+    const originalId = document.getElementById('editStudentOriginalId').value;
+    const form = document.getElementById('editStudentForm');
+    const formData = new FormData(form);
+    
+    try {
+        const res = await fetch(`${API_BASE}/students/${originalId}`, {
+            method: 'PUT',
+            body: formData
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to update student');
+        
+        showPayToast('✅ Student profile updated successfully!');
+        closeEditStudentModal();
+        
+        // Refresh active listings / dashboards
+        loadDashboard();
+        if (typeof loadStudentsList === 'function') {
+            loadStudentsList();
+        }
+        if (typeof loadProfilesGrid === 'function') {
+            loadProfilesGrid();
+        }
+        
+        // If we are currently viewing this student in the profile tab, reload it!
+        const currentViewedId = document.getElementById('profileStudentId').textContent;
+        if (currentViewedId === originalId) {
+            // Update search input to the new student_id in case it was renamed!
+            document.getElementById('profileSearchInput').value = data.student.student_id;
+            searchStudentProfile();
+        }
+    } catch (error) {
+        console.error('Error saving student profile updates:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+// Trigger student edit modal from Account/Payment details popup
+function triggerEditFromAccountModal() {
+    if (!_payStudentId) {
+        alert('No student loaded');
+        return;
+    }
+    const studentIdToEdit = _payStudentId;
+    closeStudentProfileModal();
+    showEditStudentModal(studentIdToEdit);
 }
