@@ -145,21 +145,6 @@ CREATE TABLE IF NOT EXISTS payment_records (
     FOREIGN KEY (student_id) REFERENCES students(student_id)
 );
 
--- Indexes for payment tables
-CREATE INDEX IF NOT EXISTS idx_monthly_bills_student ON monthly_bills(student_id);
-CREATE INDEX IF NOT EXISTS idx_monthly_bills_month   ON monthly_bills(month);
-CREATE INDEX IF NOT EXISTS idx_payment_records_student ON payment_records(student_id);
-CREATE INDEX IF NOT EXISTS idx_payment_records_date    ON payment_records(payment_date);
 
--- Absent records: track date ranges when a student was absent
-CREATE TABLE IF NOT EXISTS absent_records (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    student_id TEXT NOT NULL,
-    from_date TEXT NOT NULL,                      -- YYYY-MM-DD
-    to_date TEXT NOT NULL,                        -- YYYY-MM-DD
-    note TEXT,                                    -- Optional note/reason
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(student_id)
-);
 
 CREATE INDEX IF NOT EXISTS idx_absent_records_student ON absent_records(student_id);
