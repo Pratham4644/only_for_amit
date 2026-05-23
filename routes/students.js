@@ -90,7 +90,7 @@ router.get('/:id', (req, res) => {
 
 // POST create new student
 router.post('/', upload.single('photo'), async (req, res) => {
-    let { student_id, name, student_department, phone_number, meal_plan, join_date, mess_price } = req.body;
+    let { student_id, name, student_department, phone_number, meal_plan, join_date, mess_price, student_profile_update, payment_upto } = req.body;
     const photo_path = req.file ? req.file.path : null;
 
     if (!student_id || !name) {
@@ -105,11 +105,11 @@ router.post('/', upload.single('photo'), async (req, res) => {
 
     const insertStudent = (price) => {
         const query = `
-            INSERT INTO students (student_id, name, student_department, phone_number, photo_path, meal_plan, join_date, mess_price)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO students (student_id, name, student_department, phone_number, photo_path, meal_plan, join_date, mess_price, student_profile_update, payment_upto)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        db.run(query, [student_id, name, student_department, phone_number, photo_path, meal_plan || 'FULL', join_date, price], function (err) {
+        db.run(query, [student_id, name, student_department, phone_number, photo_path, meal_plan || 'FULL', join_date, price, student_profile_update || null, payment_upto || null], function (err) {
             if (err) {
                 db.close();
                 return res.status(500).json({ error: err.message });
@@ -166,7 +166,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
 router.put('/:id', upload.single('photo'), (req, res) => {
     console.log('PUT student request body:', req.body);
     const studentId = req.params.id;
-    const { student_id, name, student_department, phone_number, meal_plan, active, join_date, mess_price } = req.body;
+    const { student_id, name, student_department, phone_number, meal_plan, active, join_date, mess_price, student_profile_update, payment_upto } = req.body;
     const photo_path = req.file ? req.file.path : null;
 
     const db = getDatabase();
@@ -213,6 +213,14 @@ router.put('/:id', upload.single('photo'), (req, res) => {
             }
             updates.push('mess_price = ?');
             params.push(parsedPrice);
+        }
+        if (student_profile_update !== undefined) {
+            updates.push('student_profile_update = ?');
+            params.push(student_profile_update);
+        }
+        if (payment_upto !== undefined) {
+            updates.push('payment_upto = ?');
+            params.push(payment_upto);
         }
 
         if (updates.length === 0) {

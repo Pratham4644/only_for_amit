@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS students (
     active INTEGER DEFAULT 1,  -- 1 = active, 0 = inactive
     join_date TEXT,  -- Student official enrollment/joining date
     mess_price REAL,  -- Individual monthly price override for the mess
+    student_profile_update DATE,
+    payment_upto DATE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -1463,8 +1463,13 @@ async function searchStudentProfile() {
         // Populate UI
         document.getElementById('profileName').textContent = student.name;
         document.getElementById('profileStudentId').textContent = student.student_id;
-        document.getElementById('profileDept').textContent = student.student_department;
+        document.getElementById('profileDept').textContent = student.student_department || 'N/A';
         document.getElementById('profilePhone').textContent = student.phone_number || 'N/A';
+        
+        const paymentUptoElem = document.getElementById('profilePaymentUpto');
+        if (paymentUptoElem) {
+            paymentUptoElem.textContent = student.payment_upto ? new Date(student.payment_upto).toLocaleDateString('en-IN') : 'N/A';
+        }
         
         const mealPlanLabel = student.meal_plan ? student.meal_plan.replace('_', ' ') : 'FULL';
         document.getElementById('profileMealPlan').textContent = mealPlanLabel;
@@ -1816,6 +1821,11 @@ async function openStudentProfile(sid, name = '') {
             document.getElementById('profPhone').textContent = st.phone_number || 'N/A';
             document.getElementById('profDept').textContent = st.student_department || 'N/A';
             document.getElementById('profPlan').textContent = st.meal_plan || 'N/A';
+            
+            const profPaymentUptoElem = document.getElementById('profPaymentUpto');
+            if (profPaymentUptoElem) {
+                profPaymentUptoElem.textContent = st.payment_upto ? new Date(st.payment_upto).toLocaleDateString('en-IN') : 'N/A';
+            }
             
             // Populate mess price text display
             const priceVal = st.mess_price !== null && st.mess_price !== undefined ? st.mess_price : 'Default';
