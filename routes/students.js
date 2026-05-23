@@ -264,14 +264,17 @@ router.put('/:id', upload.single('photo'), (req, res) => {
             db.run('UPDATE attendance SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
                 if (err) console.error('Error cascading attendance:', err);
             });
-            db.run('UPDATE payments SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
-                if (err) console.error('Error cascading payments:', err);
+            db.run('UPDATE payment_records SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                if (err) console.error('Error cascading payment_records:', err);
             });
             db.run('UPDATE monthly_bills SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
                 if (err) console.error('Error cascading monthly_bills:', err);
             });
             db.run('UPDATE leave_requests SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
                 if (err) console.error('Error cascading leave_requests:', err);
+            });
+            db.run('UPDATE leave_credits SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                if (err) console.error('Error cascading leave_credits:', err);
             });
             db.run('UPDATE reminders_sent SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
                 if (err) console.error('Error cascading reminders_sent:', err);

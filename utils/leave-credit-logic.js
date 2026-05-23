@@ -57,8 +57,8 @@ function computeMonthlyCredits(db, ym) {
         const [year, month] = ym.split('-').map(Number);
         const daysInMonth = new Date(year, month, 0).getDate();
 
-        // Get all active students
-        db.all(`SELECT student_id FROM students WHERE active = 1`, [], (err, students) => {
+        // Get all active students with their meal plans
+        db.all(`SELECT student_id, meal_plan FROM students WHERE active = 1`, [], (err, students) => {
             if (err) return reject(err);
             if (!students || students.length === 0) return resolve([]);
 
@@ -92,17 +92,23 @@ function computeMonthlyCredits(db, ym) {
                         });
 
                         let totalCredit = 0;
+                        const plan = student.meal_plan || 'FULL';
 
                         datesToCheck.forEach(dateStr => {
                             const hasLunch  = scanSet.has(`${dateStr}|LUNCH`);
                             const hasDinner = scanSet.has(`${dateStr}|DINNER`);
 
-                            if (!hasLunch && !hasDinner) {
-                                totalCredit += 1.0; // Full absent day
-                            } else if (!hasLunch || !hasDinner) {
-                                totalCredit += 0.5; // Half-day absent
+                            if (plan === 'FULL') {
+                                if (!hasLunch && !hasDinner) {
+                                    totalCredit += 1.0; // Full absent day
+                                } else if (!hasLunch || !hasDinner) {
+                                    totalCredit += 0.5; // Half-day absent
+                                }
+                            } else if (plan === 'LUNCH_ONLY') {
+                                if (!hasLunch) totalCredit += 1.0;
+                            } else if (plan === 'DINNER_ONLY') {
+                                if (!hasDinner) totalCredit += 1.0;
                             }
-                            // Both present → 0 credit
                         });
 
                         if (totalCredit >= 4) {

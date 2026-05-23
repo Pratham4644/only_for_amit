@@ -46,7 +46,7 @@ router.get('/date/:date', (req, res) => {
         SELECT 
             rs.*,
             s.name,
-            s.mail_plan
+            s.meal_plan
         FROM reminders_sent rs
         JOIN students s ON rs.student_id = s.student_id
         WHERE rs.date = ?

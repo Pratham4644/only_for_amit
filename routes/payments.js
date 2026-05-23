@@ -385,6 +385,8 @@ router.delete('/record/:id', (req, res) => {
 /**
  * GET /api/payments/balance/:studentId
  * Calculates total_billed, total_paid, balance, and status.
+ * Also computes meal_days: how many days of meals the balance covers
+ * (positive = advance days remaining, negative = days owed).
  */
 router.get('/balance/:studentId', (req, res) => {
     const sid = req.params.studentId;
@@ -392,7 +394,7 @@ router.get('/balance/:studentId', (req, res) => {
 
     db.get(
         `SELECT COALESCE(SUM(final_bill), 0) AS total_billed,
-                MAX(month)                    AS last_bill_month
+                MAX(to_date)                  AS last_bill_to_date
          FROM monthly_bills WHERE student_id = ?`,
         [sid],
         (err, billRow) => {
@@ -404,8 +406,7 @@ router.get('/balance/:studentId', (req, res) => {
                  FROM payment_records WHERE student_id = ?`,
                 [sid],
                 (err2, payRow) => {
-                    db.close();
-                    if (err2) return res.status(500).json({ success: false, error: 'DB_ERROR', message: err2.message });
+                    if (err2) { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err2.message }); }
 
                     const totalBilled = Math.round((billRow.total_billed  || 0) * 100) / 100;
                     const totalPaid   = Math.round((payRow.total_paid     || 0) * 100) / 100;
@@ -416,18 +417,75 @@ router.get('/balance/:studentId', (req, res) => {
                     else if (balance < 0) status = 'DUE';
                     else                  status = 'SETTLED';
 
-                    res.json({
-                        success: true,
-                        data: {
-                            student_id:        sid,
-                            total_billed:      totalBilled,
-                            total_paid:        totalPaid,
-                            balance,
-                            status,
-                            last_payment_date: payRow.last_payment_date || null,
-                            last_bill_month:   billRow.last_bill_month  || null,
+                    // Fetch student + fee_settings to compute meal days and payment_upto
+                    db.get(
+                        `SELECT s.meal_plan,
+                                s.join_date,
+                                COALESCE(s.mess_price, f.monthly_fee) AS effective_fee
+                         FROM students s
+                         LEFT JOIN fee_settings f ON f.meal_plan = s.meal_plan
+                         WHERE s.student_id = ?`,
+                        [sid],
+                        (err3, planRow) => {
+                            db.close();
+
+                            let meal_days = null;
+                            let cost_per_day = null;
+                            let meals_per_day = null;
+                            let calculated_payment_upto = null;
+
+                            if (!err3 && planRow && planRow.effective_fee > 0) {
+                                // Logic mirrors bill generation:
+                                if (planRow.meal_plan === 'FULL') {
+                                    const perPlate = planRow.effective_fee / 60;
+                                    meals_per_day  = 2;
+                                    cost_per_day   = Math.round(perPlate * meals_per_day * 100) / 100;
+                                } else {
+                                    const perPlate = planRow.effective_fee / 30;
+                                    meals_per_day  = 1;
+                                    cost_per_day   = Math.round(perPlate * meals_per_day * 100) / 100;
+                                }
+                                
+                                meal_days = cost_per_day > 0
+                                    ? Math.round((balance / cost_per_day) * 10) / 10
+                                    : null;
+                                    
+                                // Calculate the exact payment_upto date
+                                if (cost_per_day > 0) {
+                                    // Base Date: if bills exist, use the end date of the latest bill. Otherwise, use join_date.
+                                    let baseDateStr = billRow.last_bill_to_date || planRow.join_date;
+                                    if (!baseDateStr) {
+                                        // Fallback to today if missing join_date
+                                        baseDateStr = new Date().toISOString().split('T')[0];
+                                    }
+                                    
+                                    const baseDate = new Date(baseDateStr);
+                                    if (!isNaN(baseDate.getTime())) {
+                                        // Add the meal_days to the base date
+                                        baseDate.setDate(baseDate.getDate() + Math.floor(meal_days));
+                                        calculated_payment_upto = baseDate.toISOString().split('T')[0];
+                                    }
+                                }
+                            }
+
+                            res.json({
+                                success: true,
+                                data: {
+                                    student_id:        sid,
+                                    total_billed:      totalBilled,
+                                    total_paid:        totalPaid,
+                                    balance,
+                                    status,
+                                    last_payment_date: payRow.last_payment_date || null,
+                                    last_bill_to_date: billRow.last_bill_to_date || null,
+                                    meal_days,
+                                    cost_per_day,
+                                    meals_per_day,
+                                    calculated_payment_upto
+                                }
+                            });
                         }
-                    });
+                    );
                 }
             );
         }

@@ -1827,7 +1827,13 @@ async function openStudentProfile(sid, name = '') {
             
             const profPaymentUptoElem = document.getElementById('profPaymentUpto');
             if (profPaymentUptoElem) {
-                profPaymentUptoElem.textContent = st.payment_upto ? new Date(st.payment_upto).toLocaleDateString('en-IN') : 'N/A';
+                if (st.payment_upto) {
+                    const parts = st.payment_upto.split('T')[0].split('-');
+                    if (parts.length === 3) profPaymentUptoElem.textContent = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    else profPaymentUptoElem.textContent = st.payment_upto;
+                } else {
+                    profPaymentUptoElem.textContent = 'N/A';
+                }
             }
             
             // Populate mess price text display
@@ -1836,7 +1842,13 @@ async function openStudentProfile(sid, name = '') {
             
             // Format Join Date from st.join_date, fallback to st.created_at
             const rawJoinDate = st.join_date || st.created_at;
-            document.getElementById('profJoined').textContent = rawJoinDate ? new Date(rawJoinDate).toLocaleDateString('en-IN') : 'N/A';
+            if (rawJoinDate) {
+                const parts = rawJoinDate.split('T')[0].split('-');
+                if (parts.length === 3) document.getElementById('profJoined').textContent = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                else document.getElementById('profJoined').textContent = new Date(rawJoinDate).toLocaleDateString('en-IN');
+            } else {
+                document.getElementById('profJoined').textContent = 'N/A';
+            }
             
             document.getElementById('profStatus').innerHTML = st.active ? '<span style="color:#00b894;font-weight:bold;">Active</span>' : '<span style="color:#d63031;font-weight:bold;">Inactive</span>';
             
@@ -1902,6 +1914,26 @@ async function refreshPayBalance() {
         balEl.textContent = fmt(d.balance);
         balEl.className   = 'pay-bal-val ' +
             (d.status === 'DUE' ? 'val-due' : d.status === 'ADVANCE' ? 'val-advance' : 'val-settled');
+            
+        // Dynamically update Payment Upto date based on the balance calculation
+        const profPaymentUptoElem = document.getElementById('profPaymentUpto');
+        if (profPaymentUptoElem && d.calculated_payment_upto) {
+            // d.calculated_payment_upto is "YYYY-MM-DD", manually format to DD/MM/YYYY to prevent timezone shifting
+            const [y, m, d_day] = d.calculated_payment_upto.split('-');
+            profPaymentUptoElem.textContent = `${d_day}/${m}/${y}`;
+            
+            // Optional visual indicator if due/advance
+            if (d.status === 'DUE') {
+                profPaymentUptoElem.style.color = '#d63031';
+                profPaymentUptoElem.style.fontWeight = 'bold';
+            } else if (d.status === 'ADVANCE') {
+                profPaymentUptoElem.style.color = '#00b894';
+                profPaymentUptoElem.style.fontWeight = 'bold';
+            } else {
+                profPaymentUptoElem.style.color = 'inherit';
+                profPaymentUptoElem.style.fontWeight = 'normal';
+            }
+        }
 
         const chip = document.getElementById('payBalanceChip');
         const chipMap = { DUE: 'chip-due', ADVANCE: 'chip-advance', SETTLED: 'chip-settled' };
