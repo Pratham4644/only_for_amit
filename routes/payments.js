@@ -43,6 +43,14 @@ function daysInMonth(ym) {
     return new Date(year, month, 0).getDate();
 }
 
+/** Calculate calendar days between two dates inclusive */
+function calcDaysBetween(d1, d2) {
+    const date1 = new Date(d1 + 'T00:00:00');
+    const date2 = new Date(d2 + 'T00:00:00');
+    const diffTime = date2.getTime() - date1.getTime();
+    return Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
+}
+
 /** Current month as YYYY-MM */
 function currentYM() {
     const now = new Date();
@@ -135,18 +143,40 @@ router.put('/fee-settings', (req, res) => {
 
 /**
  * POST /api/payments/bills/generate
- * Body: { student_id, month (YYYY-MM), absent_days, notes? }
+ * Body: { student_id, month?, from_date?, to_date?, absent_days, notes? }
  */
 router.post('/bills/generate', (req, res) => {
-    const { student_id, month, notes } = req.body;
+    let { student_id, month, from_date, to_date, notes } = req.body;
     const absent_days = parseFloat(req.body.absent_days) || 0;
 
-    if (!student_id || !month) {
-        return res.status(400).json({ success: false, error: 'MISSING_FIELDS', message: 'student_id and month are required' });
+    if (!student_id) {
+        return res.status(400).json({ success: false, error: 'MISSING_FIELDS', message: 'student_id is required' });
     }
-    if (!isValidYM(month)) {
-        return res.status(400).json({ success: false, error: 'INVALID_MONTH', message: 'month must be YYYY-MM' });
+
+    // Support range inputs or single month input for backward compatibility
+    if (!from_date || !to_date) {
+        if (!month) {
+            return res.status(400).json({ success: false, error: 'MISSING_FIELDS', message: 'Either month or from_date & to_date must be provided' });
+        }
+        if (!isValidYM(month)) {
+            return res.status(400).json({ success: false, error: 'INVALID_MONTH', message: 'month must be YYYY-MM' });
+        }
+        // Derive from_date and to_date from month
+        from_date = `${month}-01`;
+        const [y, m] = month.split('-').map(Number);
+        const lastDay = new Date(y, m, 0).getDate();
+        to_date = `${month}-${String(lastDay).padStart(2, '0')}`;
+    } else {
+        if (!isValidDate(from_date) || !isValidDate(to_date)) {
+            return res.status(400).json({ success: false, error: 'INVALID_DATE', message: 'Dates must be in YYYY-MM-DD format' });
+        }
+        if (from_date > to_date) {
+            return res.status(400).json({ success: false, error: 'INVALID_RANGE', message: 'from_date must be less than or equal to to_date' });
+        }
+        // Save range string in month column
+        month = `${from_date} to ${to_date}`;
     }
+
     if (absent_days < 0) {
         return res.status(400).json({ success: false, error: 'INVALID_ABSENT_DAYS', message: 'absent_days must be >= 0' });
     }
@@ -165,31 +195,42 @@ router.post('/bills/generate', (req, res) => {
             if (err2) { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err2.message }); }
             if (!fee) { db.close(); return res.status(404).json({ success: false, error: 'FEE_NOT_FOUND', message: `No fee settings found for plan ${student.meal_plan}` }); }
 
-            const totalDays = daysInMonth(month);  // actual calendar days (28/30/31)
+            const totalDays = calcDaysBetween(from_date, to_date);
             const baseFee   = (student.mess_price !== null && student.mess_price !== undefined) ? student.mess_price : fee.monthly_fee;
             const threshold = fee.vacation_threshold_days;
 
-            /*
-             * BILL CALCULATION LOGIC:
-             *   per_day_rate = base_fee / total_days_in_month
-             *   IF absent_days > threshold (STRICT >):
-             *       deduction = round(per_day_rate × absent_days, 2)
-             *   ELSE: deduction = 0 (student pays full fee)
-             *   final_bill = max(0, base_fee - deduction)
-             */
+            // Plate calculation logic:
+            // - FULL plan: amount is divided by 60 for per-plate price. User can get 2 meals per day.
+            // - LUNCH_ONLY / DINNER_ONLY: amount is divided by 30 for per-plate price. User can get 1 meal per day.
+            let perPlatePrice = 0;
+            let mealsPerDay = 1;
+            if (student.meal_plan === 'FULL') {
+                perPlatePrice = baseFee / 60;
+                mealsPerDay = 2;
+            } else {
+                perPlatePrice = baseFee / 30;
+                mealsPerDay = 1;
+            }
+
+            // Calculate base bill based on total dates and plate price
+            const baseBill = totalDays * mealsPerDay * perPlatePrice;
+
+            // If absent_days > threshold (days), deduct the plate price for missed meals
             let deduction = 0;
             if (absent_days > threshold) {
-                const perDay = baseFee / totalDays;
-                deduction = Math.round(perDay * absent_days * 100) / 100;
+                const absentMeals = absent_days * mealsPerDay;
+                deduction = Math.round(absentMeals * perPlatePrice * 100) / 100;
             }
-            const finalBill = Math.max(0, Math.round((baseFee - deduction) * 100) / 100);
+            const finalBill = Math.max(0, Math.round((baseBill - deduction) * 100) / 100);
 
             db.run(
                 `INSERT INTO monthly_bills
-                   (student_id, month, meal_plan, base_fee, total_days_in_month,
+                   (student_id, month, from_date, to_date, meal_plan, base_fee, total_days_in_month,
                     absent_days, vacation_threshold_days, deduction, final_bill, notes, generated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                  ON CONFLICT(student_id, month) DO UPDATE SET
+                   from_date               = excluded.from_date,
+                   to_date                 = excluded.to_date,
                    meal_plan               = excluded.meal_plan,
                    base_fee                = excluded.base_fee,
                    total_days_in_month     = excluded.total_days_in_month,
@@ -199,7 +240,7 @@ router.post('/bills/generate', (req, res) => {
                    final_bill              = excluded.final_bill,
                    notes                   = excluded.notes,
                    generated_at            = CURRENT_TIMESTAMP`,
-                [student_id, month, student.meal_plan, baseFee, totalDays,
+                [student_id, month, from_date, to_date, student.meal_plan, baseFee, totalDays,
                  absent_days, threshold, deduction, finalBill, notes || null],
                 function (err3) {
                     if (err3) { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err3.message }); }

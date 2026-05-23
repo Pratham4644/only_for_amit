@@ -861,8 +861,12 @@
                     <h3 style="margin-bottom:0.8rem;">+ Generate / Update Bill</h3>
                     <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;">
                         <div class="form-group" style="margin:0;flex:1;min-width:10rem;">
-                            <label>Month</label>
-                            <input type="month" id="genBillMonth">
+                            <label>From Date</label>
+                            <input type="date" id="genBillFromDate">
+                        </div>
+                        <div class="form-group" style="margin:0;flex:1;min-width:10rem;">
+                            <label>To Date</label>
+                            <input type="date" id="genBillToDate">
                         </div>
                         <div class="form-group" style="margin:0;flex:1;min-width:9rem;">
                             <label>Absent Days</label>
@@ -874,11 +878,13 @@
                         </div>
                         <button class="btn-primary" style="padding:0.75rem 1.2rem;" onclick="generateStudentBill()">Generate</button>
                     </div>
+                    <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-secondary);">💡 Per-plate price: FULL plan = monthly fee ÷ 60 (2 meals/day) | Lunch/Dinner only = monthly fee ÷ 30 (1 meal/day)</p>
                 </div>
                 <div class="table-container" style="margin-top:1rem;overflow-x:auto;">
                     <table id="studentBillsTable">
                         <thead><tr>
-                            <th>Month</th>
+                            <th>Date Range</th>
+                            <th>Days</th>
                             <th>Plan</th>
                             <th>Base Fee (₹)</th>
                             <th>Absent Days</th>
@@ -887,7 +893,7 @@
                             <th>Notes</th>
                         </tr></thead>
                         <tbody id="studentBillsBody">
-                            <tr><td colspan="7" class="text-center">Loading…</td></tr>
+                            <tr><td colspan="8" class="text-center">Loading…</td></tr>
                         </tbody>
                     </table>
                 </div>

@@ -1797,10 +1797,13 @@ async function openStudentProfile(sid, name = '') {
     document.getElementById('payAmount').value = '';
     document.getElementById('payNote').value = '';
 
-    // Set default month in bill generator
+    // Set default date range in bill generator (first to last day of current month)
     const today = new Date();
-    document.getElementById('genBillMonth').value =
-        `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    const yyyy = today.getFullYear();
+    const mm   = String(today.getMonth() + 1).padStart(2, '0');
+    const lastDay = new Date(yyyy, today.getMonth() + 1, 0).getDate();
+    document.getElementById('genBillFromDate').value = `${yyyy}-${mm}-01`;
+    document.getElementById('genBillToDate').value   = `${yyyy}-${mm}-${String(lastDay).padStart(2, '0')}`;
     document.getElementById('genBillAbsent').value = '0';
     document.getElementById('genBillNotes').value = '';
 
@@ -1998,7 +2001,7 @@ async function submitAddPayment(event) {
 async function loadStudentBills() {
     const tbody = document.getElementById('studentBillsBody');
     if (!tbody || !_payStudentId) return;
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center">Loading…</td></tr>';
 
     try {
         const res  = await fetch(`${API_BASE}/payments/bills/${_payStudentId}`);
@@ -2007,46 +2010,58 @@ async function loadStudentBills() {
 
         const rows = data.data || [];
         if (rows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No bills generated yet.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center">No bills generated yet.</td></tr>';
             return;
         }
 
-        tbody.innerHTML = rows.map(b => `
+        tbody.innerHTML = rows.map(b => {
+            // Build a readable date range label
+            const rangeLabel = (b.from_date && b.to_date)
+                ? `${b.from_date} &rarr; ${b.to_date}`
+                : b.month;
+            const totalDays = b.total_days_in_month || '—';
+            return `
             <tr>
-                <td><strong>${b.month}</strong></td>
+                <td><strong>${rangeLabel}</strong></td>
+                <td style="text-align:center;">${totalDays}</td>
                 <td><span class="badge badge-warning" style="background:#e0e4ff;color:#6c5ce7;">${b.meal_plan}</span></td>
                 <td>${fmt(b.base_fee)}</td>
                 <td>${b.absent_days}</td>
                 <td style="color:${b.deduction > 0 ? '#d63031' : '#636e72'};">${fmt(b.deduction)}</td>
                 <td><strong>${fmt(b.final_bill)}</strong></td>
                 <td style="max-width:10rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${b.notes || ''}">${b.notes || '—'}</td>
-            </tr>
-        `).join('');
+            </tr>`;
+        }).join('');
     } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color:red;">Error: ${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="color:red;">Error: ${e.message}</td></tr>`;
     }
 }
 
 async function generateStudentBill() {
     if (!_payStudentId) return;
 
-    const month       = document.getElementById('genBillMonth').value;
+    const from_date   = document.getElementById('genBillFromDate').value;
+    const to_date     = document.getElementById('genBillToDate').value;
     const absent_days = parseFloat(document.getElementById('genBillAbsent').value) || 0;
     const notes       = document.getElementById('genBillNotes').value.trim();
 
-    if (!month) { alert('Please select a month.'); return; }
+    if (!from_date || !to_date) { alert('Please select both From Date and To Date.'); return; }
+    if (from_date > to_date)    { alert('From Date must be before or equal to To Date.'); return; }
+
+    // Calculate total days for user preview
+    const totalDays = Math.round((new Date(to_date) - new Date(from_date)) / 86400000) + 1;
 
     try {
         const res  = await fetch(`${API_BASE}/payments/bills/generate`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ student_id: _payStudentId, month, absent_days, notes: notes || undefined }),
+            body:    JSON.stringify({ student_id: _payStudentId, from_date, to_date, absent_days, notes: notes || undefined }),
         });
         const data = await res.json();
         if (!data.success) throw new Error(data.message);
 
         const b = data.data;
-        showPayToast(`✅ Bill generated for ${month}: ${fmt(b.final_bill)}`);
+        showPayToast(`✅ Bill generated (${from_date} → ${to_date}, ${totalDays} days): ${fmt(b.final_bill)}`);
         loadStudentBills();
         await refreshPayBalance();
         loadUnpaidWidget();

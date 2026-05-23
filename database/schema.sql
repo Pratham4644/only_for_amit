@@ -110,11 +110,13 @@ INSERT OR IGNORE INTO fee_settings (meal_plan, monthly_fee, vacation_threshold_d
     ('LUNCH_ONLY',   1800, 6),
     ('DINNER_ONLY',  1500, 6);
 
--- Monthly bills: one row per student per month
+-- Monthly bills: one row per student per month or date-range
 CREATE TABLE IF NOT EXISTS monthly_bills (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id TEXT NOT NULL,
-    month TEXT NOT NULL,                          -- 'YYYY-MM'
+    month TEXT NOT NULL,                          -- 'YYYY-MM' or date-range string
+    from_date TEXT,                               -- YYYY-MM-DD
+    to_date TEXT,                                 -- YYYY-MM-DD
     meal_plan TEXT NOT NULL,                      -- snapshot of plan at billing time
     base_fee REAL NOT NULL,                       -- fee_settings.monthly_fee at billing time
     total_days_in_month INTEGER NOT NULL,         -- e.g. 31 for May
@@ -122,7 +124,7 @@ CREATE TABLE IF NOT EXISTS monthly_bills (
     vacation_threshold_days INTEGER NOT NULL,
     deduction REAL NOT NULL DEFAULT 0,
     -- IF absent_days > vacation_threshold_days:
-    --     deduction = round((base_fee / total_days_in_month) * absent_days, 2)
+    --     deduction = round(absent_meals * plate_price, 2)
     -- ELSE: deduction = 0
     final_bill REAL NOT NULL,                     -- base_fee - deduction
     notes TEXT,

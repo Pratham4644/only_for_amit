@@ -143,6 +143,100 @@ function runMigrations(db, callback) {
             }
         };
 
+        // Step 4: Add from_date and to_date columns to monthly_bills if missing
+        const migrateMonthlyBills = (next) => {
+            db.all("PRAGMA table_info(monthly_bills)", (err, columns) => {
+                if (err) {
+                    console.error('Error checking monthly_bills schema:', err);
+                    next(err);
+                    return;
+                }
+
+                const hasFromDate = columns && columns.some(col => col.name === 'from_date');
+                const hasToDate = columns && columns.some(col => col.name === 'to_date');
+
+                if (!hasFromDate || !hasToDate) {
+                    console.log('Migrating: Adding from_date and to_date columns to monthly_bills...');
+                    
+                    const addFromDate = (cb) => {
+                        if (!hasFromDate) {
+                            db.run('ALTER TABLE monthly_bills ADD COLUMN from_date TEXT', cb);
+                        } else {
+                            cb(null);
+                        }
+                    };
+
+                    const addToDate = (cb) => {
+                        if (!hasToDate) {
+                            db.run('ALTER TABLE monthly_bills ADD COLUMN to_date TEXT', cb);
+                        } else {
+                            cb(null);
+                        }
+                    };
+
+                    addFromDate((err1) => {
+                        if (err1) {
+                            console.error('Error adding from_date column:', err1);
+                            next(err1);
+                            return;
+                        }
+                        addToDate((err2) => {
+                            if (err2) {
+                                console.error('Error adding to_date column:', err2);
+                                next(err2);
+                                return;
+                            }
+                            console.log('Columns added to monthly_bills. Backfilling existing rows...');
+                            
+                            // Backfill existing rows
+                            db.all("SELECT id, month FROM monthly_bills WHERE from_date IS NULL", [], (err3, rows) => {
+                                if (err3) {
+                                    console.error('Error selecting bills for backfill:', err3);
+                                    next(err3);
+                                    return;
+                                }
+
+                                if (!rows || rows.length === 0) {
+                                    next(null);
+                                    return;
+                                }
+
+                                let pendingBackfill = rows.length;
+                                rows.forEach(row => {
+                                    if (/^\d{4}-\d{2}$/.test(row.month)) {
+                                        const [yearStr, monthStr] = row.month.split('-');
+                                        const y = parseInt(yearStr, 10);
+                                        const m = parseInt(monthStr, 10);
+                                        const lastDay = new Date(y, m, 0).getDate();
+                                        const fromDate = `${row.month}-01`;
+                                        const toDate = `${row.month}-${String(lastDay).padStart(2, '0')}`;
+
+                                        db.run(
+                                            "UPDATE monthly_bills SET from_date = ?, to_date = ? WHERE id = ?",
+                                            [fromDate, toDate, row.id],
+                                            (err4) => {
+                                                if (err4) console.error(`Error backfilling bill ID ${row.id}:`, err4);
+                                                if (--pendingBackfill === 0) {
+                                                    console.log('Backfill of monthly_bills completed.');
+                                                    next(null);
+                                                }
+                                            }
+                                        );
+                                    } else {
+                                        if (--pendingBackfill === 0) {
+                                            next(null);
+                                        }
+                                    }
+                                });
+                            });
+                        });
+                    });
+                } else {
+                    next(null);
+                }
+            });
+        };
+
         // Run migrations sequentially
         migrateRoomNumber((err) => {
             if (err) {
@@ -155,7 +249,13 @@ function runMigrations(db, callback) {
                     return;
                 }
                 migrateMessPrice((err) => {
-                    callback(err);
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    migrateMonthlyBills((err) => {
+                        callback(err);
+                    });
                 });
             });
         });
