@@ -142,10 +142,11 @@ router.put('/fee-settings', (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * POST /api/payments/bills/generate
+ * POST /api/payments/bills/preview
  * Body: { student_id, month?, from_date?, to_date?, absent_days, notes? }
+ * Does the exact calculation as generate but does not save to database.
  */
-router.post('/bills/generate', (req, res) => {
+router.post('/bills/preview', (req, res) => {
     let { student_id, month, from_date, to_date, notes } = req.body;
     const absent_days = parseFloat(req.body.absent_days) || 0;
 
@@ -153,7 +154,6 @@ router.post('/bills/generate', (req, res) => {
         return res.status(400).json({ success: false, error: 'MISSING_FIELDS', message: 'student_id is required' });
     }
 
-    // Support range inputs or single month input for backward compatibility
     if (!from_date || !to_date) {
         if (!month) {
             return res.status(400).json({ success: false, error: 'MISSING_FIELDS', message: 'Either month or from_date & to_date must be provided' });
@@ -161,7 +161,6 @@ router.post('/bills/generate', (req, res) => {
         if (!isValidYM(month)) {
             return res.status(400).json({ success: false, error: 'INVALID_MONTH', message: 'month must be YYYY-MM' });
         }
-        // Derive from_date and to_date from month
         from_date = `${month}-01`;
         const [y, m] = month.split('-').map(Number);
         const lastDay = new Date(y, m, 0).getDate();
@@ -173,16 +172,93 @@ router.post('/bills/generate', (req, res) => {
         if (from_date > to_date) {
             return res.status(400).json({ success: false, error: 'INVALID_RANGE', message: 'from_date must be less than or equal to to_date' });
         }
-        // Save range string in month column
         month = `${from_date} to ${to_date}`;
     }
 
-    if (absent_days < 0) {
-        return res.status(400).json({ success: false, error: 'INVALID_ABSENT_DAYS', message: 'absent_days must be >= 0' });
+    if (absent_days < 0 || (absent_days * 2) % 1 !== 0) {
+        return res.status(400).json({ success: false, error: 'INVALID_ABSENT_DAYS', message: 'absent_days must be >= 0 and in 0.5 increments' });
     }
-    // absent_days must be in 0.5 increments (half-days allowed)
-    if ((absent_days * 2) % 1 !== 0) {
-        return res.status(400).json({ success: false, error: 'INVALID_ABSENT_DAYS', message: 'absent_days must be in 0.5 increments' });
+
+    const db = getDatabase();
+
+    db.get('SELECT * FROM students WHERE student_id = ?', [student_id], (err, student) => {
+        if (err)      { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err.message }); }
+        if (!student) { db.close(); return res.status(404).json({ success: false, error: 'STUDENT_NOT_FOUND', message: `Student ${student_id} not found` }); }
+
+        db.get('SELECT * FROM fee_settings WHERE meal_plan = ?', [student.meal_plan], (err2, fee) => {
+            db.close();
+            if (err2) { return res.status(500).json({ success: false, error: 'DB_ERROR', message: err2.message }); }
+            if (!fee) { return res.status(404).json({ success: false, error: 'FEE_NOT_FOUND', message: `No fee settings found for plan ${student.meal_plan}` }); }
+
+            const totalDays = calcDaysBetween(from_date, to_date);
+            const baseFee   = (student.mess_price !== null && student.mess_price !== undefined) ? student.mess_price : fee.monthly_fee;
+            const threshold = fee.vacation_threshold_days;
+
+            let perPlatePrice = 0;
+            let mealsPerDay = 1;
+            if (student.meal_plan === 'FULL') {
+                perPlatePrice = baseFee / 60;
+                mealsPerDay = 2;
+            } else {
+                perPlatePrice = baseFee / 30;
+                mealsPerDay = 1;
+            }
+
+            const baseBill = totalDays * mealsPerDay * perPlatePrice;
+            let deduction = 0;
+            if (absent_days > threshold) {
+                const absentMeals = absent_days * mealsPerDay;
+                deduction = Math.round(absentMeals * perPlatePrice * 100) / 100;
+            }
+            const finalBill = Math.max(0, Math.round((baseBill - deduction) * 100) / 100);
+
+            res.json({
+                success: true,
+                data: {
+                    student_id, month, from_date, to_date, meal_plan: student.meal_plan,
+                    base_fee: baseFee, total_days_in_month: totalDays, absent_days,
+                    vacation_threshold_days: threshold, deduction, final_bill: finalBill, notes: notes || null
+                }
+            });
+        });
+    });
+});
+
+/**
+ * POST /api/payments/bills/generate
+ * Body: { student_id, month?, from_date?, to_date?, absent_days, notes? }
+ */
+router.post('/bills/generate', (req, res) => {
+    let { student_id, month, from_date, to_date, notes } = req.body;
+    const absent_days = parseFloat(req.body.absent_days) || 0;
+
+    if (!student_id) {
+        return res.status(400).json({ success: false, error: 'MISSING_FIELDS', message: 'student_id is required' });
+    }
+
+    if (!from_date || !to_date) {
+        if (!month) {
+            return res.status(400).json({ success: false, error: 'MISSING_FIELDS', message: 'Either month or from_date & to_date must be provided' });
+        }
+        if (!isValidYM(month)) {
+            return res.status(400).json({ success: false, error: 'INVALID_MONTH', message: 'month must be YYYY-MM' });
+        }
+        from_date = `${month}-01`;
+        const [y, m] = month.split('-').map(Number);
+        const lastDay = new Date(y, m, 0).getDate();
+        to_date = `${month}-${String(lastDay).padStart(2, '0')}`;
+    } else {
+        if (!isValidDate(from_date) || !isValidDate(to_date)) {
+            return res.status(400).json({ success: false, error: 'INVALID_DATE', message: 'Dates must be in YYYY-MM-DD format' });
+        }
+        if (from_date > to_date) {
+            return res.status(400).json({ success: false, error: 'INVALID_RANGE', message: 'from_date must be less than or equal to to_date' });
+        }
+        month = `${from_date} to ${to_date}`;
+    }
+
+    if (absent_days < 0 || (absent_days * 2) % 1 !== 0) {
+        return res.status(400).json({ success: false, error: 'INVALID_ABSENT_DAYS', message: 'absent_days must be >= 0 and in 0.5 increments' });
     }
 
     const db = getDatabase();
@@ -199,9 +275,6 @@ router.post('/bills/generate', (req, res) => {
             const baseFee   = (student.mess_price !== null && student.mess_price !== undefined) ? student.mess_price : fee.monthly_fee;
             const threshold = fee.vacation_threshold_days;
 
-            // Plate calculation logic:
-            // - FULL plan: amount is divided by 60 for per-plate price. User can get 2 meals per day.
-            // - LUNCH_ONLY / DINNER_ONLY: amount is divided by 30 for per-plate price. User can get 1 meal per day.
             let perPlatePrice = 0;
             let mealsPerDay = 1;
             if (student.meal_plan === 'FULL') {
@@ -212,10 +285,7 @@ router.post('/bills/generate', (req, res) => {
                 mealsPerDay = 1;
             }
 
-            // Calculate base bill based on total dates and plate price
             const baseBill = totalDays * mealsPerDay * perPlatePrice;
-
-            // If absent_days > threshold (days), deduct the plate price for missed meals
             let deduction = 0;
             if (absent_days > threshold) {
                 const absentMeals = absent_days * mealsPerDay;

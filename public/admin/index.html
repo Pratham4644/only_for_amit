@@ -944,6 +944,55 @@
     </div>
 
     <script src="app.js"></script>
+    <!-- Bill Preview Modal -->
+    <div class="modal" id="billPreviewModal">
+        <div class="modal-content pay-student-modal-content">
+            <div class="modal-header">
+                <h2>Confirm Bill Generation</h2>
+                <button class="close-btn" onclick="closeBillPreviewModal()">&times;</button>
+            </div>
+            <div style="padding: 1rem 0;">
+                <p style="margin-bottom: 1rem; color: #636e72;">Please confirm the details of the bill below before generating. Once generated, this amount will be added to the student's account.</p>
+                
+                <div style="background: #f8f9ff; border: 1px solid #e0e4ff; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: #636e72;">From Date:</span>
+                        <strong id="previewBillFrom"></strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: #636e72;">To Date:</span>
+                        <strong id="previewBillTo"></strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: #636e72;">Total Days:</span>
+                        <strong id="previewBillTotalDays"></strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: #636e72;">Absent Days:</span>
+                        <strong id="previewBillAbsentDays"></strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px dashed #e0e4ff;">
+                        <span style="color: #636e72;">Base Fee:</span>
+                        <strong id="previewBillBaseFee"></strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: #d63031;">
+                        <span>Deduction:</span>
+                        <strong id="previewBillDeduction"></strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; color: #0984e3; margin-top: 1rem;">
+                        <span>Final Bill Amount:</span>
+                        <span id="previewBillFinal"></span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="closeBillPreviewModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="confirmGenerateBill()">Yes, Generate Bill</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

@@ -2092,6 +2092,8 @@ async function loadStudentBills() {
     }
 }
 
+let currentBillPayload = null;
+
 async function generateStudentBill() {
     if (!_payStudentId) return;
 
@@ -2103,20 +2105,56 @@ async function generateStudentBill() {
     if (!from_date || !to_date) { alert('Please select both From Date and To Date.'); return; }
     if (from_date > to_date)    { alert('From Date must be before or equal to To Date.'); return; }
 
-    // Calculate total days for user preview
-    const totalDays = Math.round((new Date(to_date) - new Date(from_date)) / 86400000) + 1;
+    currentBillPayload = { student_id: _payStudentId, from_date, to_date, absent_days, notes: notes || undefined };
 
     try {
-        const res  = await fetch(`${API_BASE}/payments/bills/generate`, {
-            method:  'POST',
+        const res = await fetch(`${API_BASE}/payments/bills/preview`, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ student_id: _payStudentId, from_date, to_date, absent_days, notes: notes || undefined }),
+            body: JSON.stringify(currentBillPayload)
         });
         const data = await res.json();
         if (!data.success) throw new Error(data.message);
 
         const b = data.data;
-        showPayToast(`✅ Bill generated (${from_date} → ${to_date}, ${totalDays} days): ${fmt(b.final_bill)}`);
+
+        // Populate Preview Modal
+        document.getElementById('previewBillFrom').textContent = b.from_date;
+        document.getElementById('previewBillTo').textContent = b.to_date;
+        document.getElementById('previewBillTotalDays').textContent = b.total_days_in_month;
+        document.getElementById('previewBillAbsentDays').textContent = b.absent_days;
+        document.getElementById('previewBillBaseFee').textContent = fmt(b.base_fee);
+        document.getElementById('previewBillDeduction').textContent = fmt(b.deduction);
+        document.getElementById('previewBillFinal').textContent = fmt(b.final_bill);
+
+        // Show Modal
+        document.getElementById('billPreviewModal').classList.add('active');
+    } catch (e) {
+        showPayToast('❌ Preview Error: ' + e.message, true);
+    }
+}
+
+function closeBillPreviewModal() {
+    document.getElementById('billPreviewModal').classList.remove('active');
+    currentBillPayload = null;
+}
+
+async function confirmGenerateBill() {
+    if (!currentBillPayload) return;
+
+    try {
+        const res  = await fetch(`${API_BASE}/payments/bills/generate`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(currentBillPayload),
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        const b = data.data;
+        showPayToast(`✅ Bill generated (${b.from_date} → ${b.to_date}, ${b.total_days_in_month} days): ${fmt(b.final_bill)}`);
+        
+        closeBillPreviewModal();
         loadStudentBills();
         await refreshPayBalance();
         loadUnpaidWidget();
