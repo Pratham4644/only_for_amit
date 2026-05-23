@@ -478,6 +478,7 @@ router.get('/balance/:studentId', (req, res) => {
                                     status,
                                     last_payment_date: payRow.last_payment_date || null,
                                     last_bill_to_date: billRow.last_bill_to_date || null,
+                                    join_date:         planRow.join_date || null,
                                     meal_days,
                                     cost_per_day,
                                     meals_per_day,

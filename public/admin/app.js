@@ -1797,12 +1797,14 @@ async function openStudentProfile(sid, name = '') {
     document.getElementById('payAmount').value = '';
     document.getElementById('payNote').value = '';
 
-    // Set default date range in bill generator (first to last day of current month)
+    // Set default date range in bill generator
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm   = String(today.getMonth() + 1).padStart(2, '0');
     const lastDay = new Date(yyyy, today.getMonth() + 1, 0).getDate();
-    document.getElementById('genBillFromDate').value = `${yyyy}-${mm}-01`;
+    
+    // genBillFromDate is dynamically set in refreshPayBalance()
+    document.getElementById('genBillFromDate').value = '';
     document.getElementById('genBillToDate').value   = `${yyyy}-${mm}-${String(lastDay).padStart(2, '0')}`;
     document.getElementById('genBillAbsent').value = '0';
     document.getElementById('genBillNotes').value = '';
@@ -1932,6 +1934,27 @@ async function refreshPayBalance() {
             } else {
                 profPaymentUptoElem.style.color = 'inherit';
                 profPaymentUptoElem.style.fontWeight = 'normal';
+            }
+        }
+        
+        // Dynamically set "From Date" for the Bill Generator
+        const genBillFromDateEl = document.getElementById('genBillFromDate');
+        if (genBillFromDateEl) {
+            if (d.last_bill_to_date) {
+                // If a bill exists, the next bill starts the day after the last bill's to_date
+                const lastToDate = new Date(d.last_bill_to_date);
+                if (!isNaN(lastToDate.getTime())) {
+                    lastToDate.setDate(lastToDate.getDate() + 1);
+                    genBillFromDateEl.value = lastToDate.toISOString().split('T')[0];
+                }
+            } else if (d.join_date) {
+                // If no bills exist, start from the join date
+                const joinDateRaw = d.join_date.split('T')[0]; // Extract YYYY-MM-DD
+                genBillFromDateEl.value = joinDateRaw;
+            } else {
+                // Fallback to the first day of the current month if somehow both are missing
+                const td = new Date();
+                genBillFromDateEl.value = `${td.getFullYear()}-${String(td.getMonth() + 1).padStart(2, '0')}-01`;
             }
         }
 
