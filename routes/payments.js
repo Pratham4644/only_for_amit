@@ -646,5 +646,32 @@ router.get('/unpaid-current-month', (req, res) => {
         });
     });
 });
+/**
+ * GET /api/payments/absent-days/:studentId
+ * Query: ?from=YYYY-MM-DD&to=YYYY-MM-DD
+ * Returns the sum of total_leaves in the given date range.
+ */
+router.get('/absent-days/:studentId', (req, res) => {
+    const studentId = req.params.studentId;
+    const { from, to } = req.query;
+    
+    if (!from || !to) {
+        return res.status(400).json({ success: false, message: 'from and to dates are required' });
+    }
+
+    const db = getDatabase();
+    db.get(
+        `SELECT SUM(total_leaves) as total FROM absent_records 
+         WHERE student_id = ? 
+           AND from_date <= ? 
+           AND to_date >= ?`,
+        [studentId, to, from],
+        (err, row) => {
+            db.close();
+            if (err) return res.status(500).json({ success: false, error: err.message });
+            res.json({ success: true, data: row.total || 0 });
+        }
+    );
+});
 
 module.exports = router;

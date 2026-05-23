@@ -2044,6 +2044,7 @@ async function refreshPayBalance() {
                 const td = new Date();
                 genBillFromDateEl.value = `${td.getFullYear()}-${String(td.getMonth() + 1).padStart(2, '0')}-01`;
             }
+            fetchAutoAbsentDays(); // Trigger auto-fetch if to-date is somehow set
         }
 
         const chip = document.getElementById('payBalanceChip');
@@ -2181,6 +2182,24 @@ async function loadStudentBills() {
 }
 
 let currentBillPayload = null;
+
+async function fetchAutoAbsentDays() {
+    if (!_payStudentId) return;
+    const from_date = document.getElementById('genBillFromDate').value;
+    const to_date = document.getElementById('genBillToDate').value;
+    
+    if (from_date && to_date) {
+        try {
+            const res = await fetch(`${API_BASE}/payments/absent-days/${_payStudentId}?from=${from_date}&to=${to_date}`);
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('genBillAbsent').value = data.data || 0;
+            }
+        } catch (e) {
+            console.error('Error fetching auto absent days:', e);
+        }
+    }
+}
 
 async function generateStudentBill() {
     if (!_payStudentId) return;
