@@ -1885,6 +1885,94 @@ function switchProfileTab(tab) {
 
     if (tab === 'bills')   loadStudentBills();
     if (tab === 'history') loadPaymentHistory();
+    if (tab === 'absent')  loadAbsentRecords();
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// ABSENT DATES LOGIC
+// ─────────────────────────────────────────────────────────────────────
+
+function calculateAbsentDays() {
+    const fromDate = document.getElementById('absentFromDate').value;
+    const toDate = document.getElementById('absentToDate').value;
+    
+    if (fromDate && toDate) {
+        if (fromDate > toDate) {
+            document.getElementById('absentTotalLeaves').value = '';
+            return;
+        }
+        const totalDays = Math.round((new Date(toDate) - new Date(fromDate)) / 86400000) + 1;
+        document.getElementById('absentTotalLeaves').value = totalDays;
+    }
+}
+
+async function saveAbsentRecord() {
+    if (!_payStudentId) return;
+
+    const from_date = document.getElementById('absentFromDate').value;
+    const to_date = document.getElementById('absentToDate').value;
+    const total_leaves = parseFloat(document.getElementById('absentTotalLeaves').value);
+    const note = document.getElementById('absentNote').value.trim();
+
+    if (!from_date || !to_date) {
+        alert('Please select both From Date and To Date.');
+        return;
+    }
+    if (from_date > to_date) {
+        alert('From Date must be before or equal to To Date.');
+        return;
+    }
+    if (isNaN(total_leaves) || total_leaves < 0) {
+        alert('Please enter a valid number for Total Leaves.');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/students/${_payStudentId}/absent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from_date, to_date, total_leaves, note })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        showPayToast(`✅ Absent record saved successfully!`);
+        document.getElementById('absentForm').reset();
+        loadAbsentRecords();
+    } catch (e) {
+        showPayToast('❌ Error: ' + e.message, true);
+    }
+}
+
+async function loadAbsentRecords() {
+    const tbody = document.getElementById('absentRecordsBody');
+    if (!tbody || !_payStudentId) return;
+    
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center">Loading…</td></tr>';
+
+    try {
+        const res = await fetch(`${API_BASE}/students/${_payStudentId}/absent`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Failed to load absent records');
+
+        const rows = data.data || [];
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center">No absent records found.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = rows.map(r => `
+            <tr>
+                <td>${r.from_date}</td>
+                <td>${r.to_date}</td>
+                <td><strong>${r.total_leaves}</strong></td>
+                <td>${r.note || '—'}</td>
+                <td style="color:var(--text-secondary);font-size:0.9rem;">${new Date(r.created_at).toLocaleDateString('en-IN')}</td>
+            </tr>
+        `).join('');
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="color:red;">Error: ${e.message}</td></tr>`;
+    }
 }
 
 function downloadProfileQR() {

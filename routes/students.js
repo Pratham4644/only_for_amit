@@ -331,4 +331,45 @@ router.post('/bulk-import', (req, res) => {
     res.status(501).json({ message: 'Bulk import not yet implemented' });
 });
 
+// GET absent records for a student
+router.get('/:id/absent', (req, res) => {
+    const studentId = req.params.id;
+    const db = getDatabase();
+
+    db.all('SELECT * FROM absent_records WHERE student_id = ? ORDER BY from_date DESC', [studentId], (err, rows) => {
+        db.close();
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        res.json({ success: true, data: rows || [] });
+    });
+});
+
+// POST new absent record for a student
+router.post('/:id/absent', (req, res) => {
+    const studentId = req.params.id;
+    const { from_date, to_date, total_leaves, note } = req.body;
+
+    if (!from_date || !to_date || total_leaves === undefined) {
+        return res.status(400).json({ success: false, message: 'from_date, to_date, and total_leaves are required' });
+    }
+
+    const db = getDatabase();
+    
+    // Validate student exists
+    db.get('SELECT student_id FROM students WHERE student_id = ?', [studentId], (err, student) => {
+        if (err) { db.close(); return res.status(500).json({ success: false, message: err.message }); }
+        if (!student) { db.close(); return res.status(404).json({ success: false, message: 'Student not found' }); }
+
+        db.run(
+            `INSERT INTO absent_records (student_id, from_date, to_date, total_leaves, note) 
+             VALUES (?, ?, ?, ?, ?)`,
+            [studentId, from_date, to_date, parseFloat(total_leaves) || 0, note || null],
+            function(err2) {
+                db.close();
+                if (err2) return res.status(500).json({ success: false, message: err2.message });
+                res.json({ success: true, message: 'Absent record saved successfully', id: this.lastID });
+            }
+        );
+    });
+});
+
 module.exports = router;

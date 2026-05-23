@@ -921,10 +921,48 @@
 
             <!-- Tab: Absent Dates -->
             <div id="payTab_absent" class="pay-modal-tab-panel">
-                <div style="text-align: center; padding: 3rem; color: var(--text-secondary); background: #f8f9ff; border: 1px dashed #e0e4ff; border-radius: 12px; margin-top: 1rem;">
-                    <span style="font-size: 2.5rem; display: block; margin-bottom: 1rem;">📅</span>
-                    <h3>Absent Dates</h3>
-                    <p style="margin-top: 0.5rem;">Data will be populated here.</p>
+                <div class="pay-gen-bill-box">
+                    <h3 style="margin-bottom: 1rem;">Log New Absent Dates</h3>
+                    <form id="absentForm">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: start; margin-bottom: 1rem;">
+                            <div class="form-group" style="margin: 0;">
+                                <label>From Date *</label>
+                                <input type="date" id="absentFromDate" required onchange="calculateAbsentDays()">
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label>To Date *</label>
+                                <input type="date" id="absentToDate" required onchange="calculateAbsentDays()">
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label>Total Leaves *</label>
+                                <input type="number" id="absentTotalLeaves" step="0.5" min="0" required>
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label>Note (optional)</label>
+                                <input type="text" id="absentNote" placeholder="e.g. going home">
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <button type="button" class="btn-primary" style="padding: 0.6rem 1.5rem;" onclick="saveAbsentRecord()">Save Record</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="table-container" style="margin-top: 1.5rem; overflow-x: auto;">
+                    <table id="absentRecordsTable">
+                        <thead>
+                            <tr>
+                                <th>From Date</th>
+                                <th>To Date</th>
+                                <th>Total Leaves</th>
+                                <th>Note</th>
+                                <th>Recorded At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="absentRecordsBody">
+                            <tr><td colspan="5" class="text-center">Loading…</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
