@@ -660,16 +660,45 @@ router.get('/absent-days/:studentId', (req, res) => {
     }
 
     const db = getDatabase();
-    db.get(
-        `SELECT SUM(total_leaves) as total FROM absent_records 
+    db.all(
+        `SELECT from_date, to_date, total_leaves FROM absent_records 
          WHERE student_id = ? 
            AND from_date <= ? 
            AND to_date >= ?`,
         [studentId, to, from],
-        (err, row) => {
+        (err, rows) => {
             db.close();
             if (err) return res.status(500).json({ success: false, error: err.message });
-            res.json({ success: true, data: row.total || 0 });
+            
+            let totalOverlappingLeaves = 0;
+            if (rows && rows.length > 0) {
+                rows.forEach(row => {
+                    const recFrom = row.from_date;
+                    const recTo = row.to_date;
+                    const leaves = parseFloat(row.total_leaves) || 0;
+                    
+                    const overlapFrom = recFrom > from ? recFrom : from;
+                    const overlapTo = recTo < to ? recTo : to;
+                    
+                    if (overlapFrom <= overlapTo) {
+                        const d1 = new Date(overlapFrom + 'T00:00:00');
+                        const d2 = new Date(overlapTo + 'T00:00:00');
+                        const overlapDays = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                        
+                        const rd1 = new Date(recFrom + 'T00:00:00');
+                        const rd2 = new Date(recTo + 'T00:00:00');
+                        const recordDays = Math.round((rd2.getTime() - rd1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                        
+                        if (recordDays > 0) {
+                            const overlappingLeaves = leaves * (overlapDays / recordDays);
+                            totalOverlappingLeaves += overlappingLeaves;
+                        }
+                    }
+                });
+            }
+            
+            totalOverlappingLeaves = Math.round(totalOverlappingLeaves * 2) / 2;
+            res.json({ success: true, data: totalOverlappingLeaves });
         }
     );
 });

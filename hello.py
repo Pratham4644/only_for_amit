@@ -7,11 +7,10 @@ import cv2
 conn = sqlite3.connect('attendance.db')
 cursor = conn.cursor()
 
-# Create tables if not exist
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS members (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL
+    name TEXT UNIQUE NOT NULL 
 )
 ''')
 

@@ -1,6 +1,7 @@
 -- Mess Attendance System Database Schema
 
 -- Students table: Master data for all students
+
 CREATE TABLE IF NOT EXISTS students (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id TEXT UNIQUE NOT NULL,  -- Unique student ID (e.g., "101", "102")
@@ -16,6 +17,7 @@ CREATE TABLE IF NOT EXISTS students (
     payment_upto DATE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
 
 -- Meal timings configuration
 CREATE TABLE IF NOT EXISTS meal_timings (
