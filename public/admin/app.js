@@ -230,6 +230,119 @@ function filterStudents() {
     });
 }
 
+// Add Student Camera Capture State
+let addStudentStream = null;
+let addStudentBlob = null;
+
+async function startAddStudentCamera() {
+    stopAddStudentCamera(false); // Clean up existing stream first, keep blob if exists
+    
+    const video = document.getElementById('addStudentVideo');
+    const photoImg = document.getElementById('addStudentCapturedPhoto');
+    const placeholder = document.getElementById('addStudentCameraPlaceholder');
+    
+    const btnStart = document.getElementById('btnStartCamera');
+    const btnCapture = document.getElementById('btnCapturePhoto');
+    const btnRetake = document.getElementById('btnRetakePhoto');
+    
+    // Reset view
+    video.style.display = 'none';
+    photoImg.style.display = 'none';
+    placeholder.style.display = 'flex';
+    placeholder.innerHTML = `<span style="font-size: 2rem;">⏳</span><span>Requesting camera access...</span>`;
+    
+    btnStart.style.display = 'none';
+    btnCapture.style.display = 'none';
+    btnRetake.style.display = 'none';
+    
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: 'user'
+            },
+            audio: false
+        });
+        
+        addStudentStream = stream;
+        video.srcObject = stream;
+        video.style.display = 'block';
+        placeholder.style.display = 'none';
+        
+        btnStart.style.display = 'none';
+        btnCapture.style.display = 'flex';
+        btnRetake.style.display = 'none';
+    } catch (err) {
+        console.error('Camera access error:', err);
+        placeholder.style.display = 'flex';
+        placeholder.innerHTML = `<span style="font-size: 2.5rem; color: #ff7675;">⚠️</span><span style="color: #ff7675; font-weight: bold;">Camera Access Failed</span><span style="font-size: 0.85rem; padding: 0 10px;">${err.message || 'Permission denied or no camera device found.'}</span>`;
+        btnStart.style.display = 'flex';
+        btnCapture.style.display = 'none';
+        btnRetake.style.display = 'none';
+    }
+}
+
+function captureAddStudentPhoto() {
+    const video = document.getElementById('addStudentVideo');
+    const photoImg = document.getElementById('addStudentCapturedPhoto');
+    
+    const btnStart = document.getElementById('btnStartCamera');
+    const btnCapture = document.getElementById('btnCapturePhoto');
+    const btnRetake = document.getElementById('btnRetakePhoto');
+    
+    if (!addStudentStream) return;
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    
+    const ctx = canvas.getContext('2d');
+    // Mirror horizontally to match preview
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    photoImg.src = dataUrl;
+    photoImg.style.display = 'block';
+    video.style.display = 'none';
+    
+    canvas.toBlob((blob) => {
+        addStudentBlob = blob;
+    }, 'image/jpeg', 0.9);
+    
+    stopAddStudentCamera(false); // Stop video tracks, keep captured blob
+    
+    btnStart.style.display = 'none';
+    btnCapture.style.display = 'none';
+    btnRetake.style.display = 'flex';
+}
+
+function retakeAddStudentPhoto() {
+    addStudentBlob = null;
+    startAddStudentCamera();
+}
+
+function stopAddStudentCamera(clearBlob = true) {
+    if (addStudentStream) {
+        addStudentStream.getTracks().forEach(track => track.stop());
+        addStudentStream = null;
+    }
+    
+    const video = document.getElementById('addStudentVideo');
+    if (video) video.srcObject = null;
+    
+    if (clearBlob) {
+        addStudentBlob = null;
+        const photoImg = document.getElementById('addStudentCapturedPhoto');
+        if (photoImg) {
+            photoImg.src = '';
+            photoImg.style.display = 'none';
+        }
+    }
+}
+
 // Add Student Modal
 function showAddStudentModal() {
     const today = new Date().toISOString().split('T')[0];
@@ -238,11 +351,13 @@ function showAddStudentModal() {
         joinDateInput.value = today;
     }
     document.getElementById('addStudentModal').classList.add('active');
+    startAddStudentCamera();
 }
 
 function closeAddStudentModal() {
     document.getElementById('addStudentModal').classList.remove('active');
     document.getElementById('addStudentForm').reset();
+    stopAddStudentCamera(true);
 }
 
 async function addStudent(event) {
@@ -250,6 +365,10 @@ async function addStudent(event) {
 
     const form = event.target;
     const formData = new FormData(form);
+
+    if (addStudentBlob) {
+        formData.append('photo', addStudentBlob, 'photo.jpg');
+    }
 
     try {
         const response = await fetch(`${API_BASE}/students`, {
@@ -1482,12 +1601,23 @@ async function searchStudentProfile() {
         }
 
         const statusBadge = document.getElementById('profileStatusBadge');
+        const toggleBtn   = document.getElementById('toggleStatusBtn');
         if (student.active) {
-            statusBadge.className = 'badge badge-success';
+            statusBadge.className   = 'badge badge-success';
             statusBadge.textContent = 'Active';
+            if (toggleBtn) {
+                toggleBtn.textContent = '⏸ Deactivate';
+                toggleBtn.className   = 'btn-secondary';
+                toggleBtn.style.cssText = 'padding:0.4rem 1rem;font-size:0.9rem;display:flex;align-items:center;gap:5px;';
+            }
         } else {
-            statusBadge.className = 'badge badge-danger';
+            statusBadge.className   = 'badge badge-danger';
             statusBadge.textContent = 'Inactive';
+            if (toggleBtn) {
+                toggleBtn.textContent = '▶ Activate';
+                toggleBtn.className   = 'btn-success';
+                toggleBtn.style.cssText = 'padding:0.4rem 1rem;font-size:0.9rem;display:flex;align-items:center;gap:5px;';
+            }
         }
 
         const qrImg = document.getElementById('profileQrCode');
@@ -1535,6 +1665,61 @@ async function searchStudentProfile() {
     } catch (error) {
         console.error('Error fetching profile data:', error);
         alert('Failed to load profile details. See console for errors.');
+    }
+}
+
+// Toggle a student's active status from the profile page (no page reload)
+async function toggleStudentStatus() {
+    const studentId = document.getElementById('profileStudentId').textContent.trim();
+    if (!studentId || studentId === '-') {
+        alert('No student loaded');
+        return;
+    }
+
+    const statusBadge = document.getElementById('profileStatusBadge');
+    const currentlyActive = statusBadge.textContent.trim() === 'Active';
+
+    // Confirm only when deactivating
+    if (currentlyActive) {
+        const ok = confirm(`Mark ${studentId} as inactive?\n\nThis student will no longer be able to use their QR for scanning.`);
+        if (!ok) return;
+    }
+
+    try {
+        const res  = await fetch(`${API_BASE}/students/${encodeURIComponent(studentId)}/status`, {
+            method:  'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ active: !currentlyActive }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert('Error: ' + (data.error || 'Unknown error'));
+            return;
+        }
+
+        // Update badge + toggle button from the fresh student row
+        const toggleBtn = document.getElementById('toggleStatusBtn');
+        if (data.student.active) {
+            statusBadge.className   = 'badge badge-success';
+            statusBadge.textContent = 'Active';
+            if (toggleBtn) {
+                toggleBtn.textContent = '⏸ Deactivate';
+                toggleBtn.className   = 'btn-secondary';
+            }
+            showPayToast('✅ Student activated successfully!');
+        } else {
+            statusBadge.className   = 'badge badge-danger';
+            statusBadge.textContent = 'Inactive';
+            if (toggleBtn) {
+                toggleBtn.textContent = '▶ Activate';
+                toggleBtn.className   = 'btn-success';
+            }
+            showPayToast('⏸ Student deactivated.');
+        }
+    } catch (err) {
+        console.error('Error toggling student status:', err);
+        alert('Failed to update status: ' + err.message);
     }
 }
 
@@ -1883,7 +2068,10 @@ function switchProfileTab(tab) {
     document.getElementById(`pmtab_${tab}`).classList.add('active');
     document.getElementById(`payTab_${tab}`).classList.add('active');
 
-    if (tab === 'bills')   loadStudentBills();
+    if (tab === 'bills') {
+        loadStudentBills();
+        fetchAutoAbsentDays();
+    }
     if (tab === 'history') loadPaymentHistory();
     if (tab === 'absent')  loadAbsentRecords();
 }
@@ -1939,6 +2127,7 @@ async function saveAbsentRecord() {
         showPayToast(`✅ Absent record saved successfully!`);
         document.getElementById('absentForm').reset();
         loadAbsentRecords();
+        fetchAutoAbsentDays();
     } catch (e) {
         showPayToast('❌ Error: ' + e.message, true);
     }
@@ -2189,6 +2378,10 @@ async function fetchAutoAbsentDays() {
     const to_date = document.getElementById('genBillToDate').value;
     
     if (from_date && to_date) {
+        if (from_date > to_date) {
+            document.getElementById('genBillAbsent').value = 0;
+            return;
+        }
         try {
             const res = await fetch(`${API_BASE}/payments/absent-days/${_payStudentId}?from=${from_date}&to=${to_date}`);
             const data = await res.json();

@@ -37,11 +37,66 @@ router.get('/', (req, res) => {
     `;
 
     db.all(query, [today, today], (err, rows) => {
-        db.close();
         if (err) {
+            db.close();
             return res.status(500).json({ error: err.message });
         }
-        res.json({ students: rows });
+
+        // Fetch fee_settings once to compute live "fees due today" per student
+        db.all('SELECT meal_plan, monthly_fee FROM fee_settings', [], (feeErr, feeRows) => {
+            db.close();
+            if (feeErr) {
+                return res.status(500).json({ error: feeErr.message });
+            }
+
+            // Build a lookup map: meal_plan -> monthly_fee
+            const feeMap = {};
+            (feeRows || []).forEach(f => { feeMap[f.meal_plan] = f.monthly_fee; });
+
+            // Helper: parse a YYYY-MM-DD string as a local midnight Date
+            const parseLocalDate = (dateStr) => {
+                if (!dateStr) return null;
+                const [y, m, d] = dateStr.split('-').map(Number);
+                return new Date(y, m - 1, d);
+            };
+
+            const todayDate = parseLocalDate(today);
+            const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+            const enrichedRows = rows.map(student => {
+                // Effective monthly fee: per-student override wins, else plan default
+                const effective_fee = (student.mess_price != null)
+                    ? student.mess_price
+                    : (feeMap[student.meal_plan] ?? null);
+
+                // Cost per day — mirrors the convention used everywhere else in the codebase
+                let cost_per_day = null;
+                if (effective_fee != null) {
+                    if (student.meal_plan === 'FULL') {
+                        cost_per_day = Math.round((effective_fee / 60) * 2 * 100) / 100;
+                    } else {
+                        cost_per_day = Math.round((effective_fee / 30) * 1 * 100) / 100;
+                    }
+                }
+
+                // Baseline: payment_upto > join_date > null
+                const baseline = student.payment_upto || student.join_date || null;
+                const baselineDate = parseLocalDate(baseline);
+
+                let days_owed = null;
+                let fees_due_today = null;
+
+                if (baselineDate !== null && cost_per_day !== null) {
+                    const rawDays = Math.floor((todayDate - baselineDate) / MS_PER_DAY);
+                    days_owed = rawDays < 0 ? 0 : rawDays;
+                    fees_due_today = Math.round(days_owed * cost_per_day * 100) / 100;
+                }
+
+                return { ...student, cost_per_day, days_owed, fees_due_today };
+            });
+
+            res.json({ students: enrichedRows });
+        });
     });
 });
 
@@ -372,4 +427,47 @@ router.post('/:id/absent', (req, res) => {
     });
 });
 
+// PATCH /:id/status — flip active only, no other fields touched
+router.patch('/:id/status', (req, res) => {
+    const studentId = req.params.id;
+    const db = getDatabase();
+
+    // Validate 'active' is present
+    if (req.body.active === undefined || req.body.active === null) {
+        db.close();
+        return res.status(400).json({ error: "'active' field is required" });
+    }
+
+    // Match the same loose parsing used in PUT /:id for consistency
+    const { active } = req.body;
+    const newActive = (active === 'true' || active === 1 || active === '1' || active === true) ? 1 : 0;
+
+    // Confirm student exists first (mirrors GET /:id style)
+    db.get('SELECT * FROM students WHERE student_id = ?', [studentId], (err, row) => {
+        if (err) {
+            db.close();
+            return res.status(500).json({ error: err.message });
+        }
+        if (!row) {
+            db.close();
+            return res.status(404).json({ error: 'Student not found' });
+        }
+
+        // Update only the active column
+        db.run('UPDATE students SET active = ? WHERE student_id = ?', [newActive, studentId], function (updateErr) {
+            if (updateErr) {
+                db.close();
+                return res.status(500).json({ error: updateErr.message });
+            }
+
+            db.get('SELECT * FROM students WHERE student_id = ?', [studentId], (fetchErr, updated) => {
+                db.close();
+                if (fetchErr) return res.status(500).json({ error: fetchErr.message });
+                res.json({ success: true, student: updated });
+            });
+        });
+    });
+});
+
 module.exports = router;
+

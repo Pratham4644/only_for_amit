@@ -463,8 +463,10 @@
                             <p class="student-id" style="color: #6c5ce7; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px;">ID: <span id="profileStudentId">-</span></p>
                             <div style="display: flex; gap: 10px; align-items: center;">
                                 <span id="profileStatusBadge" class="badge badge-success">Active</span>
+                                <button id="toggleStatusBtn" class="btn-secondary" onclick="toggleStudentStatus()" style="padding: 0.4rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 5px;">⏸ Deactivate</button>
                                 <button class="btn-primary" id="editProfileBtn" onclick="triggerEditFromProfile()" style="padding: 0.4rem 1rem; font-size: 0.9rem; background-color: #0984e3; display: flex; align-items: center; gap: 5px;">Edit Profile</button>
                             </div>
+
                         </div>
                     </div>
 
@@ -622,7 +624,28 @@
                 </div>
                 <div class="form-group">
                     <label>Photo</label>
-                    <input type="file" name="photo" accept="image/*">
+                    <div class="camera-container" style="position: relative; width: 100%; max-width: 320px; border-radius: 12px; overflow: hidden; background: #2f3542; aspect-ratio: 4/3; margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: center; border: 2px solid #e0e4ff; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                        <!-- Video stream from camera -->
+                        <video id="addStudentVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none;"></video>
+                        <!-- Captured photo preview -->
+                        <img id="addStudentCapturedPhoto" style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none;">
+                        <!-- Placeholder when camera is off -->
+                        <div id="addStudentCameraPlaceholder" style="text-align: center; color: #a4b0be; font-size: 0.9rem; padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 2.5rem;">📷</span>
+                            <span>Camera is off</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                        <button type="button" id="btnStartCamera" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-radius: 6px;" onclick="startAddStudentCamera()">
+                            🔌 Open Camera
+                        </button>
+                        <button type="button" id="btnCapturePhoto" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem; display: none; align-items: center; gap: 0.4rem; cursor: pointer; border-radius: 6px;" onclick="captureAddStudentPhoto()">
+                            📸 Capture Photo
+                        </button>
+                        <button type="button" id="btnRetakePhoto" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem; display: none; align-items: center; gap: 0.4rem; cursor: pointer; border-radius: 6px;" onclick="retakeAddStudentPhoto()">
+                            🔄 Retake
+                        </button>
+                    </div>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn-primary">Add Student</button>
@@ -863,7 +886,7 @@
                     <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;">
                         <div class="form-group" style="margin:0;flex:1;min-width:10rem;">
                             <label>From Date</label>
-                            <input type="date" id="genBillFromDate" readonly style="background-color: #f1f2f6; cursor: not-allowed; color: #636e72;">
+                            <input type="date" id="genBillFromDate" onchange="fetchAutoAbsentDays()">
                         </div>
                         <div class="form-group" style="margin:0;flex:1;min-width:10rem;">
                             <label>To Date</label>
