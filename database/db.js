@@ -35,7 +35,16 @@ function initDatabase() {
                         return;
                     }
                     console.log('Database schema initialized successfully');
-                    resolve(db);
+
+                    // Cleanup old bills: keep only the most recent one for each student
+                    db.run('DELETE FROM monthly_bills WHERE id NOT IN (SELECT MAX(id) FROM monthly_bills GROUP BY student_id)', (errClean) => {
+                        if (errClean) {
+                            console.error('Error cleaning up old bills:', errClean);
+                        } else {
+                            console.log('Cleaned up old monthly bills: only kept the most recent per student');
+                        }
+                        resolve(db);
+                    });
                 });
             });
         });

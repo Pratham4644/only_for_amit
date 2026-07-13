@@ -2217,22 +2217,30 @@ async function refreshPayBalance() {
         // Dynamically set "From Date" for the Bill Generator
         const genBillFromDateEl = document.getElementById('genBillFromDate');
         if (genBillFromDateEl) {
-            if (d.last_bill_to_date) {
-                // If a bill exists, the next bill starts the day after the last bill's to_date
-                const lastToDate = new Date(d.last_bill_to_date);
-                if (!isNaN(lastToDate.getTime())) {
-                    lastToDate.setDate(lastToDate.getDate() + 1);
-                    genBillFromDateEl.value = lastToDate.toISOString().split('T')[0];
+            let nextFromDate = '';
+            if (d.calculated_payment_upto) {
+                try {
+                    const parts = d.calculated_payment_upto.split('-');
+                    if (parts.length === 3) {
+                        const payDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                        payDate.setDate(payDate.getDate() + 1);
+                        const y = payDate.getFullYear();
+                        const m = String(payDate.getMonth() + 1).padStart(2, '0');
+                        const d_day = String(payDate.getDate()).padStart(2, '0');
+                        nextFromDate = `${y}-${m}-${d_day}`;
+                    }
+                } catch (e) {
+                    console.error(e);
                 }
-            } else if (d.join_date) {
-                // If no bills exist, start from the join date
-                const joinDateRaw = d.join_date.split('T')[0]; // Extract YYYY-MM-DD
-                genBillFromDateEl.value = joinDateRaw;
-            } else {
-                // Fallback to the first day of the current month if somehow both are missing
-                const td = new Date();
-                genBillFromDateEl.value = `${td.getFullYear()}-${String(td.getMonth() + 1).padStart(2, '0')}-01`;
             }
+            if (!nextFromDate && d.join_date) {
+                nextFromDate = d.join_date.split('T')[0];
+            }
+            if (!nextFromDate) {
+                const td = new Date();
+                nextFromDate = `${td.getFullYear()}-${String(td.getMonth() + 1).padStart(2, '0')}-01`;
+            }
+            genBillFromDateEl.value = nextFromDate;
             fetchAutoAbsentDays(); // Trigger auto-fetch if to-date is somehow set
         }
 

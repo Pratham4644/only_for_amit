@@ -191,33 +191,15 @@ router.post('/bills/preview', (req, res) => {
             if (!fee) { return res.status(404).json({ success: false, error: 'FEE_NOT_FOUND', message: `No fee settings found for plan ${student.meal_plan}` }); }
 
             const totalDays = calcDaysBetween(from_date, to_date);
-            const baseFee   = (student.mess_price !== null && student.mess_price !== undefined) ? student.mess_price : fee.monthly_fee;
             const threshold = fee.vacation_threshold_days;
-
-            let perPlatePrice = 0;
-            let mealsPerDay = 1;
-            if (student.meal_plan === 'FULL') {
-                perPlatePrice = baseFee / 60;
-                mealsPerDay = 2;
-            } else {
-                perPlatePrice = baseFee / 30;
-                mealsPerDay = 1;
-            }
-
-            const baseBill = totalDays * mealsPerDay * perPlatePrice;
-            let deduction = 0;
-            if (absent_days > threshold) {
-                const absentMeals = absent_days * mealsPerDay;
-                deduction = Math.round(absentMeals * perPlatePrice * 100) / 100;
-            }
-            const finalBill = Math.max(0, Math.round((baseBill - deduction) * 100) / 100);
+            const baseFee = (student.mess_price !== null && student.mess_price !== undefined) ? student.mess_price : fee.monthly_fee;
 
             res.json({
                 success: true,
                 data: {
                     student_id, month, from_date, to_date, meal_plan: student.meal_plan,
                     base_fee: baseFee, total_days_in_month: totalDays, absent_days,
-                    vacation_threshold_days: threshold, deduction, final_bill: finalBill, notes: notes || null
+                    vacation_threshold_days: threshold, deduction: 0, final_bill: baseFee, notes: notes || null
                 }
             });
         });
@@ -272,26 +254,8 @@ router.post('/bills/generate', (req, res) => {
             if (!fee) { db.close(); return res.status(404).json({ success: false, error: 'FEE_NOT_FOUND', message: `No fee settings found for plan ${student.meal_plan}` }); }
 
             const totalDays = calcDaysBetween(from_date, to_date);
-            const baseFee   = (student.mess_price !== null && student.mess_price !== undefined) ? student.mess_price : fee.monthly_fee;
             const threshold = fee.vacation_threshold_days;
-
-            let perPlatePrice = 0;
-            let mealsPerDay = 1;
-            if (student.meal_plan === 'FULL') {
-                perPlatePrice = baseFee / 60;
-                mealsPerDay = 2;
-            } else {
-                perPlatePrice = baseFee / 30;
-                mealsPerDay = 1;
-            }
-
-            const baseBill = totalDays * mealsPerDay * perPlatePrice;
-            let deduction = 0;
-            if (absent_days > threshold) {
-                const absentMeals = absent_days * mealsPerDay;
-                deduction = Math.round(absentMeals * perPlatePrice * 100) / 100;
-            }
-            const finalBill = Math.max(0, Math.round((baseBill - deduction) * 100) / 100);
+            const baseFee = (student.mess_price !== null && student.mess_price !== undefined) ? student.mess_price : fee.monthly_fee;
 
             db.run(
                 `INSERT INTO monthly_bills
@@ -311,14 +275,19 @@ router.post('/bills/generate', (req, res) => {
                    notes                   = excluded.notes,
                    generated_at            = CURRENT_TIMESTAMP`,
                 [student_id, month, from_date, to_date, student.meal_plan, baseFee, totalDays,
-                 absent_days, threshold, deduction, finalBill, notes || null],
+                 absent_days, threshold, 0, baseFee, notes || null],
                 function (err3) {
                     if (err3) { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err3.message }); }
 
-                    db.get('SELECT * FROM monthly_bills WHERE student_id = ? AND month = ?', [student_id, month], (err4, bill) => {
-                        db.close();
-                        if (err4) return res.status(500).json({ success: false, error: 'DB_ERROR', message: err4.message });
-                        res.json({ success: true, data: bill });
+                    // Delete all other bills for this student to keep only the most recent one
+                    db.run('DELETE FROM monthly_bills WHERE student_id = ? AND month != ?', [student_id, month], (errDelete) => {
+                        if (errDelete) console.error('Error deleting past bills:', errDelete);
+
+                        db.get('SELECT * FROM monthly_bills WHERE student_id = ? AND month = ?', [student_id, month], (err4, bill) => {
+                            db.close();
+                            if (err4) return res.status(500).json({ success: false, error: 'DB_ERROR', message: err4.message });
+                            res.json({ success: true, data: bill });
+                        });
                     });
                 }
             );
