@@ -62,9 +62,6 @@ function loadPageData(pageName) {
         case 'leave':
             initLeavePage();
             break;
-        case 'profile':
-            document.getElementById('profileSearchInput').focus();
-            break;
     }
 }
 
@@ -344,12 +341,32 @@ function stopAddStudentCamera(clearBlob = true) {
 }
 
 // Add Student Modal
-function showAddStudentModal() {
+async function showAddStudentModal() {
     const today = new Date().toISOString().split('T')[0];
     const joinDateInput = document.getElementById('addStudentJoinDate');
     if (joinDateInput) {
         joinDateInput.value = today;
     }
+
+    // Clear and fetch next available numeric student ID
+    const studentIdInput = document.getElementById('addStudentIdInput');
+    if (studentIdInput) {
+        studentIdInput.value = '';
+        studentIdInput.placeholder = 'Fetching next ID...';
+        try {
+            const res = await fetch(`${API_BASE}/students/next-id`);
+            if (res.ok) {
+                const data = await res.json();
+                studentIdInput.value = data.next_id;
+            } else {
+                studentIdInput.placeholder = 'e.g., 101';
+            }
+        } catch (err) {
+            console.error('Error fetching next student ID:', err);
+            studentIdInput.placeholder = 'e.g., 101';
+        }
+    }
+
     document.getElementById('addStudentModal').classList.add('active');
     startAddStudentCamera();
 }
@@ -1539,189 +1556,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ==========================================
-// Deep Student Profile Feature
-// ==========================================
-
-async function searchStudentProfile() {
-    const searchInput = document.getElementById('profileSearchInput').value.trim();
-    if (!searchInput) {
-        alert('Please enter a Student ID to search');
-        return;
-    }
-
-    const contentContainer = document.getElementById('profileContentContainer');
-    const errorContainer = document.getElementById('profileErrorContainer');
-
-    // Reset UI
-    contentContainer.style.display = 'none';
-    errorContainer.style.display = 'none';
-
-    try {
-        // Use the new search endpoint
-        const searchRes = await fetch(`${API_BASE}/students/search?q=${encodeURIComponent(searchInput)}`);
-        const searchData = await searchRes.json();
-
-        if (!searchRes.ok || !searchData.students || searchData.students.length === 0) {
-            errorContainer.style.display = 'block';
-            return;
-        }
-
-        // Use the first student found
-        const student = searchData.students[0];
-        const studentId = student.student_id;
-
-        // Fetch QR Code
-        const qrRes = await fetch(`${API_BASE}/students/${studentId}/qr`);
-        const qrData = await qrRes.json();
-
-        // Fetch Attendance History
-        const historyRes = await fetch(`${API_BASE}/attendance/student/${studentId}`);
-        const historyData = await historyRes.json();
-
-        // Populate UI
-        document.getElementById('profileName').textContent = student.name;
-        document.getElementById('profileStudentId').textContent = student.student_id;
-        document.getElementById('profileDept').textContent = student.student_department || 'N/A';
-        document.getElementById('profilePhone').textContent = student.phone_number || 'N/A';
-        
-        const paymentUptoElem = document.getElementById('profilePaymentUpto');
-        if (paymentUptoElem) {
-            paymentUptoElem.textContent = student.payment_upto ? new Date(student.payment_upto).toLocaleDateString('en-IN') : 'N/A';
-        }
-        
-        const mealPlanLabel = student.meal_plan ? student.meal_plan.replace('_', ' ') : 'FULL';
-        document.getElementById('profileMealPlan').textContent = mealPlanLabel;
-
-        const photoImg = document.getElementById('profilePhoto');
-        if (student.photo_path) {
-            photoImg.src = '/' + student.photo_path.replace(/\\/g, '/');
-        } else {
-            photoImg.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23e0e4ff'/><text x='50' y='50' font-family='Arial' font-size='40' fill='%236c5ce7' text-anchor='middle' dy='.3em'>👤</text></svg>";
-        }
-
-        const statusBadge = document.getElementById('profileStatusBadge');
-        const toggleBtn   = document.getElementById('toggleStatusBtn');
-        if (student.active) {
-            statusBadge.className   = 'badge badge-success';
-            statusBadge.textContent = 'Active';
-            if (toggleBtn) {
-                toggleBtn.textContent = '⏸ Deactivate';
-                toggleBtn.className   = 'btn-secondary';
-                toggleBtn.style.cssText = 'padding:0.4rem 1rem;font-size:0.9rem;display:flex;align-items:center;gap:5px;';
-            }
-        } else {
-            statusBadge.className   = 'badge badge-danger';
-            statusBadge.textContent = 'Inactive';
-            if (toggleBtn) {
-                toggleBtn.textContent = '▶ Activate';
-                toggleBtn.className   = 'btn-success';
-                toggleBtn.style.cssText = 'padding:0.4rem 1rem;font-size:0.9rem;display:flex;align-items:center;gap:5px;';
-            }
-        }
-
-        const qrImg = document.getElementById('profileQrCode');
-        const qrPlaceholder = document.getElementById('profileQrPlaceholder');
-        if (qrRes.ok && qrData.qr_code) {
-            qrImg.src = qrData.qr_code;
-            qrImg.style.display = 'block';
-            qrPlaceholder.style.display = 'none';
-        } else {
-            qrImg.style.display = 'none';
-            qrPlaceholder.style.display = 'block';
-        }
-
-        // Populate History
-        const tbody = document.getElementById('profileHistoryBody');
-        tbody.innerHTML = '';
-
-        if (!historyRes.ok || !historyData.history || historyData.history.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center">No recent attendance found.</td></tr>';
-        } else {
-            historyData.history.forEach(record => {
-                const statusClass = record.is_late ? 'status-late' : 'status-present';
-                const statusIcon = record.is_late ? '!' : '✓';
-                const mealBadgeClass = record.meal_type === 'LUNCH' ? 'badge-warning' : 'badge-success';
-                
-                const row = `
-                    <tr>
-                        <td>${record.date}</td>
-                        <td><span class="badge ${mealBadgeClass}">${record.meal_type}</span></td>
-                        <td>${record.scan_time || '-'}</td>
-                        <td>
-                            <div class="status-badge ${statusClass}">
-                                <div class="status-dot">${statusIcon}</div>
-                                <span>${record.status}</span>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        }
-
-        contentContainer.style.display = 'block';
-
-    } catch (error) {
-        console.error('Error fetching profile data:', error);
-        alert('Failed to load profile details. See console for errors.');
-    }
-}
-
-// Toggle a student's active status from the profile page (no page reload)
-async function toggleStudentStatus() {
-    const studentId = document.getElementById('profileStudentId').textContent.trim();
-    if (!studentId || studentId === '-') {
-        alert('No student loaded');
-        return;
-    }
-
-    const statusBadge = document.getElementById('profileStatusBadge');
-    const currentlyActive = statusBadge.textContent.trim() === 'Active';
-
-    // Confirm only when deactivating
-    if (currentlyActive) {
-        const ok = confirm(`Mark ${studentId} as inactive?\n\nThis student will no longer be able to use their QR for scanning.`);
-        if (!ok) return;
-    }
-
-    try {
-        const res  = await fetch(`${API_BASE}/students/${encodeURIComponent(studentId)}/status`, {
-            method:  'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ active: !currentlyActive }),
-        });
-        const data = await res.json();
-
-        if (!res.ok) {
-            alert('Error: ' + (data.error || 'Unknown error'));
-            return;
-        }
-
-        // Update badge + toggle button from the fresh student row
-        const toggleBtn = document.getElementById('toggleStatusBtn');
-        if (data.student.active) {
-            statusBadge.className   = 'badge badge-success';
-            statusBadge.textContent = 'Active';
-            if (toggleBtn) {
-                toggleBtn.textContent = '⏸ Deactivate';
-                toggleBtn.className   = 'btn-secondary';
-            }
-            showPayToast('✅ Student activated successfully!');
-        } else {
-            statusBadge.className   = 'badge badge-danger';
-            statusBadge.textContent = 'Inactive';
-            if (toggleBtn) {
-                toggleBtn.textContent = '▶ Activate';
-                toggleBtn.className   = 'btn-success';
-            }
-            showPayToast('⏸ Student deactivated.');
-        }
-    } catch (err) {
-        console.error('Error toggling student status:', err);
-        alert('Failed to update status: ' + err.message);
-    }
-}
 
 // ====================================================================
 // PAYMENTS MODULE
@@ -2660,16 +2494,6 @@ async function updateStudentMessPrice() {
     }
 }
 
-// Trigger student edit modal from active deep profile page
-function triggerEditFromProfile() {
-    const sidElement = document.getElementById('profileStudentId');
-    const sid = sidElement ? sidElement.textContent.trim() : '';
-    if (!sid || sid === '-') {
-        alert('No student loaded');
-        return;
-    }
-    showEditStudentModal(sid);
-}
 
 // Safely formats any date string to YYYY-MM-DD for datepicker inputs
 function formatToYYYYMMDD(dateStr) {

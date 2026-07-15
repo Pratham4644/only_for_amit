@@ -246,6 +246,34 @@ function runMigrations(db, callback) {
             });
         };
 
+        // Step 5: Ensure DINNER meal timing row exists
+        const migrateDinnerTiming = (next) => {
+            db.get("SELECT id FROM meal_timings WHERE meal_type = 'DINNER'", [], (err, row) => {
+                if (err) {
+                    console.error('Error checking DINNER timing:', err);
+                    next(err);
+                    return;
+                }
+                if (!row) {
+                    console.log('Migrating: Adding missing DINNER meal timing...');
+                    db.run(
+                        "INSERT INTO meal_timings (meal_type, start_time, end_time, late_warning_time, active) VALUES ('DINNER', '19:00', '22:00', '21:00', 1)",
+                        (err2) => {
+                            if (err2) {
+                                console.error('Error inserting DINNER timing:', err2);
+                                next(err2);
+                                return;
+                            }
+                            console.log('Migration completed: DINNER timing added successfully');
+                            next(null);
+                        }
+                    );
+                } else {
+                    next(null);
+                }
+            });
+        };
+
         // Run migrations sequentially
         migrateRoomNumber((err) => {
             if (err) {
@@ -263,7 +291,13 @@ function runMigrations(db, callback) {
                         return;
                     }
                     migrateMonthlyBills((err) => {
-                        callback(err);
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+                        migrateDinnerTiming((err) => {
+                            callback(err);
+                        });
                     });
                 });
             });

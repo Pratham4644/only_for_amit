@@ -1,507 +1,137 @@
-<!DOCTYPE html>
-<html lang="en">
+<optimised!DOCTYPE html>
+    <html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Mess Attendance</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Admin Panel - Mess Attendance</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
 
-<body>
-    <div class="admin-container">
-        <aside class="sidebar">
-            <div class="logo">
-                <h2>🍽️ Buddy's Kitchen</h2>
-            </div>
-            <nav class="nav-menu">
-                <a href="#dashboard" class="nav-item active" data-page="dashboard">
-                    <span class="icon">📊</span>
-                    <span>Dashboard</span>
-                </a>
-                <a href="#students" class="nav-item" data-page="students">
-                    <span class="icon">👥</span>
-                    <span>Students</span>
-                </a>
-                <a href="#reports" class="nav-item" data-page="reports">
-                    <span class="icon">📈</span>
-                    <span>Reports</span>
-                </a>
-                <a href="#reminders" class="nav-item" data-page="reminders">
-                    <span class="icon">📱</span>
-                    <span>Reminders</span>
-                </a>
-                <a href="#leave" class="nav-item" data-page="leave">
-                    <span class="icon">🗓️</span>
-                    <span>Leave Credits</span>
-                </a>
-                <a href="#payments" class="nav-item" data-page="payments">
-                    <span class="icon">₹</span>
-                    <span>Payments</span>
-                </a>
-                <a href="#profiles" class="nav-item" data-page="profiles">
-                    <span class="icon">👤</span>
-                    <span>Profiles</span>
-                </a>
-                <a href="/counter" class="nav-item" target="_blank">
-                    <span class="icon">📷</span>
-                    <span>QR Scanner</span>
-                </a>
-                <a href="#settings" class="nav-item" data-page="settings">
-                    <span class="icon">⚙️</span>
-                    <span>Settings</span>
-                </a>
-                <a href="#profile" class="nav-item" data-page="profile">
-                    <span class="icon">👤</span>
-                    <span>Profile</span>
-                </a>
-            </nav>
-            <div class="sidebar-footer">
-                <a href="/counter" class="btn-counter" target="_blank">
-                    🖥️ Open Counter Screen
-                </a>
-            </div>
-        </aside>
-
-        <main class="main-panel">
-            <!-- Dashboard Page -->
-            <div id="page-dashboard" class="page active">
-                <header class="page-header">
-                    <h1>Dashboard</h1>
-                    <p class="date" id="dashDate"></p>
-                </header>
-
-                <div class="stats-overview">
-                    <div class="stat-box">
-                        <div class="stat-icon">👥</div>
-                        <div class="stat-content">
-                            <h3 id="totalStudents">0</h3>
-                            <p>Total Students</p>
-                        </div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-icon">🍲</div>
-                        <div class="stat-content">
-                            <h3 id="lunchPresent">0</h3>
-                            <p>Lunch Present</p>
-                            <small style="color: var(--text-secondary);">Absent: <span id="lunchAbsent">0</span></small>
-                        </div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-icon">🍽️</div>
-                        <div class="stat-content">
-                            <h3 id="dinnerPresent">0</h3>
-                            <p>Dinner Present</p>
-                            <small style="color: var(--text-secondary);">Absent: <span
-                                    id="dinnerAbsent">0</span></small>
-                        </div>
-                    </div>
+    <body>
+        <div class="admin-container">
+            <aside class="sidebar">
+                <div class="logo">
+                    <h2>🍽️ Buddy's Kitchen</h2>
                 </div>
-
-                <div class="current-meal-banner" id="currentMealBanner">
-                    <div class="meal-label">
-                        <span>Current Meal</span>
-                        <div class="live-indicator" id="liveIndicator" style="display: none;">
-                            <div class="live-dot"></div>
-                            <span>Live</span>
-                        </div>
-                    </div>
-                    <div class="meal-info">
-                        <div class="meal-name" id="currentMealDash">-</div>
-                        <div class="meal-time" id="currentMealTime"></div>
-                    </div>
+                <nav class="nav-menu">
+                    <a href="#dashboard" class="nav-item active" data-page="dashboard">
+                        <span class="icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#students" class="nav-item" data-page="students">
+                        <span class="icon">👥</span>
+                        <span>Students</span>
+                    </a>
+                    <a href="#reports" class="nav-item" data-page="reports">
+                        <span class="icon">📈</span>
+                        <span>Reports</span>
+                    </a>
+                    <a href="#reminders" class="nav-item" data-page="reminders">
+                        <span class="icon">📱</span>
+                        <span>Reminders</span>
+                    </a>
+                    <a href="#leave" class="nav-item" data-page="leave">
+                        <span class="icon">🗓️</span>
+                        <span>Leave Credits</span>
+                    </a>
+                    <a href="#payments" class="nav-item" data-page="payments">
+                        <span class="icon">₹</span>
+                        <span>Payments</span>
+                    </a>
+                    <a href="#profiles" class="nav-item" data-page="profiles">
+                        <span class="icon">👤</span>
+                        <span>Profiles</span>
+                    </a>
+                    <a href="#settings" class="nav-item" data-page="settings">
+                        <span class="icon">⚙️</span>
+                        <span>Settings</span>
+                    </a>
+                </nav>
+                <div class="sidebar-footer">
+                    <a href="/counter" class="btn-counter" target="_blank">
+                        🖥️ Open Counter Screen
+                    </a>
                 </div>
+            </aside>
 
-                <!-- Pending Payments Widget -->
-                <div class="unpaid-widget" id="unpaidWidget">
-                    <div class="unpaid-widget-header">
-                        <span>⚠️ Pending Payments — Current Month</span>
-                        <span class="unpaid-count-badge" id="unpaidCountBadge" style="display:none;"></span>
-                    </div>
-                    <div id="unpaidWidgetBody"><p class="text-center" style="color:var(--text-secondary);">Loading…</p></div>
-                </div>
+            <main class="main-panel">
+                <!-- Dashboard Page -->
+                <div id="page-dashboard" class="page active">
+                    <header class="page-header">
+                        <h1>Dashboard</h1>
+                        <p class="date" id="dashDate"></p>
+                    </header>
 
-                <div class="recent-activity">
-                    <h2>Today's Attendance</h2>
-                    <div class="table-container">
-                        <table id="recentTable">
-                            <thead>
-                                <tr>
-                                    <th>Student ID</th>
-                                    <th>Name</th>
-                                    <th>Meal Type</th>
-                                    <th>Time</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recentTableBody">
-                                <tr>
-                                    <td colspan="5" class="text-center">Loading...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Students Page -->
-            <div id="page-students" class="page">
-                <header class="page-header">
-                    <h1>Student Management</h1>
-                    <button class="btn-primary" onclick="showAddStudentModal()">+ Add Student</button>
-                </header>
-
-                <div class="stats-overview" style="margin-bottom: 1.5rem;">
-                    <div class="stat-box" style="padding: 1.5rem;">
-                        <div class="stat-content">
-                            <h3 id="studentStatsLunch">0 / 0</h3>
-                            <p>Lunch (P / A)</p>
-                        </div>
-                    </div>
-                    <div class="stat-box" style="padding: 1.5rem;">
-                        <div class="stat-content">
-                            <h3 id="studentStatsDinner">0 / 0</h3>
-                            <p>Dinner (P / A)</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="search-bar">
-                    <input type="text" id="studentSearch" placeholder="Search students..." onkeyup="filterStudents()">
-                </div>
-
-                <div class="table-container">
-                    <table id="studentsTable">
-                        <thead>
-                            <tr>
-                                <th>Student ID</th>
-                                <th>Name</th>
-                                <th>Department</th>
-                                <th>Meal Plan</th>
-                                <th>Today's Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="studentsTableBody">
-                            <tr>
-                                <td colspan="6" class="text-center">Loading...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Reports Page -->
-            <div id="page-reports" class="page">
-                <header class="page-header">
-                    <h1>Attendance Reports</h1>
-                </header>
-
-                <div class="report-filters">
-                    <div class="filter-group">
-                        <label>Start Date:</label>
-                        <input type="date" id="reportStartDate">
-                    </div>
-                    <div class="filter-group">
-                        <label>End Date:</label>
-                        <input type="date" id="reportEndDate">
-                    </div>
-                    <div class="filter-group">
-                        <label>Meal Type:</label>
-                        <select id="reportMealType">
-                            <option value="">All</option>
-                            <option value="LUNCH">Lunch</option>
-                            <option value="DINNER">Dinner</option>
-                        </select>
-                    </div>
-                    <button class="btn-primary" onclick="generateReport()">Generate Report</button>
-                    <button class="btn-secondary" onclick="exportExcel()">Export Excel</button>
-                </div>
-
-                <div id="reportResults" class="report-results">
-                    <p class="text-center">Select date range and click "Generate Report"</p>
-                </div>
-            </div>
-
-            <!-- Reminders Page -->
-            <div id="page-reminders" class="page">
-                <header class="page-header">
-                    <h1>WhatsApp Reminders</h1>
-                </header>
-
-                <div class="reminders-section">
-                    <div class="reminder-controls">
-                        <h2>Today's Reminders</h2>
-                        <div class="control-buttons">
-                            <button class="btn-primary" onclick="loadReminderStats()">📊 Refresh Stats</button>
-                            <button class="btn-success" onclick="triggerReminder('LUNCH')">🍛 Send Lunch
-                                Reminder</button>
-                            <button class="btn-success" onclick="triggerReminder('DINNER')">🍜 Send Dinner
-                                Reminder</button>
-                        </div>
-                    </div>
-
-                    <div class="reminders-stats">
-                        <div class="stat-card">
-                            <h3>Lunch Reminders</h3>
-                            <div class="stat-numbers">
-                                <div><span class="label">Sent:</span> <span id="lunchSent" class="number">0</span></div>
-                                <div><span class="label">Failed:</span> <span id="lunchFailed" class="number">0</span>
-                                </div>
-                                <div><span class="label">Pending:</span> <span id="lunchPending" class="number">0</span>
-                                </div>
+                    <div class="stats-overview">
+                        <div class="stat-box">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-content">
+                                <h3 id="totalStudents">0</h3>
+                                <p>Total Students</p>
                             </div>
                         </div>
-                        <div class="stat-card">
-                            <h3>Dinner Reminders</h3>
-                            <div class="stat-numbers">
-                                <div><span class="label">Sent:</span> <span id="dinnerSent" class="number">0</span>
-                                </div>
-                                <div><span class="label">Failed:</span> <span id="dinnerFailed" class="number">0</span>
-                                </div>
-                                <div><span class="label">Pending:</span> <span id="dinnerPending"
-                                        class="number">0</span></div>
+                        <div class="stat-box">
+                            <div class="stat-icon">🍲</div>
+                            <div class="stat-content">
+                                <h3 id="lunchPresent">0</h3>
+                                <p>Lunch Present</p>
+                                <small style="color: var(--text-secondary);">Absent: <span
+                                        id="lunchAbsent">0</span></small>
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">🍽️</div>
+                            <div class="stat-content">
+                                <h3 id="dinnerPresent">0</h3>
+                                <p>Dinner Present</p>
+                                <small style="color: var(--text-secondary);">Absent: <span
+                                        id="dinnerAbsent">0</span></small>
                             </div>
                         </div>
                     </div>
 
-                    <div class="absent-students">
-                        <h2>Absent Students</h2>
-                        <div class="absent-tabs">
-                            <button class="tab-button active" onclick="switchAbsentTab('LUNCH')">🍛 Lunch</button>
-                            <button class="tab-button" onclick="switchAbsentTab('DINNER')">🍜 Dinner</button>
-                        </div>
-                        <div id="absentStudentsList" class="students-list">
-                            <p class="text-center">Loading...</p>
-                        </div>
-                    </div>
-
-                    <div class="scheduler-status">
-                        <h2>Automatic Scheduler</h2>
-                        <div id="schedulerStatusBox" class="status-box">Loading...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Leave Credits Page -->
-            <div id="page-leave" class="page">
-                <header class="page-header">
-                    <h1>Leave Credits</h1>
-                    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-                        <button class="btn-primary" id="btnNewLeaveRequest" onclick="showLeaveRequestModal()">+ New Leave Request</button>
-                        <button class="btn-secondary" onclick="showComputeModal()">⚙️ Compute Credits</button>
-                    </div>
-                </header>
-
-                <!-- Stats row -->
-                <div class="leave-stats-row" id="leaveStatsRow">
-                    <div class="leave-stat-card" id="leaveStat_pending">
-                        <div class="lsc-icon">⏳</div>
-                        <div class="lsc-body">
-                            <div class="lsc-num" id="leaveStatPending">—</div>
-                            <div class="lsc-label">Pending Requests</div>
-                        </div>
-                    </div>
-                    <div class="leave-stat-card" id="leaveStat_approved">
-                        <div class="lsc-icon">✅</div>
-                        <div class="lsc-body">
-                            <div class="lsc-num" id="leaveStatApproved">—</div>
-                            <div class="lsc-label">Approved Requests</div>
-                        </div>
-                    </div>
-                    <div class="leave-stat-card" id="leaveStat_credits">
-                        <div class="lsc-icon">💰</div>
-                        <div class="lsc-body">
-                            <div class="lsc-num" id="leaveStatCredits">—</div>
-                            <div class="lsc-label">Credits Computed</div>
-                        </div>
-                    </div>
-                    <div class="leave-stat-card" id="leaveStat_applied">
-                        <div class="lsc-icon">🏦</div>
-                        <div class="lsc-body">
-                            <div class="lsc-num" id="leaveStatApplied">—</div>
-                            <div class="lsc-label">Credits Applied</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tabs -->
-                <div class="leave-tabs">
-                    <button class="leave-tab-btn active" id="leaveTab_requests" onclick="switchLeaveTab('requests')">📋 Leave Requests</button>
-                    <button class="leave-tab-btn" id="leaveTab_credits" onclick="switchLeaveTab('credits')">💰 Credit Records</button>
-                </div>
-
-                <!-- Leave Requests Panel -->
-                <div id="leavePanel_requests" class="leave-panel active">
-                    <div class="leave-filters">
-                        <div class="filter-group">
-                            <label>Status</label>
-                            <select id="leaveFilterStatus" onchange="loadLeaveRequests()">
-                                <option value="">All</option>
-                                <option value="PENDING">Pending</option>
-                                <option value="APPROVED">Approved</option>
-                                <option value="REJECTED">Rejected</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Month</label>
-                            <input type="month" id="leaveFilterMonth" onchange="loadLeaveRequests()">
-                        </div>
-                        <button class="btn-secondary" onclick="loadLeaveRequests()">🔄 Refresh</button>
-                    </div>
-                    <div class="table-container" style="margin-top:1rem;">
-                        <table id="leaveRequestsTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Student</th>
-                                    <th>From</th>
-                                    <th>To</th>
-                                    <th>Days</th>
-                                    <th>Type</th>
-                                    <th>Month</th>
-                                    <th>Reason</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="leaveRequestsBody">
-                                <tr><td colspan="10" class="text-center">Loading…</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Credit Records Panel -->
-                <div id="leavePanel_credits" class="leave-panel">
-                    <div class="leave-filters">
-                        <div class="filter-group">
-                            <label>Leave Month</label>
-                            <input type="month" id="creditFilterMonth" onchange="loadCreditRecords()">
-                        </div>
-                        <div class="filter-group">
-                            <label>Status</label>
-                            <select id="creditFilterStatus" onchange="loadCreditRecords()">
-                                <option value="">All</option>
-                                <option value="PENDING">Pending</option>
-                                <option value="APPLIED">Applied</option>
-                            </select>
-                        </div>
-                        <button class="btn-secondary" onclick="loadCreditRecords()">🔄 Refresh</button>
-                    </div>
-                    <div class="table-container" style="margin-top:1rem;">
-                        <table id="creditRecordsTable">
-                            <thead>
-                                <tr>
-                                    <th>Student</th>
-                                    <th>Leave Month</th>
-                                    <th>Credit Month</th>
-                                    <th>Absent Days</th>
-                                    <th>Credit Days</th>
-                                    <th>Source</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="creditRecordsBody">
-                                <tr><td colspan="7" class="text-center">Loading…</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Profiles Page -->
-            <div id="page-profiles" class="page">
-                <header class="page-header">
-                    <h1>Student Profiles</h1>
-                </header>
-                <div class="search-bar" style="margin-bottom: 1.5rem;">
-                    <input type="text" id="profileSearch" placeholder="Search profiles by name, ID, phone..." onkeyup="filterProfilesGrid()">
-                </div>
-                <div id="profilesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
-                    <!-- Profile cards generated via JS -->
-                </div>
-            </div>
-
-            <!-- Settings Page -->
-            <div id="page-settings" class="page">
-                <header class="page-header">
-                    <h1>Settings</h1>
-                </header>
-
-                <div class="settings-section">
-                    <h2>Meal Timings</h2>
-                    <div id="mealTimingsContainer"></div>
-                </div>
-
-                <div class="settings-section">
-                    <h2>Meal Prices (Monthly)</h2>
-                    <div id="mealPricesContainer" class="settings-grid"></div>
-                </div>
-            </div>
-
-            <!-- Profile Page -->
-            <div id="page-profile" class="page">
-                <header class="page-header">
-                    <h1>Profile</h1>
-                </header>
-
-                <div class="search-bar" style="margin-bottom: 2rem;">
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="profileSearchInput" placeholder="Search by Student ID or Name..." style="flex: 1;" onkeypress="if(event.key === 'Enter') searchStudentProfile()">
-                        <button class="btn-primary" onclick="searchStudentProfile()">Search</button>
-                    </div>
-                </div>
-
-                <div id="profileContentContainer" style="display: none;">
-                    <div class="profile-header" style="display: flex; align-items: center; gap: 20px; background: var(--white); padding: 2rem; border-radius: 24px; box-shadow: var(--card-shadow);">
-                        <div class="profile-avatar">
-                            <img id="profilePhoto" src="" alt="Student" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23e0e4ff\\'/><text x=\\'50\\' y=\\'50\\' font-family=\\'Arial\\' font-size=\\'40\\' fill=\\'%236c5ce7\\' text-anchor=\\'middle\\' dy=\\'.3em\\'>👤</text></svg>'" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #e0e4ff;">
-                        </div>
-                        <div class="profile-title" style="flex: 1;">
-                            <h2 id="profileName" style="font-size: 2.5rem; color: #2d3436; margin-bottom: 5px;">-</h2>
-                            <p class="student-id" style="color: #6c5ce7; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px;">ID: <span id="profileStudentId">-</span></p>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <span id="profileStatusBadge" class="badge badge-success">Active</span>
-                                <button id="toggleStatusBtn" class="btn-secondary" onclick="toggleStudentStatus()" style="padding: 0.4rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 5px;">⏸ Deactivate</button>
-                                <button class="btn-primary" id="editProfileBtn" onclick="triggerEditFromProfile()" style="padding: 0.4rem 1rem; font-size: 0.9rem; background-color: #0984e3; display: flex; align-items: center; gap: 5px;">Edit Profile</button>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div class="settings-grid" style="margin-top: 2rem;">
-                        <div class="timing-card">
-                            <h3>Student Details</h3>
-                            <div style="font-size: 1.2rem; line-height: 1.8;">
-                                <p><strong>Department:</strong> <span id="profileDept">-</span></p>
-                                <p><strong>Phone:</strong> <span id="profilePhone">-</span></p>
-                                <p><strong>Meal Plan:</strong> <span id="profileMealPlan" class="badge badge-warning">-</span></p>
-                                <p><strong>Payment Upto:</strong> <span id="profilePaymentUpto">-</span></p>
+                    <div class="current-meal-banner" id="currentMealBanner">
+                        <div class="meal-label">
+                            <span>Current Meal</span>
+                            <div class="live-indicator" id="liveIndicator" style="display: none;">
+                                <div class="live-dot"></div>
+                                <span>Live</span>
                             </div>
                         </div>
-                        <div class="timing-card" style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                            <h3>QR Code</h3>
-                            <img id="profileQrCode" src="" alt="QR Code" style="max-width: 150px; display: none; margin: 10px auto;">
-                            <p id="profileQrPlaceholder" style="color: #999;">No QR generated</p>
+                        <div class="meal-info">
+                            <div class="meal-name" id="currentMealDash">-</div>
+                            <div class="meal-time" id="currentMealTime"></div>
                         </div>
                     </div>
 
-                    <div class="recent-activity" style="margin-top: 2rem;">
-                        <h2>Recent Attendance (Last 30 Days)</h2>
+                    <!-- Pending Payments Widget -->
+                    <div class="unpaid-widget" id="unpaidWidget">
+                        <div class="unpaid-widget-header">
+                            <span>⚠️ Pending Payments — Current Month</span>
+                            <span class="unpaid-count-badge" id="unpaidCountBadge" style="display:none;"></span>
+                        </div>
+                        <div id="unpaidWidgetBody">
+                            <p class="text-center" style="color:var(--text-secondary);">Loading…</p>
+                        </div>
+                    </div>
+
+                    <div class="recent-activity">
+                        <h2>Today's Attendance</h2>
                         <div class="table-container">
-                            <table id="profileHistoryTable">
+                            <table id="recentTable">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
+                                        <th>Student ID</th>
+                                        <th>Name</th>
                                         <th>Meal Type</th>
-                                        <th>Scan Time</th>
+                                        <th>Time</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
-                                <tbody id="profileHistoryBody">
+                                <tbody id="recentTableBody">
                                     <tr>
-                                        <td colspan="4" class="text-center">Loading...</td>
+                                        <td colspan="5" class="text-center">Loading...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -509,561 +139,932 @@
                     </div>
                 </div>
 
-                <div id="profileErrorContainer" style="display: none; background: #fff0f0; border: 2px solid #ffebeb; padding: 2rem; border-radius: 15px; color: #d63031; text-align: center; margin-top: 20px;">
-                    <h3 style="font-size: 1.5rem; margin-bottom: 10px;">Student Not Found</h3>
-                    <p>Please check the Student ID and try again.</p>
-                </div>
-            </div>
+                <!-- Students Page -->
+                <div id="page-students" class="page">
+                    <header class="page-header">
+                        <h1>Student Management</h1>
+                        <button class="btn-primary" onclick="showAddStudentModal()">+ Add Student</button>
+                    </header>
 
-            <!-- Payments Page -->
-            <div id="page-payments" class="page">
-                <header class="page-header">
-                    <h1>💰 Payments</h1>
-                    <button class="btn-primary" onclick="openPayStudentSearch()">🔍 Open Student Account</button>
-                </header>
-
-                <!-- Fee Settings Card -->
-                <div class="pay-section-card">
-                    <div class="pay-section-header">
-                        <h2>⚙️ Fee Settings</h2>
-                        <button class="btn-primary" style="padding:0.6rem 1.4rem;font-size:1rem;" onclick="saveFeeSettings()">💾 Save All</button>
-                    </div>
-                    <div class="table-container" style="margin-top:1rem;">
-                        <table id="feeSettingsTable">
-                            <thead><tr>
-                                <th>Meal Plan</th>
-                                <th>Monthly Fee (₹)</th>
-                                <th>Vacation Threshold Days</th>
-                            </tr></thead>
-                            <tbody id="feeSettingsBody">
-                                <tr><td colspan="3" class="text-center">Loading…</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Unpaid Summary Card -->
-                <div class="pay-section-card" style="margin-top:1.5rem;">
-                    <div class="pay-section-header">
-                        <h2>⚠️ Pending Payments — Current Month</h2>
-                        <button class="btn-secondary" style="padding:0.6rem 1.2rem;font-size:1rem;" onclick="loadUnpaidSummary()">🔄 Refresh</button>
-                    </div>
-                    <div class="table-container" style="margin-top:1rem;">
-                        <table id="unpaidSummaryTable">
-                            <thead><tr>
-                                <th>Student</th>
-                                <th>Meal Plan</th>
-                                <th>This Month's Bill (₹)</th>
-                                <th>Balance (₹)</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr></thead>
-                            <tbody id="unpaidSummaryBody">
-                                <tr><td colspan="6" class="text-center">Loading…</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Student Payment Modal -->
-        <div id="payStudentSearchModal" class="modal">
-            <div class="modal-content" style="max-width:28rem;">
-                <span class="close" onclick="closePayStudentSearch()">×</span>
-                <h2>🔍 Open Student Account</h2>
-                <div class="form-group">
-                    <label>Student ID</label>
-                    <input type="text" id="paySearchStudentId" placeholder="e.g. 101" onkeydown="if(event.key==='Enter') openStudentPaymentModal()">
-                </div>
-                <div class="form-actions">
-                    <button class="btn-primary" onclick="openStudentPaymentModal()">Open Account</button>
-                    <button class="btn-secondary" onclick="closePayStudentSearch()">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Student Modal -->
-    <div id="addStudentModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeAddStudentModal()">&times;</span>
-            <h2>Add New Student</h2>
-            <form id="addStudentForm" onsubmit="addStudent(event)">
-                <div class="form-group">
-                    <label>Student ID *</label>
-                    <input type="text" name="student_id" required>
-                </div>
-                <div class="form-group">
-                    <label>Name *</label>
-                    <input type="text" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label>Student Department</label>
-                    <input type="text" name="student_department" placeholder="e.g., Computer Science">
-                </div>
-                <div class="form-group">
-                    <label>Phone Number (with country code)</label>
-                    <input type="tel" name="phone_number" placeholder="+919876543210">
-                </div>
-                <div class="form-group">
-                    <label>Meal Plan</label>
-                    <select name="meal_plan">
-                        <option value="FULL">Full (Lunch + Dinner)</option>
-                        <option value="LUNCH_ONLY">Lunch Only</option>
-                        <option value="DINNER_ONLY">Dinner Only</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Join Date *</label>
-                    <input type="date" name="join_date" id="addStudentJoinDate" required>
-                </div>
-                <div class="form-group">
-                    <label>Mess Price (Monthly Fee in Rs)</label>
-                    <input type="number" name="mess_price" id="addStudentMessPrice" step="0.01" min="0" placeholder="Default: 3000 Rs">
-                </div>
-                <div class="form-group">
-                    <label>Photo</label>
-                    <div class="camera-container" style="position: relative; width: 100%; max-width: 320px; border-radius: 12px; overflow: hidden; background: #2f3542; aspect-ratio: 4/3; margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: center; border: 2px solid #e0e4ff; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                        <!-- Video stream from camera -->
-                        <video id="addStudentVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none;"></video>
-                        <!-- Captured photo preview -->
-                        <img id="addStudentCapturedPhoto" style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none;">
-                        <!-- Placeholder when camera is off -->
-                        <div id="addStudentCameraPlaceholder" style="text-align: center; color: #a4b0be; font-size: 0.9rem; padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                            <span style="font-size: 2.5rem;">📷</span>
-                            <span>Camera is off</span>
+                    <div class="stats-overview" style="margin-bottom: 1.5rem;">
+                        <div class="stat-box" style="padding: 1.5rem;">
+                            <div class="stat-content">
+                                <h3 id="studentStatsLunch">0 / 0</h3>
+                                <p>Lunch (P / A)</p>
+                            </div>
+                        </div>
+                        <div class="stat-box" style="padding: 1.5rem;">
+                            <div class="stat-content">
+                                <h3 id="studentStatsDinner">0 / 0</h3>
+                                <p>Dinner (P / A)</p>
+                            </div>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                        <button type="button" id="btnStartCamera" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-radius: 6px;" onclick="startAddStudentCamera()">
-                            🔌 Open Camera
-                        </button>
-                        <button type="button" id="btnCapturePhoto" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem; display: none; align-items: center; gap: 0.4rem; cursor: pointer; border-radius: 6px;" onclick="captureAddStudentPhoto()">
-                            📸 Capture Photo
-                        </button>
-                        <button type="button" id="btnRetakePhoto" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem; display: none; align-items: center; gap: 0.4rem; cursor: pointer; border-radius: 6px;" onclick="retakeAddStudentPhoto()">
-                            🔄 Retake
-                        </button>
+
+                    <div class="search-bar">
+                        <input type="text" id="studentSearch" placeholder="Search students..."
+                            onkeyup="filterStudents()">
+                    </div>
+
+                    <div class="table-container">
+                        <table id="studentsTable">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Meal Plan</th>
+                                    <th>Today's Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Add Student</button>
-                    <button type="button" class="btn-secondary" onclick="closeAddStudentModal()">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    <!-- Edit Student Modal -->
-    <div id="editStudentModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeEditStudentModal()">&times;</span>
-            <h2>Edit Student Profile</h2>
-            <form id="editStudentForm" onsubmit="submitEditStudentForm(event)">
-                <input type="hidden" id="editStudentOriginalId">
-                
-                <div class="form-group">
-                    <label>Student ID *</label>
-                    <input type="text" name="student_id" id="editStudentId" required>
-                </div>
-                <div class="form-group">
-                    <label>Name *</label>
-                    <input type="text" name="name" id="editStudentName" required>
-                </div>
-                <div class="form-group">
-                    <label>Student Department</label>
-                    <input type="text" name="student_department" id="editStudentDept" placeholder="e.g., Computer Science">
-                </div>
-                <div class="form-group">
-                    <label>Phone Number (with country code)</label>
-                    <input type="tel" name="phone_number" id="editStudentPhone" placeholder="+919876543210">
-                </div>
-                <div class="form-group">
-                    <label>Meal Plan</label>
-                    <select name="meal_plan" id="editStudentMealPlan">
-                        <option value="FULL">Full (Lunch + Dinner)</option>
-                        <option value="LUNCH_ONLY">Lunch Only</option>
-                        <option value="DINNER_ONLY">Dinner Only</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Mess Price (Monthly Fee in Rs)</label>
-                    <input type="number" name="mess_price" id="editStudentMessPrice" step="0.01" min="0" placeholder="e.g., 3000">
-                </div>
-                <div class="form-group">
-                    <label>Join Date *</label>
-                    <input type="date" name="join_date" id="editStudentJoinDate" required>
-                </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <select name="active" id="editStudentActive">
-                        <option value="1">Active</option>
-                        <option value="0">Inactive</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Photo <span style="font-size: 0.8rem; color: #888;">(Leave blank to keep existing photo)</span></label>
-                    <input type="file" name="photo" accept="image/*">
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Save Changes</button>
-                    <button type="button" class="btn-secondary" onclick="closeEditStudentModal()">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
+                <!-- Reports Page -->
+                <div id="page-reports" class="page">
+                    <header class="page-header">
+                        <h1>Attendance Reports</h1>
+                    </header>
 
-    <!-- Leave Request Modal -->
-    <div id="leaveRequestModal" class="modal">
-        <div class="modal-content" style="max-width:40rem;">
-            <span class="close" onclick="closeLeaveRequestModal()">&times;</span>
-            <h2>🗓️ New Leave Request</h2>
-            <form id="leaveRequestForm" onsubmit="submitLeaveRequest(event)">
-                <div class="form-group">
-                    <label>Student ID *</label>
-                    <input type="text" id="leaveStudentId" name="student_id" required placeholder="e.g., 101">
-                </div>
-                <div class="form-group">
-                    <label>From Date *</label>
-                    <input type="date" id="leaveFromDate" name="from_date" required>
-                </div>
-                <div class="form-group">
-                    <label>To Date *</label>
-                    <input type="date" id="leaveToDate" name="to_date" required>
-                </div>
-                <div class="form-group">
-                    <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;">
-                        <input type="checkbox" id="leaveIsHalfDay" name="is_half_day"
-                               onchange="toggleHalfDayMeal()" style="width:auto;margin:0;">
-                        Half-Day Leave
-                    </label>
-                </div>
-                <div class="form-group" id="halfDayMealGroup" style="display:none;">
-                    <label>Which Meal is Missed? *</label>
-                    <select id="leaveHalfDayMeal" name="half_day_meal">
-                        <option value="lunch">Lunch (morning off)</option>
-                        <option value="dinner">Dinner (evening off)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Reason</label>
-                    <input type="text" id="leaveReason" name="reason" placeholder="Optional reason">
-                </div>
-                <div id="leaveDayPreview" class="leave-day-preview" style="display:none;"></div>
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Submit Request</button>
-                    <button type="button" class="btn-secondary" onclick="closeLeaveRequestModal()">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
+                    <div class="report-filters">
+                        <div class="filter-group">
+                            <label>Start Date:</label>
+                            <input type="date" id="reportStartDate">
+                        </div>
+                        <div class="filter-group">
+                            <label>End Date:</label>
+                            <input type="date" id="reportEndDate">
+                        </div>
+                        <div class="filter-group">
+                            <label>Meal Type:</label>
+                            <select id="reportMealType">
+                                <option value="">All</option>
+                                <option value="LUNCH">Lunch</option>
+                                <option value="DINNER">Dinner</option>
+                            </select>
+                        </div>
+                        <button class="btn-primary" onclick="generateReport()">Generate Report</button>
+                        <button class="btn-secondary" onclick="exportExcel()">Export Excel</button>
+                    </div>
 
-    <!-- Compute Credits Modal -->
-    <div id="computeModal" class="modal">
-        <div class="modal-content" style="max-width:36rem;">
-            <span class="close" onclick="closeComputeModal()">&times;</span>
-            <h2>⚙️ Compute / Apply Credits</h2>
-            <div class="form-group">
-                <label>Month (YYYY-MM)</label>
-                <input type="month" id="computeMonth">
-            </div>
-            <div class="compute-actions">
-                <button class="btn-primary" onclick="triggerCompute('auto')">🔍 Auto Compute</button>
-                <button class="btn-primary" onclick="triggerCompute('manual')">📋 Manual Compute</button>
-                <button class="btn-primary" onclick="triggerCompute('merged')">🔀 Merged Compute</button>
-                <button class="btn-success" style="width:100%;margin-top:0.5rem;" onclick="triggerApply()">💰 Apply Credits to Next Month</button>
-            </div>
-            <div id="computeResult" style="margin-top:1.5rem;"></div>
-        </div>
-    </div>
-
-    <!-- Student Profile & Payment Modal -->
-    <div id="studentProfileModal" class="modal">
-        <div class="modal-content pay-student-modal-content">
-            <span class="close" onclick="closeStudentProfileModal()">×</span>
-            <div class="pay-modal-header">
-                <div style="display:flex; gap:1.5rem; align-items:center;">
-                    <div id="profileModalPhoto" style="width: 80px; height: 80px; border-radius: 50%; background-color: var(--border-color); display:flex; align-items:center; justify-content:center; font-size: 2.5rem; color: var(--text-secondary); overflow:hidden;">👤</div>
-                    <div>
-                        <h2 id="payModalStudentName">Student</h2>
-                        <p id="payModalStudentMeta" style="color:var(--text-secondary);font-size:1rem;"></p>
+                    <div id="reportResults" class="report-results">
+                        <p class="text-center">Select date range and click "Generate Report"</p>
                     </div>
                 </div>
-                <div class="pay-balance-chip" id="payBalanceChip">Loading…</div>
-            </div>
 
-            <!-- Tabs -->
-            <div class="pay-modal-tabs" style="flex-wrap: wrap;">
-                <button class="pay-modal-tab active" id="pmtab_overview" onclick="switchProfileTab('overview')">ℹ️ Overview</button>
-                <button class="pay-modal-tab" id="pmtab_addpay" onclick="switchProfileTab('addpay')">➕ Add Payment</button>
-                <button class="pay-modal-tab" id="pmtab_bills" onclick="switchProfileTab('bills')">🧾 Bills</button>
-                <button class="pay-modal-tab" id="pmtab_history" onclick="switchProfileTab('history')">📋 Payment History</button>
-                <button class="pay-modal-tab" id="pmtab_absent" onclick="switchProfileTab('absent')">📅 Absent Dates</button>
-            </div>
+                <!-- Reminders Page -->
+                <div id="page-reminders" class="page">
+                    <header class="page-header">
+                        <h1>WhatsApp Reminders</h1>
+                    </header>
 
-            <!-- Tab: Overview -->
-            <div id="payTab_overview" class="pay-modal-tab-panel active">
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                     <!-- Info card -->
-                     <div class="pay-gen-bill-box" style="margin:0;">
-                         <h3 style="margin-bottom:1rem; border-bottom:1px solid #e0e4ff; padding-bottom:0.5rem; display: flex; justify-content: space-between; align-items: center;">
-                             <span>Student Details</span>
-                             <button class="btn-primary" onclick="triggerEditFromAccountModal()" style="padding: 4px 8px; font-size: 0.8rem; background-color: #0984e3; border: none; border-radius: 4px; color: white; cursor: pointer;">Edit</button>
-                         </h3>
-                         <div style="display:flex; flex-direction:column; gap:0.5rem;">
-                             <p><strong>Phone:</strong> <span id="profPhone">—</span></p>
-                             <p><strong>Department:</strong> <span id="profDept">—</span></p>
-                             <p><strong>Meal Plan:</strong> <span id="profPlan">—</span></p>
-                             <p><strong>Mess Price (Rs):</strong> <span id="profMessPrice">—</span></p>
-                             <p><strong>Joined:</strong> <span id="profJoined">—</span></p>
-                             <p><strong>Status:</strong> <span id="profStatus">—</span></p>
-                             <p><strong>Payment Upto:</strong> <span id="profPaymentUpto">—</span></p>
-                         </div>
-                     </div>
-                     <!-- QR Card -->
-                     <div class="pay-gen-bill-box" style="margin:0; text-align:center;">
-                         <h3 style="margin-bottom:1rem; border-bottom:1px solid #e0e4ff; padding-bottom:0.5rem;">QR Code</h3>
-                         <div id="profQRCode" style="display:inline-block; padding:0.5rem; background:#fff; border-radius:8px;"></div>
-                         <div style="margin-top:0.5rem;">
-                             <button class="btn-primary" onclick="downloadProfileQR()" style="padding:0.4rem 1rem; font-size:0.9rem;">⬇️ Download</button>
-                         </div>
-                     </div>
+                    <div class="reminders-section">
+                        <div class="reminder-controls">
+                            <h2>Today's Reminders</h2>
+                            <div class="control-buttons">
+                                <button class="btn-primary" onclick="loadReminderStats()">📊 Refresh Stats</button>
+                                <button class="btn-success" onclick="triggerReminder('LUNCH')">🍛 Send Lunch
+                                    Reminder</button>
+                                <button class="btn-success" onclick="triggerReminder('DINNER')">🍜 Send Dinner
+                                    Reminder</button>
+                            </div>
+                        </div>
+
+                        <div class="reminders-stats">
+                            <div class="stat-card">
+                                <h3>Lunch Reminders</h3>
+                                <div class="stat-numbers">
+                                    <div><span class="label">Sent:</span> <span id="lunchSent" class="number">0</span>
+                                    </div>
+                                    <div><span class="label">Failed:</span> <span id="lunchFailed"
+                                            class="number">0</span>
+                                    </div>
+                                    <div><span class="label">Pending:</span> <span id="lunchPending"
+                                            class="number">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Dinner Reminders</h3>
+                                <div class="stat-numbers">
+                                    <div><span class="label">Sent:</span> <span id="dinnerSent" class="number">0</span>
+                                    </div>
+                                    <div><span class="label">Failed:</span> <span id="dinnerFailed"
+                                            class="number">0</span>
+                                    </div>
+                                    <div><span class="label">Pending:</span> <span id="dinnerPending"
+                                            class="number">0</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="absent-students">
+                            <h2>Absent Students</h2>
+                            <div class="absent-tabs">
+                                <button class="tab-button active" onclick="switchAbsentTab('LUNCH')">🍛 Lunch</button>
+                                <button class="tab-button" onclick="switchAbsentTab('DINNER')">🍜 Dinner</button>
+                            </div>
+                            <div id="absentStudentsList" class="students-list">
+                                <p class="text-center">Loading...</p>
+                            </div>
+                        </div>
+
+                        <div class="scheduler-status">
+                            <h2>Automatic Scheduler</h2>
+                            <div id="schedulerStatusBox" class="status-box">Loading...</div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Balance Summary -->
-                <div class="pay-balance-cards" id="payBalanceCards">
-                    <div class="pay-bal-card">
-                        <div class="pay-bal-label">Total Billed</div>
-                        <div class="pay-bal-val" id="payTotalBilled">—</div>
+                <!-- Leave Credits Page -->
+                <div id="page-leave" class="page">
+                    <header class="page-header">
+                        <h1>Leave Credits</h1>
+                        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                            <button class="btn-primary" id="btnNewLeaveRequest" onclick="showLeaveRequestModal()">+ New
+                                Leave Request</button>
+                            <button class="btn-secondary" onclick="showComputeModal()">⚙️ Compute Credits</button>
+                        </div>
+                    </header>
+
+                    <!-- Stats row -->
+                    <div class="leave-stats-row" id="leaveStatsRow">
+                        <div class="leave-stat-card" id="leaveStat_pending">
+                            <div class="lsc-icon">⏳</div>
+                            <div class="lsc-body">
+                                <div class="lsc-num" id="leaveStatPending">—</div>
+                                <div class="lsc-label">Pending Requests</div>
+                            </div>
+                        </div>
+                        <div class="leave-stat-card" id="leaveStat_approved">
+                            <div class="lsc-icon">✅</div>
+                            <div class="lsc-body">
+                                <div class="lsc-num" id="leaveStatApproved">—</div>
+                                <div class="lsc-label">Approved Requests</div>
+                            </div>
+                        </div>
+                        <div class="leave-stat-card" id="leaveStat_credits">
+                            <div class="lsc-icon">💰</div>
+                            <div class="lsc-body">
+                                <div class="lsc-num" id="leaveStatCredits">—</div>
+                                <div class="lsc-label">Credits Computed</div>
+                            </div>
+                        </div>
+                        <div class="leave-stat-card" id="leaveStat_applied">
+                            <div class="lsc-icon">🏦</div>
+                            <div class="lsc-body">
+                                <div class="lsc-num" id="leaveStatApplied">—</div>
+                                <div class="lsc-label">Credits Applied</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="pay-bal-card">
-                        <div class="pay-bal-label">Total Paid</div>
-                        <div class="pay-bal-val" id="payTotalPaid">—</div>
+
+                    <!-- Tabs -->
+                    <div class="leave-tabs">
+                        <button class="leave-tab-btn active" id="leaveTab_requests"
+                            onclick="switchLeaveTab('requests')">📋 Leave Requests</button>
+                        <button class="leave-tab-btn" id="leaveTab_credits" onclick="switchLeaveTab('credits')">💰
+                            Credit Records</button>
                     </div>
-                    <div class="pay-bal-card pay-bal-card-balance">
-                        <div class="pay-bal-label">Balance (₹)</div>
-                        <div class="pay-bal-val" id="payBalance">—</div>
+
+                    <!-- Leave Requests Panel -->
+                    <div id="leavePanel_requests" class="leave-panel active">
+                        <div class="leave-filters">
+                            <div class="filter-group">
+                                <label>Status</label>
+                                <select id="leaveFilterStatus" onchange="loadLeaveRequests()">
+                                    <option value="">All</option>
+                                    <option value="PENDING">Pending</option>
+                                    <option value="APPROVED">Approved</option>
+                                    <option value="REJECTED">Rejected</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Month</label>
+                                <input type="month" id="leaveFilterMonth" onchange="loadLeaveRequests()">
+                            </div>
+                            <button class="btn-secondary" onclick="loadLeaveRequests()">🔄 Refresh</button>
+                        </div>
+                        <div class="table-container" style="margin-top:1rem;">
+                            <table id="leaveRequestsTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Student</th>
+                                        <th>From</th>
+                                        <th>To</th>
+                                        <th>Days</th>
+                                        <th>Type</th>
+                                        <th>Month</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leaveRequestsBody">
+                                    <tr>
+                                        <td colspan="10" class="text-center">Loading…</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Credit Records Panel -->
+                    <div id="leavePanel_credits" class="leave-panel">
+                        <div class="leave-filters">
+                            <div class="filter-group">
+                                <label>Leave Month</label>
+                                <input type="month" id="creditFilterMonth" onchange="loadCreditRecords()">
+                            </div>
+                            <div class="filter-group">
+                                <label>Status</label>
+                                <select id="creditFilterStatus" onchange="loadCreditRecords()">
+                                    <option value="">All</option>
+                                    <option value="PENDING">Pending</option>
+                                    <option value="APPLIED">Applied</option>
+                                </select>
+                            </div>
+                            <button class="btn-secondary" onclick="loadCreditRecords()">🔄 Refresh</button>
+                        </div>
+                        <div class="table-container" style="margin-top:1rem;">
+                            <table id="creditRecordsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Leave Month</th>
+                                        <th>Credit Month</th>
+                                        <th>Absent Days</th>
+                                        <th>Credit Days</th>
+                                        <th>Source</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="creditRecordsBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center">Loading…</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Tab: Add Payment -->
-            <div id="payTab_addpay" class="pay-modal-tab-panel">
-                <form id="addPaymentForm" onsubmit="submitAddPayment(event)">
+                <!-- Profiles Page -->
+                <div id="page-profiles" class="page">
+                    <header class="page-header">
+                        <h1>Student Profiles</h1>
+                    </header>
+                    <div class="search-bar" style="margin-bottom: 1.5rem;">
+                        <input type="text" id="profileSearch" placeholder="Search profiles by name, ID, phone..."
+                            onkeyup="filterProfilesGrid()">
+                    </div>
+                    <div id="profilesGrid"
+                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                        <!-- Profile cards generated via JS -->
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div id="page-settings" class="page">
+                    <header class="page-header">
+                        <h1>Settings</h1>
+                    </header>
+
+                    <div class="settings-section">
+                        <h2>Meal Timings</h2>
+                        <div id="mealTimingsContainer" class="settings-grid"></div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h2>Meal Prices (Monthly)</h2>
+                        <div id="mealPricesContainer" class="settings-grid"></div>
+                    </div>
+                </div>
+
+                <!-- Payments Page -->
+                <div id="page-payments" class="page">
+                    <header class="page-header">
+                        <h1>💰 Payments</h1>
+                        <button class="btn-primary" onclick="openPayStudentSearch()">🔍 Open Student Account</button>
+                    </header>
+
+                    <!-- Fee Settings Card -->
+                    <div class="pay-section-card">
+                        <div class="pay-section-header">
+                            <h2>⚙️ Fee Settings</h2>
+                            <button class="btn-primary" style="padding:0.6rem 1.4rem;font-size:1rem;"
+                                onclick="saveFeeSettings()">💾 Save All</button>
+                        </div>
+                        <div class="table-container" style="margin-top:1rem;">
+                            <table id="feeSettingsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Meal Plan</th>
+                                        <th>Monthly Fee (₹)</th>
+                                        <th>Vacation Threshold Days</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="feeSettingsBody">
+                                    <tr>
+                                        <td colspan="3" class="text-center">Loading…</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Unpaid Summary Card -->
+                    <div class="pay-section-card" style="margin-top:1.5rem;">
+                        <div class="pay-section-header">
+                            <h2>⚠️ Pending Payments — Current Month</h2>
+                            <button class="btn-secondary" style="padding:0.6rem 1.2rem;font-size:1rem;"
+                                onclick="loadUnpaidSummary()">🔄 Refresh</button>
+                        </div>
+                        <div class="table-container" style="margin-top:1rem;">
+                            <table id="unpaidSummaryTable">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Meal Plan</th>
+                                        <th>This Month's Bill (₹)</th>
+                                        <th>Balance (₹)</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="unpaidSummaryBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center">Loading…</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Student Payment Modal -->
+            <div id="payStudentSearchModal" class="modal">
+                <div class="modal-content" style="max-width:28rem;">
+                    <span class="close" onclick="closePayStudentSearch()">×</span>
+                    <h2>🔍 Open Student Account</h2>
                     <div class="form-group">
-                        <label>Date of Payment *</label>
-                        <input type="date" id="payDate" name="payment_date" required>
+                        <label>Student ID</label>
+                        <input type="text" id="paySearchStudentId" placeholder="e.g. 101"
+                            onkeydown="if(event.key==='Enter') openStudentPaymentModal()">
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-primary" onclick="openStudentPaymentModal()">Open Account</button>
+                        <button class="btn-secondary" onclick="closePayStudentSearch()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Student Modal -->
+        <div id="addStudentModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeAddStudentModal()">&times;</span>
+                <h2>Add New Student</h2>
+                <form id="addStudentForm" onsubmit="addStudent(event)">
+                    <div class="form-group">
+                        <label>Student ID *</label>
+                        <input type="text" name="student_id" required>
                     </div>
                     <div class="form-group">
-                        <label>Amount (₹) *</label>
-                        <input type="number" id="payAmount" name="amount" min="1" step="0.01" placeholder="e.g. 3000" required>
+                        <label>Name *</label>
+                        <input type="text" name="name" required>
                     </div>
                     <div class="form-group">
-                        <label>Payment Mode *</label>
-                        <select id="payMode" name="payment_mode" required>
-                            <option value="CASH">💵 Cash</option>
-                            <option value="UPI">📱 UPI</option>
-                            <option value="BANK_TRANSFER">🏦 Bank Transfer</option>
-                            <option value="OTHER">🔄 Other</option>
+                        <label>Student Department</label>
+                        <input type="text" name="student_department" placeholder="e.g., Computer Science">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number (with country code)</label>
+                        <input type="tel" name="phone_number" placeholder="+919876543210">
+                    </div>
+                    <div class="form-group">
+                        <label>Meal Plan</label>
+                        <select name="meal_plan">
+                            <option value="FULL">Full (Lunch + Dinner)</option>
+                            <option value="LUNCH_ONLY">Lunch Only</option>
+                            <option value="DINNER_ONLY">Dinner Only</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Note / Reference (optional)</label>
-                        <input type="text" id="payNote" name="reference_note" placeholder="e.g. UPI ref 123456 or 2 months advance">
+                        <label>Join Date *</label>
+                        <input type="date" name="join_date" id="addStudentJoinDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mess Price (Monthly Fee in Rs)</label>
+                        <input type="number" name="mess_price" id="addStudentMessPrice" step="0.01" min="0"
+                            placeholder="Default: 3000 Rs">
+                    </div>
+                    <div class="form-group">
+                        <label>Photo</label>
+                        <div class="camera-container"
+                            style="position: relative; width: 100%; max-width: 320px; border-radius: 12px; overflow: hidden; background: #2f3542; aspect-ratio: 4/3; margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: center; border: 2px solid #e0e4ff; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                            <!-- Video stream from camera -->
+                            <video id="addStudentVideo" autoplay playsinline
+                                style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none;"></video>
+                            <!-- Captured photo preview -->
+                            <img id="addStudentCapturedPhoto"
+                                style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none;">
+                            <!-- Placeholder when camera is off -->
+                            <div id="addStudentCameraPlaceholder"
+                                style="text-align: center; color: #a4b0be; font-size: 0.9rem; padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                                <span style="font-size: 2.5rem;">📷</span>
+                                <span>Camera is off</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                            <button type="button" id="btnStartCamera" class="btn-secondary"
+                                style="padding: 0.5rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; border-radius: 6px;"
+                                onclick="startAddStudentCamera()">
+                                🔌 Open Camera
+                            </button>
+                            <button type="button" id="btnCapturePhoto" class="btn-primary"
+                                style="padding: 0.5rem 1rem; font-size: 0.9rem; display: none; align-items: center; gap: 0.4rem; cursor: pointer; border-radius: 6px;"
+                                onclick="captureAddStudentPhoto()">
+                                📸 Capture Photo
+                            </button>
+                            <button type="button" id="btnRetakePhoto" class="btn-secondary"
+                                style="padding: 0.5rem 1rem; font-size: 0.9rem; display: none; align-items: center; gap: 0.4rem; cursor: pointer; border-radius: 6px;"
+                                onclick="retakeAddStudentPhoto()">
+                                🔄 Retake
+                            </button>
+                        </div>
                     </div>
                     <div class="form-actions">
-                        <button type="submit" class="btn-primary" id="submitPayBtn">✅ Record Payment</button>
+                        <button type="submit" class="btn-primary">Add Student</button>
+                        <button type="button" class="btn-secondary" onclick="closeAddStudentModal()">Cancel</button>
                     </div>
                 </form>
             </div>
+        </div>
 
-            <!-- Tab: Bills -->
-            <div id="payTab_bills" class="pay-modal-tab-panel">
-                <!-- Generate Bill Form -->
-                <div class="pay-gen-bill-box">
-                    <h3 style="margin-bottom:0.8rem;">+ Generate / Update Bill</h3>
-                    <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;">
-                        <div class="form-group" style="margin:0;flex:1;min-width:10rem;">
-                            <label>From Date</label>
-                            <input type="date" id="genBillFromDate" onchange="fetchAutoAbsentDays()">
-                        </div>
-                        <div class="form-group" style="margin:0;flex:1;min-width:10rem;">
-                            <label>To Date</label>
-                            <input type="date" id="genBillToDate" onchange="fetchAutoAbsentDays()">
-                        </div>
-                        <div class="form-group" style="margin:0;flex:1;min-width:9rem;">
-                            <label>Absent Days</label>
-                            <input type="number" id="genBillAbsent" min="0" step="0.5" value="0" placeholder="0">
-                        </div>
-                        <div class="form-group" style="margin:0;flex:2;min-width:12rem;">
-                            <label>Notes (optional)</label>
-                            <input type="text" id="genBillNotes" placeholder="Any note…">
-                        </div>
-                        <button class="btn-primary" style="padding:0.75rem 1.2rem;" onclick="generateStudentBill()">Generate</button>
+        <!-- Edit Student Modal -->
+        <div id="editStudentModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeEditStudentModal()">&times;</span>
+                <h2>Edit Student Profile</h2>
+                <form id="editStudentForm" onsubmit="submitEditStudentForm(event)">
+                    <input type="hidden" id="editStudentOriginalId">
+
+                    <div class="form-group">
+                        <label>Student ID *</label>
+                        <input type="text" name="student_id" id="editStudentId" required>
                     </div>
-                    <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-secondary);">💡 Per-plate price: FULL plan = monthly fee ÷ 60 (2 meals/day) | Lunch/Dinner only = monthly fee ÷ 30 (1 meal/day)</p>
-                </div>
-                <div class="table-container" style="margin-top:1rem;overflow-x:auto;">
-                    <table id="studentBillsTable">
-                        <thead><tr>
-                            <th>Date Range</th>
-                            <th>Days</th>
-                            <th>Plan</th>
-                            <th>Base Fee (₹)</th>
-                            <th>Absent Days</th>
-                            <th>Deduction (₹)</th>
-                            <th>Final Bill (₹)</th>
-                            <th>Notes</th>
-                        </tr></thead>
-                        <tbody id="studentBillsBody">
-                            <tr><td colspan="8" class="text-center">Loading…</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+                    <div class="form-group">
+                        <label>Name *</label>
+                        <input type="text" name="name" id="editStudentName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Student Department</label>
+                        <input type="text" name="student_department" id="editStudentDept"
+                            placeholder="e.g., Computer Science">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number (with country code)</label>
+                        <input type="tel" name="phone_number" id="editStudentPhone" placeholder="+919876543210">
+                    </div>
+                    <div class="form-group">
+                        <label>Meal Plan</label>
+                        <select name="meal_plan" id="editStudentMealPlan">
+                            <option value="FULL">Full (Lunch + Dinner)</option>
+                            <option value="LUNCH_ONLY">Lunch Only</option>
+                            <option value="DINNER_ONLY">Dinner Only</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Mess Price (Monthly Fee in Rs)</label>
+                        <input type="number" name="mess_price" id="editStudentMessPrice" step="0.01" min="0"
+                            placeholder="e.g., 3000">
+                    </div>
+                    <div class="form-group">
+                        <label>Join Date *</label>
+                        <input type="date" name="join_date" id="editStudentJoinDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select name="active" id="editStudentActive">
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Photo <span style="font-size: 0.8rem; color: #888;">(Leave blank to keep existing
+                                photo)</span></label>
+                        <input type="file" name="photo" accept="image/*">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Save Changes</button>
+                        <button type="button" class="btn-secondary" onclick="closeEditStudentModal()">Cancel</button>
+                    </div>
+                </form>
             </div>
+        </div>
 
-            <!-- Tab: Payment History -->
-            <div id="payTab_history" class="pay-modal-tab-panel">
-                <div class="table-container" style="overflow-x:auto;">
-                    <table id="payHistoryTable">
-                        <thead><tr>
-                            <th>Date</th>
-                            <th>Amount (₹)</th>
-                            <th>Mode</th>
-                            <th>Note</th>
-                            <th>Recorded</th>
-                            <th>Delete</th>
-                        </tr></thead>
-                        <tbody id="payHistoryBody">
-                            <tr><td colspan="6" class="text-center">Loading…</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+        <!-- Leave Request Modal -->
+        <div id="leaveRequestModal" class="modal">
+            <div class="modal-content" style="max-width:40rem;">
+                <span class="close" onclick="closeLeaveRequestModal()">&times;</span>
+                <h2>🗓️ New Leave Request</h2>
+                <form id="leaveRequestForm" onsubmit="submitLeaveRequest(event)">
+                    <div class="form-group">
+                        <label>Student ID *</label>
+                        <input type="text" id="leaveStudentId" name="student_id" required placeholder="e.g., 101">
+                    </div>
+                    <div class="form-group">
+                        <label>From Date *</label>
+                        <input type="date" id="leaveFromDate" name="from_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>To Date *</label>
+                        <input type="date" id="leaveToDate" name="to_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;">
+                            <input type="checkbox" id="leaveIsHalfDay" name="is_half_day" onchange="toggleHalfDayMeal()"
+                                style="width:auto;margin:0;">
+                            Half-Day Leave
+                        </label>
+                    </div>
+                    <div class="form-group" id="halfDayMealGroup" style="display:none;">
+                        <label>Which Meal is Missed? *</label>
+                        <select id="leaveHalfDayMeal" name="half_day_meal">
+                            <option value="lunch">Lunch (morning off)</option>
+                            <option value="dinner">Dinner (evening off)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Reason</label>
+                        <input type="text" id="leaveReason" name="reason" placeholder="Optional reason">
+                    </div>
+                    <div id="leaveDayPreview" class="leave-day-preview" style="display:none;"></div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Submit Request</button>
+                        <button type="button" class="btn-secondary" onclick="closeLeaveRequestModal()">Cancel</button>
+                    </div>
+                </form>
             </div>
+        </div>
 
-            <!-- Tab: Absent Dates -->
-            <div id="payTab_absent" class="pay-modal-tab-panel">
-                <div class="pay-gen-bill-box">
-                    <h3 style="margin-bottom: 1rem;">Log New Absent Dates</h3>
-                    <form id="absentForm">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: start; margin-bottom: 1rem;">
-                            <div class="form-group" style="margin: 0;">
-                                <label>From Date *</label>
-                                <input type="date" id="absentFromDate" required onchange="calculateAbsentDays()">
-                            </div>
-                            <div class="form-group" style="margin: 0;">
-                                <label>To Date *</label>
-                                <input type="date" id="absentToDate" required onchange="calculateAbsentDays()">
-                            </div>
-                            <div class="form-group" style="margin: 0;">
-                                <label>Total Leaves *</label>
-                                <input type="number" id="absentTotalLeaves" step="0.5" min="0" required>
-                            </div>
-                            <div class="form-group" style="margin: 0;">
-                                <label>Note (optional)</label>
-                                <input type="text" id="absentNote" placeholder="e.g. going home">
+        <!-- Compute Credits Modal -->
+        <div id="computeModal" class="modal">
+            <div class="modal-content" style="max-width:36rem;">
+                <span class="close" onclick="closeComputeModal()">&times;</span>
+                <h2>⚙️ Compute / Apply Credits</h2>
+                <div class="form-group">
+                    <label>Month (YYYY-MM)</label>
+                    <input type="month" id="computeMonth">
+                </div>
+                <div class="compute-actions">
+                    <button class="btn-primary" onclick="triggerCompute('auto')">🔍 Auto Compute</button>
+                    <button class="btn-primary" onclick="triggerCompute('manual')">📋 Manual Compute</button>
+                    <button class="btn-primary" onclick="triggerCompute('merged')">🔀 Merged Compute</button>
+                    <button class="btn-success" style="width:100%;margin-top:0.5rem;" onclick="triggerApply()">💰 Apply
+                        Credits to Next Month</button>
+                </div>
+                <div id="computeResult" style="margin-top:1.5rem;"></div>
+            </div>
+        </div>
+
+        <!-- Student Profile & Payment Modal -->
+        <div id="studentProfileModal" class="modal">
+            <div class="modal-content pay-student-modal-content">
+                <span class="close" onclick="closeStudentProfileModal()">×</span>
+                <div class="pay-modal-header">
+                    <div style="display:flex; gap:1.5rem; align-items:center;">
+                        <div id="profileModalPhoto"
+                            style="width: 80px; height: 80px; border-radius: 50%; background-color: var(--border-color); display:flex; align-items:center; justify-content:center; font-size: 2.5rem; color: var(--text-secondary); overflow:hidden;">
+                            👤</div>
+                        <div>
+                            <h2 id="payModalStudentName">Student</h2>
+                            <p id="payModalStudentMeta" style="color:var(--text-secondary);font-size:1rem;"></p>
+                        </div>
+                    </div>
+                    <div class="pay-balance-chip" id="payBalanceChip">Loading…</div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="pay-modal-tabs" style="flex-wrap: wrap;">
+                    <button class="pay-modal-tab active" id="pmtab_overview" onclick="switchProfileTab('overview')">ℹ️
+                        Overview</button>
+                    <button class="pay-modal-tab" id="pmtab_addpay" onclick="switchProfileTab('addpay')">➕ Add
+                        Payment</button>
+                    <button class="pay-modal-tab" id="pmtab_bills" onclick="switchProfileTab('bills')">🧾 Bills</button>
+                    <button class="pay-modal-tab" id="pmtab_history" onclick="switchProfileTab('history')">📋 Payment
+                        History</button>
+                    <button class="pay-modal-tab" id="pmtab_absent" onclick="switchProfileTab('absent')">📅 Absent
+                        Dates</button>
+                </div>
+
+                <!-- Tab: Overview -->
+                <div id="payTab_overview" class="pay-modal-tab-panel active">
+                    <div
+                        style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                        <!-- Info card -->
+                        <div class="pay-gen-bill-box" style="margin:0;">
+                            <h3
+                                style="margin-bottom:1rem; border-bottom:1px solid #e0e4ff; padding-bottom:0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                                <span>Student Details</span>
+                                <button class="btn-primary" onclick="triggerEditFromAccountModal()"
+                                    style="padding: 4px 8px; font-size: 0.8rem; background-color: #0984e3; border: none; border-radius: 4px; color: white; cursor: pointer;">Edit</button>
+                            </h3>
+                            <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                                <p><strong>Phone:</strong> <span id="profPhone">—</span></p>
+                                <p><strong>Department:</strong> <span id="profDept">—</span></p>
+                                <p><strong>Meal Plan:</strong> <span id="profPlan">—</span></p>
+                                <p><strong>Mess Price (Rs):</strong> <span id="profMessPrice">—</span></p>
+                                <p><strong>Joined:</strong> <span id="profJoined">—</span></p>
+                                <p><strong>Status:</strong> <span id="profStatus">—</span></p>
+                                <p><strong>Payment Upto:</strong> <span id="profPaymentUpto">—</span></p>
                             </div>
                         </div>
-                        <div style="text-align: right;">
-                            <button type="button" class="btn-primary" style="padding: 0.6rem 1.5rem;" onclick="saveAbsentRecord()">Save Record</button>
+                        <!-- QR Card -->
+                        <div class="pay-gen-bill-box" style="margin:0; text-align:center;">
+                            <h3 style="margin-bottom:1rem; border-bottom:1px solid #e0e4ff; padding-bottom:0.5rem;">QR
+                                Code</h3>
+                            <div id="profQRCode"
+                                style="display:inline-block; padding:0.5rem; background:#fff; border-radius:8px;"></div>
+                            <div style="margin-top:0.5rem;">
+                                <button class="btn-primary" onclick="downloadProfileQR()"
+                                    style="padding:0.4rem 1rem; font-size:0.9rem;">⬇️ Download</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Balance Summary -->
+                    <div class="pay-balance-cards" id="payBalanceCards">
+                        <div class="pay-bal-card">
+                            <div class="pay-bal-label">Total Billed</div>
+                            <div class="pay-bal-val" id="payTotalBilled">—</div>
+                        </div>
+                        <div class="pay-bal-card">
+                            <div class="pay-bal-label">Total Paid</div>
+                            <div class="pay-bal-val" id="payTotalPaid">—</div>
+                        </div>
+                        <div class="pay-bal-card pay-bal-card-balance">
+                            <div class="pay-bal-label">Balance (₹)</div>
+                            <div class="pay-bal-val" id="payBalance">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Add Payment -->
+                <div id="payTab_addpay" class="pay-modal-tab-panel">
+                    <form id="addPaymentForm" onsubmit="submitAddPayment(event)">
+                        <div class="form-group">
+                            <label>Date of Payment *</label>
+                            <input type="date" id="payDate" name="payment_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Amount (₹) *</label>
+                            <input type="number" id="payAmount" name="amount" min="1" step="0.01"
+                                placeholder="e.g. 3000" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Payment Mode *</label>
+                            <select id="payMode" name="payment_mode" required>
+                                <option value="CASH">💵 Cash</option>
+                                <option value="UPI">📱 UPI</option>
+                                <option value="BANK_TRANSFER">🏦 Bank Transfer</option>
+                                <option value="OTHER">🔄 Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Note / Reference (optional)</label>
+                            <input type="text" id="payNote" name="reference_note"
+                                placeholder="e.g. UPI ref 123456 or 2 months advance">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary" id="submitPayBtn">✅ Record Payment</button>
                         </div>
                     </form>
                 </div>
 
-                <div class="table-container" style="margin-top: 1.5rem; overflow-x: auto;">
-                    <table id="absentRecordsTable">
-                        <thead>
-                            <tr>
-                                <th>From Date</th>
-                                <th>To Date</th>
-                                <th>Total Leaves</th>
-                                <th>Note</th>
-                                <th>Recorded At</th>
-                            </tr>
-                        </thead>
-                        <tbody id="absentRecordsBody">
-                            <tr><td colspan="5" class="text-center">Loading…</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- WhatsApp Receipt Modal -->
-    <div id="whatsappReceiptModal" class="modal" style="z-index: 2000;">
-        <div class="modal-content" style="max-width:32rem; text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
-            <h2 style="margin-bottom: 0.5rem;">Payment Recorded Successfully!</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Would you like to send a WhatsApp receipt to <strong id="waReceiptStudentName"></strong>?</p>
-            
-            <div class="pay-gen-bill-box" style="text-align: left; background: #f8f9fa; border: 1px dashed #e0e4ff; margin-bottom: 2rem;">
-                <p style="margin-bottom: 0.5rem;"><strong>Amount:</strong> <span id="waReceiptAmount"></span></p>
-                <p style="margin-bottom: 0.5rem;"><strong>Date:</strong> <span id="waReceiptDate"></span></p>
-                <p style="margin-bottom: 0;"><strong>Mode:</strong> <span id="waReceiptMode"></span></p>
-            </div>
-
-            <div class="form-actions" style="justify-content: center; gap: 1rem;">
-                <button class="btn-success" id="btnSendWaReceipt" style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem; padding: 0.8rem 1.5rem;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-                    Send WhatsApp Receipt
-                </button>
-                <button class="btn-secondary" onclick="closeWhatsappReceiptModal()" style="font-size: 1.1rem; padding: 0.8rem 1.5rem;">Done</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
-    <!-- Bill Preview Modal -->
-    <div class="modal" id="billPreviewModal">
-        <div class="modal-content pay-student-modal-content">
-            <div class="modal-header">
-                <h2>Confirm Bill Generation</h2>
-                <button class="close-btn" onclick="closeBillPreviewModal()">&times;</button>
-            </div>
-            <div style="padding: 1rem 0;">
-                <p style="margin-bottom: 1rem; color: #636e72;">Please confirm the details of the bill below before generating. Once generated, this amount will be added to the student's account.</p>
-                
-                <div style="background: #f8f9ff; border: 1px solid #e0e4ff; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span style="color: #636e72;">From Date:</span>
-                        <strong id="previewBillFrom"></strong>
+                <!-- Tab: Bills -->
+                <div id="payTab_bills" class="pay-modal-tab-panel">
+                    <!-- Generate Bill Form -->
+                    <div class="pay-gen-bill-box">
+                        <h3 style="margin-bottom:0.8rem;">+ Generate / Update Bill</h3>
+                        <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;">
+                            <div class="form-group" style="margin:0;flex:1;min-width:10rem;">
+                                <label>From Date</label>
+                                <input type="date" id="genBillFromDate" onchange="fetchAutoAbsentDays()">
+                            </div>
+                            <div class="form-group" style="margin:0;flex:1;min-width:10rem;">
+                                <label>To Date</label>
+                                <input type="date" id="genBillToDate" onchange="fetchAutoAbsentDays()">
+                            </div>
+                            <div class="form-group" style="margin:0;flex:1;min-width:9rem;">
+                                <label>Absent Days</label>
+                                <input type="number" id="genBillAbsent" min="0" step="0.5" value="0" placeholder="0">
+                            </div>
+                            <div class="form-group" style="margin:0;flex:2;min-width:12rem;">
+                                <label>Notes (optional)</label>
+                                <input type="text" id="genBillNotes" placeholder="Any note…">
+                            </div>
+                            <button class="btn-primary" style="padding:0.75rem 1.2rem;"
+                                onclick="generateStudentBill()">Generate</button>
+                        </div>
+                        <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-secondary);">💡 Per-plate price:
+                            FULL plan = monthly fee ÷ 60 (2 meals/day) | Lunch/Dinner only = monthly fee ÷ 30 (1
+                            meal/day)</p>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span style="color: #636e72;">To Date:</span>
-                        <strong id="previewBillTo"></strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span style="color: #636e72;">Total Days:</span>
-                        <strong id="previewBillTotalDays"></strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span style="color: #636e72;">Absent Days:</span>
-                        <strong id="previewBillAbsentDays"></strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px dashed #e0e4ff;">
-                        <span style="color: #636e72;">Base Fee:</span>
-                        <strong id="previewBillBaseFee"></strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: #d63031;">
-                        <span>Deduction:</span>
-                        <strong id="previewBillDeduction"></strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; color: #0984e3; margin-top: 1rem;">
-                        <span>Final Bill Amount:</span>
-                        <span id="previewBillFinal"></span>
+                    <div class="table-container" style="margin-top:1rem;overflow-x:auto;">
+                        <table id="studentBillsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date Range</th>
+                                    <th>Days</th>
+                                    <th>Plan</th>
+                                    <th>Base Fee (₹)</th>
+                                    <th>Absent Days</th>
+                                    <th>Deduction (₹)</th>
+                                    <th>Final Bill (₹)</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentBillsBody">
+                                <tr>
+                                    <td colspan="8" class="text-center">Loading…</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button class="btn btn-secondary" onclick="closeBillPreviewModal()">Cancel</button>
-                    <button class="btn btn-primary" onclick="confirmGenerateBill()">Yes, Generate Bill</button>
+                <!-- Tab: Payment History -->
+                <div id="payTab_history" class="pay-modal-tab-panel">
+                    <div class="table-container" style="overflow-x:auto;">
+                        <table id="payHistoryTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount (₹)</th>
+                                    <th>Mode</th>
+                                    <th>Note</th>
+                                    <th>Recorded</th>
+                                    <th>Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payHistoryBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Loading…</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab: Absent Dates -->
+                <div id="payTab_absent" class="pay-modal-tab-panel">
+                    <div class="pay-gen-bill-box">
+                        <h3 style="margin-bottom: 1rem;">Log New Absent Dates</h3>
+                        <form id="absentForm">
+                            <div
+                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: start; margin-bottom: 1rem;">
+                                <div class="form-group" style="margin: 0;">
+                                    <label>From Date *</label>
+                                    <input type="date" id="absentFromDate" required onchange="calculateAbsentDays()">
+                                </div>
+                                <div class="form-group" style="margin: 0;">
+                                    <label>To Date *</label>
+                                    <input type="date" id="absentToDate" required onchange="calculateAbsentDays()">
+                                </div>
+                                <div class="form-group" style="margin: 0;">
+                                    <label>Total Leaves *</label>
+                                    <input type="number" id="absentTotalLeaves" step="0.5" min="0" required>
+                                </div>
+                                <div class="form-group" style="margin: 0;">
+                                    <label>Note (optional)</label>
+                                    <input type="text" id="absentNote" placeholder="e.g. going home">
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <button type="button" class="btn-primary" style="padding: 0.6rem 1.5rem;"
+                                    onclick="saveAbsentRecord()">Save Record</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="table-container" style="margin-top: 1.5rem; overflow-x: auto;">
+                        <table id="absentRecordsTable">
+                            <thead>
+                                <tr>
+                                    <th>From Date</th>
+                                    <th>To Date</th>
+                                    <th>Total Leaves</th>
+                                    <th>Note</th>
+                                    <th>Recorded At</th>
+                                </tr>
+                            </thead>
+                            <tbody id="absentRecordsBody">
+                                <tr>
+                                    <td colspan="5" class="text-center">Loading…</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-</body>
+        <!-- WhatsApp Receipt Modal -->
+        <div id="whatsappReceiptModal" class="modal" style="z-index: 2000;">
+            <div class="modal-content" style="max-width:32rem; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                <h2 style="margin-bottom: 0.5rem;">Payment Recorded Successfully!</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Would you like to send a WhatsApp receipt
+                    to <strong id="waReceiptStudentName"></strong>?</p>
 
-</html>
+                <div class="pay-gen-bill-box"
+                    style="text-align: left; background: #f8f9fa; border: 1px dashed #e0e4ff; margin-bottom: 2rem;">
+                    <p style="margin-bottom: 0.5rem;"><strong>Amount:</strong> <span id="waReceiptAmount"></span></p>
+                    <p style="margin-bottom: 0.5rem;"><strong>Date:</strong> <span id="waReceiptDate"></span></p>
+                    <p style="margin-bottom: 0;"><strong>Mode:</strong> <span id="waReceiptMode"></span></p>
+                </div>
+
+                <div class="form-actions" style="justify-content: center; gap: 1rem;">
+                    <button class="btn-success" id="btnSendWaReceipt"
+                        style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem; padding: 0.8rem 1.5rem;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z" />
+                        </svg>
+                        Send WhatsApp Receipt
+                    </button>
+                    <button class="btn-secondary" onclick="closeWhatsappReceiptModal()"
+                        style="font-size: 1.1rem; padding: 0.8rem 1.5rem;">Done</button>
+                </div>
+            </div>
+        </div>
+
+        <script src="app.js"></script>
+        <!-- Bill Preview Modal -->
+        <div class="modal" id="billPreviewModal">
+            <div class="modal-content pay-student-modal-content">
+                <div class="modal-header">
+                    <h2>Confirm Bill Generation</h2>
+                    <button class="close-btn" onclick="closeBillPreviewModal()">&times;</button>
+                </div>
+                <div style="padding: 1rem 0;">
+                    <p style="margin-bottom: 1rem; color: #636e72;">Please confirm the details of the bill below before
+                        generating. Once generated, this amount will be added to the student's account.</p>
+
+                    <div
+                        style="background: #f8f9ff; border: 1px solid #e0e4ff; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: #636e72;">From Date:</span>
+                            <strong id="previewBillFrom"></strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: #636e72;">To Date:</span>
+                            <strong id="previewBillTo"></strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: #636e72;">Total Days:</span>
+                            <strong id="previewBillTotalDays"></strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: #636e72;">Absent Days:</span>
+                            <strong id="previewBillAbsentDays"></strong>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px dashed #e0e4ff;">
+                            <span style="color: #636e72;">Base Fee:</span>
+                            <strong id="previewBillBaseFee"></strong>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: #d63031;">
+                            <span>Deduction:</span>
+                            <strong id="previewBillDeduction"></strong>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; color: #0984e3; margin-top: 1rem;">
+                            <span>Final Bill Amount:</span>
+                            <span id="previewBillFinal"></span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button class="btn btn-secondary" onclick="closeBillPreviewModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="confirmGenerateBill()">Yes, Generate Bill</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </body>
+
+    </html>

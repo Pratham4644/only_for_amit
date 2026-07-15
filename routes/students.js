@@ -126,6 +126,31 @@ router.get('/search', (req, res) => {
     });
 });
 
+// GET next available student ID
+router.get('/next-id', (req, res) => {
+    const db = getDatabase();
+    db.all('SELECT student_id FROM students', [], (err, rows) => {
+        if (err) {
+            db.close();
+            return res.status(500).json({ error: err.message });
+        }
+        db.close();
+        let maxId = 0;
+        if (rows && rows.length > 0) {
+            rows.forEach(row => {
+                const idNum = parseInt(row.student_id, 10);
+                if (!isNaN(idNum) && String(idNum) === row.student_id.trim() && idNum > 0) {
+                    if (idNum > maxId) {
+                        maxId = idNum;
+                    }
+                }
+            });
+        }
+        const nextId = maxId > 0 ? maxId + 1 : 1;
+        res.json({ next_id: String(nextId) });
+    });
+});
+
 // GET single student
 router.get('/:id', (req, res) => {
     const db = getDatabase();
@@ -148,8 +173,8 @@ router.post('/', upload.single('photo'), async (req, res) => {
     let { student_id, name, student_department, phone_number, meal_plan, join_date, mess_price, student_profile_update, payment_upto } = req.body;
     const photo_path = req.file ? req.file.path : null;
 
-    if (!student_id || !name) {
-        return res.status(400).json({ error: 'Student ID and name are required' });
+    if (!name) {
+        return res.status(400).json({ error: 'Student name is required' });
     }
 
     if (!join_date) {
@@ -157,6 +182,35 @@ router.post('/', upload.single('photo'), async (req, res) => {
     }
 
     const db = getDatabase();
+
+    const getNextStudentId = () => {
+        return new Promise((resolve, reject) => {
+            db.all('SELECT student_id FROM students', [], (err, rows) => {
+                if (err) return reject(err);
+                let maxId = 0;
+                if (rows && rows.length > 0) {
+                    rows.forEach(row => {
+                        const idNum = parseInt(row.student_id, 10);
+                        if (!isNaN(idNum) && String(idNum) === row.student_id.trim() && idNum > 0) {
+                            if (idNum > maxId) {
+                                maxId = idNum;
+                            }
+                        }
+                    });
+                }
+                resolve(String(maxId > 0 ? maxId + 1 : 1));
+            });
+        });
+    };
+
+    if (!student_id || student_id.trim() === '') {
+        try {
+            student_id = await getNextStudentId();
+        } catch (dbErr) {
+            db.close();
+            return res.status(500).json({ error: 'Failed to generate student ID: ' + dbErr.message });
+        }
+    }
 
     const insertStudent = (price) => {
         const query = `
