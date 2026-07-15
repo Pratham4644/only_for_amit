@@ -148,5 +148,16 @@ CREATE TABLE IF NOT EXISTS payment_records (
 );
 
 
+-- Absent records: leave/absence periods per student
+CREATE TABLE IF NOT EXISTS absent_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id TEXT NOT NULL,
+    from_date TEXT NOT NULL,      -- YYYY-MM-DD
+    to_date TEXT NOT NULL,        -- YYYY-MM-DD
+    total_leaves REAL NOT NULL DEFAULT 0,
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(student_id)
+);
 
 CREATE INDEX IF NOT EXISTS idx_absent_records_student ON absent_records(student_id);

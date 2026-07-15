@@ -7,6 +7,19 @@ const { startScheduler } = require('./utils/meal-scheduler');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ─── Global crash protection ──────────────────────────────────────────────────
+// Catch any synchronous exception that escapes an async handler so the process
+// doesn't die and take down the entire mess-hall system.
+process.on('uncaughtException', (err) => {
+    console.error('[FATAL] Uncaught exception — server kept alive:', err);
+});
+
+// Catch unhandled promise rejections (Node 15+ throws by default).
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[FATAL] Unhandled promise rejection — server kept alive:', reason);
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -39,6 +52,21 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin', 'index.html'));
 });
 
+// ─── Global Express error handler ────────────────────────────────────────────
+// Must be registered AFTER all routes. Returns clean JSON instead of leaking
+// internal stack traces / filesystem paths to the client.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+    console.error('[ERROR] Unhandled route error:', err);
+    const status = err.status || err.statusCode || 500;
+    res.status(status).json({
+        success: false,
+        error: 'SERVER_ERROR',
+        message: 'An internal server error occurred. Please try again.'
+    });
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Initialize database and start server
 initDatabase()
     .then(() => {
@@ -62,3 +90,4 @@ initDatabase()
     });
 
 module.exports = app;
+

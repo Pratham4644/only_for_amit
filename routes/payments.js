@@ -354,7 +354,11 @@ router.post('/add', (req, res) => {
     if (isNaN(amount) || amount <= 0) {
         return res.status(400).json({ success: false, error: 'INVALID_AMOUNT', message: 'amount must be > 0' });
     }
-    const mode = payment_mode.toUpperCase();
+    if (amount > 1000000) {
+        return res.status(400).json({ success: false, error: 'INVALID_AMOUNT', message: 'amount cannot exceed 10,00,000 (10 lakh). Please verify the amount.' });
+    }
+    // Coerce to string so a JSON number doesn't crash .toUpperCase()
+    const mode = String(payment_mode).toUpperCase();
     if (!['CASH', 'UPI', 'BANK_TRANSFER', 'OTHER'].includes(mode)) {
         return res.status(400).json({ success: false, error: 'INVALID_MODE', message: 'payment_mode must be CASH, UPI, BANK_TRANSFER, or OTHER' });
     }

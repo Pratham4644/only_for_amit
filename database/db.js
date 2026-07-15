@@ -16,25 +16,27 @@ function initDatabase() {
             }
             console.log('Connected to SQLite database');
 
-            // First, run migrations to update existing schema
-            runMigrations(db, (migErr) => {
-                if (migErr) {
-                    console.error('Error running migrations:', migErr);
-                    reject(migErr);
+            // Step 1: Run schema.sql FIRST so all tables exist before migrations touch them.
+            // (schema uses CREATE TABLE IF NOT EXISTS / INSERT OR IGNORE so it is safe to
+            //  re-run on an existing database — it will not overwrite any data.)
+            const schemaPath = path.join(__dirname, 'schema.sql');
+            const schema = fs.readFileSync(schemaPath, 'utf8');
+
+            db.exec(schema, (schemaErr) => {
+                if (schemaErr) {
+                    console.error('Error executing schema:', schemaErr);
+                    reject(schemaErr);
                     return;
                 }
+                console.log('Database schema initialized successfully');
 
-                // Read and execute schema
-                const schemaPath = path.join(__dirname, 'schema.sql');
-                const schema = fs.readFileSync(schemaPath, 'utf8');
-
-                db.exec(schema, (err) => {
-                    if (err) {
-                        console.error('Error executing schema:', err);
-                        reject(err);
+                // Step 2: Run migrations to handle column additions on existing databases.
+                runMigrations(db, (migErr) => {
+                    if (migErr) {
+                        console.error('Error running migrations:', migErr);
+                        reject(migErr);
                         return;
                     }
-                    console.log('Database schema initialized successfully');
 
                     // Cleanup old bills: keep only the most recent one for each student
                     db.run('DELETE FROM monthly_bills WHERE id NOT IN (SELECT MAX(id) FROM monthly_bills GROUP BY student_id)', (errClean) => {
@@ -50,6 +52,7 @@ function initDatabase() {
         });
     });
 }
+
 
 // Run database migrations
 function runMigrations(db, callback) {

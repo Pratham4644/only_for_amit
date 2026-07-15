@@ -21,7 +21,23 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage });
+// Only allow image uploads (jpeg, png, gif, webp) — reject everything else.
+const imageFileFilter = function (req, file, cb) {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extOk = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimeOk = allowedTypes.test(file.mimetype);
+    if (extOk && mimeOk) {
+        cb(null, true);
+    } else {
+        cb(new Error('Only image files (jpeg, png, gif, webp) are allowed'));
+    }
+};
+
+const upload = multer({
+    storage: storage,
+    fileFilter: imageFileFilter,
+    limits: { fileSize: 5 * 1024 * 1024 } // 5 MB max
+});
 
 // GET all students (with today's attendance status)
 router.get('/', (req, res) => {
@@ -203,6 +219,8 @@ router.post('/', upload.single('photo'), async (req, res) => {
         });
     };
 
+    // Coerce to string so a JSON number doesn't crash .trim()
+    student_id = String(student_id ?? '');
     if (!student_id || student_id.trim() === '') {
         try {
             student_id = await getNextStudentId();
