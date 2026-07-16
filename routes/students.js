@@ -239,6 +239,9 @@ router.post('/', upload.single('photo'), async (req, res) => {
         db.run(query, [student_id, name, student_department, phone_number, photo_path, meal_plan || 'FULL', join_date, price, student_profile_update || null, payment_upto || null], function (err) {
             if (err) {
                 db.close();
+                if (err.message.includes('UNIQUE constraint failed: students.student_id')) {
+                    return res.status(409).json({ error: `Student ID '${student_id}' is already registered` });
+                }
                 return res.status(500).json({ error: err.message });
             }
 
@@ -270,10 +273,13 @@ router.post('/', upload.single('photo'), async (req, res) => {
     };
 
     let numericPrice = parseFloat(mess_price);
-    if (!isNaN(numericPrice) && numericPrice < 0) {
-        return res.status(400).json({ error: 'Mess price cannot be negative' });
+    if (!isNaN(numericPrice)) {
+        if (numericPrice < 100 || numericPrice > 20000) {
+            db.close();
+            return res.status(400).json({ error: 'Mess price override must be between ₹100 and ₹20,000' });
+        }
     }
-    if (isNaN(numericPrice) || numericPrice === null || numericPrice === undefined) {
+    if (isNaN(numericPrice) || mess_price === null || mess_price === undefined || mess_price === '') {
         db.get('SELECT monthly_fee FROM fee_settings WHERE meal_plan = ?', [meal_plan || 'FULL'], (err, row) => {
             if (err || !row) {
                 let fallback = 3000.0;
@@ -334,9 +340,11 @@ router.put('/:id', upload.single('photo'), (req, res) => {
         }
         if (mess_price !== undefined) {
             const parsedPrice = mess_price === '' || mess_price === null ? null : parseFloat(mess_price);
-            if (parsedPrice !== null && parsedPrice < 0) {
-                db.close();
-                return res.status(400).json({ error: 'Mess price cannot be negative' });
+            if (parsedPrice !== null) {
+                if (isNaN(parsedPrice) || parsedPrice < 100 || parsedPrice > 20000) {
+                    db.close();
+                    return res.status(400).json({ error: 'Mess price override must be between ₹100 and ₹20,000' });
+                }
             }
             updates.push('mess_price = ?');
             params.push(parsedPrice);
@@ -382,36 +390,48 @@ router.put('/:id', upload.single('photo'), (req, res) => {
     };
 
     if (student_id && student_id !== studentId) {
-        // Cascading ID update across all SQLite tables
-        db.serialize(() => {
-            db.run('PRAGMA foreign_keys = OFF');
-            db.run('UPDATE students SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
-                if (err) console.error('Error cascading students:', err);
-            });
-            db.run('UPDATE attendance SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
-                if (err) console.error('Error cascading attendance:', err);
-            });
-            db.run('UPDATE payment_records SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
-                if (err) console.error('Error cascading payment_records:', err);
-            });
-            db.run('UPDATE monthly_bills SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
-                if (err) console.error('Error cascading monthly_bills:', err);
-            });
-            db.run('UPDATE leave_requests SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
-                if (err) console.error('Error cascading leave_requests:', err);
-            });
-            db.run('UPDATE leave_credits SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
-                if (err) console.error('Error cascading leave_credits:', err);
-            });
-            db.run('UPDATE reminders_sent SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
-                if (err) console.error('Error cascading reminders_sent:', err);
-            });
-            db.run('PRAGMA foreign_keys = ON', (err) => {
-                if (err) {
-                    db.close();
-                    return res.status(500).json({ error: 'Failed to re-enable foreign keys: ' + err.message });
-                }
-                proceedWithUpdate();
+        // Check if new student_id already exists to prevent UNIQUE constraint violation
+        db.get('SELECT student_id FROM students WHERE student_id = ?', [student_id], (errCheck, existingStudent) => {
+            if (errCheck) {
+                db.close();
+                return res.status(500).json({ error: errCheck.message });
+            }
+            if (existingStudent) {
+                db.close();
+                return res.status(409).json({ error: `Student ID '${student_id}' is already registered` });
+            }
+
+            // Cascading ID update across all SQLite tables
+            db.serialize(() => {
+                db.run('PRAGMA foreign_keys = OFF');
+                db.run('UPDATE students SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                    if (err) console.error('Error cascading students:', err);
+                });
+                db.run('UPDATE attendance SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                    if (err) console.error('Error cascading attendance:', err);
+                });
+                db.run('UPDATE payment_records SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                    if (err) console.error('Error cascading payment_records:', err);
+                });
+                db.run('UPDATE monthly_bills SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                    if (err) console.error('Error cascading monthly_bills:', err);
+                });
+                db.run('UPDATE leave_requests SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                    if (err) console.error('Error cascading leave_requests:', err);
+                });
+                db.run('UPDATE leave_credits SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                    if (err) console.error('Error cascading leave_credits:', err);
+                });
+                db.run('UPDATE reminders_sent SET student_id = ? WHERE student_id = ?', [student_id, studentId], (err) => {
+                    if (err) console.error('Error cascading reminders_sent:', err);
+                });
+                db.run('PRAGMA foreign_keys = ON', (err) => {
+                    if (err) {
+                        db.close();
+                        return res.status(500).json({ error: 'Failed to re-enable foreign keys: ' + err.message });
+                    }
+                    proceedWithUpdate();
+                });
             });
         });
     } else {

@@ -109,8 +109,8 @@ router.put('/fee-settings', (req, res) => {
             return;
         }
         const fee = parseFloat(monthly_fee);
-        if (isNaN(fee) || fee <= 0) {
-            errors.push(`monthly_fee must be > 0 for ${meal_plan}`);
+        if (isNaN(fee) || fee < 100 || fee > 20000) {
+            errors.push(`monthly_fee must be between ₹100 and ₹20,000 for ${meal_plan}`);
             if (--pending === 0) finish();
             return;
         }
@@ -502,11 +502,19 @@ router.get('/balance/:studentId', (req, res) => {
                                         baseDateStr = new Date().toISOString().split('T')[0];
                                     }
                                     
-                                    const baseDate = new Date(baseDateStr);
-                                    if (!isNaN(baseDate.getTime())) {
-                                        // Add the meal_days to the base date
-                                        baseDate.setDate(baseDate.getDate() + Math.floor(meal_days));
-                                        calculated_payment_upto = baseDate.toISOString().split('T')[0];
+                                    try {
+                                        const baseDate = new Date(baseDateStr);
+                                        if (!isNaN(baseDate.getTime()) && meal_days !== null) {
+                                            // Clamp meal_days to +/- 36500 days (~100 years) to prevent range errors on Date object
+                                            const clampedMealDays = Math.max(-36500, Math.min(36500, Math.floor(meal_days)));
+                                            
+                                            // Add the clamped meal_days to the base date
+                                            baseDate.setDate(baseDate.getDate() + clampedMealDays);
+                                            calculated_payment_upto = baseDate.toISOString().split('T')[0];
+                                        }
+                                    } catch (dateErr) {
+                                        console.error('Error computing payment_upto date:', dateErr);
+                                        calculated_payment_upto = null;
                                     }
                                 }
                             }

@@ -1,6 +1,17 @@
 // API base URL
 const API_BASE = '/api';
 
+// Safe HTML escaping helper to prevent stored and reflected XSS
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
@@ -127,10 +138,10 @@ async function loadDashboard() {
 
                 const row = `
                     <tr>
-                        <td>${record.student_id}</td>
-                        <td>${record.name}</td>
-                        <td><span class="badge ${record.meal_type === 'LUNCH' ? 'badge-warning' : 'badge-success'}">${record.meal_type}</span></td>
-                        <td>${record.scan_time}</td>
+                        <td>${escapeHtml(record.student_id)}</td>
+                        <td>${escapeHtml(record.name)}</td>
+                        <td><span class="badge ${record.meal_type === 'LUNCH' ? 'badge-warning' : 'badge-success'}">${escapeHtml(record.meal_type)}</span></td>
+                        <td>${escapeHtml(record.scan_time)}</td>
                         <td>
                             <div class="status-badge ${statusClass}">
                                 <div class="status-dot">${statusIcon}</div>
@@ -173,38 +184,91 @@ async function loadStudents() {
                 if (isLunchPresent) lunchPresent++;
                 if (isDinnerPresent) dinnerPresent++;
 
-                const lunchBadge = isLunchPresent ?
-                    `<span class="badge badge-success" title="Present at ${student.lunch_time}">L: ✓</span>` :
-                    `<span class="badge badge-danger">L: ✗</span>`;
+                const tr = document.createElement('tr');
 
-                const dinnerBadge = isDinnerPresent ?
-                    `<span class="badge badge-success" title="Present at ${student.dinner_time}">D: ✓</span>` :
-                    `<span class="badge badge-danger">D: ✗</span>`;
+                const tdId = document.createElement('td');
+                tdId.textContent = student.student_id;
+                tr.appendChild(tdId);
 
-                const row = `
-                    <tr>
-                        <td>${student.student_id}</td>
-                        <td>${student.name}</td>
-                        <td>${student.student_department || 'N/A'}</td>
-                        <td><span class="badge badge-warning" style="background:#e0e4ff; color:#6c5ce7;">${student.meal_plan}</span></td>
-                        <td>
-                            <div style="display: flex; gap: 5px;">
-                                ${lunchBadge}
-                                ${dinnerBadge}
-                            </div>
-                        </td>
-                        <td>
-                            <div style="display: flex; gap: 5px;">
-                                ${hasPhone ?
-                        `<button class="btn-success" style="padding: 5px 10px; font-size: 0.8rem;" onclick="sendQRWhatsApp('${student.student_id}', '${student.phone_number}', '${student.name}')">📱 WA</button>` :
-                        `<button class="btn-success" style="padding: 5px 10px; font-size: 0.8rem;" onclick="viewQR('${student.student_id}')">QR</button>`
-                    }
-                                <button class="btn-danger" style="padding: 5px 10px; font-size: 0.8rem;" onclick="deleteStudent('${student.student_id}')">Del</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
+                const tdName = document.createElement('td');
+                tdName.textContent = student.name;
+                tr.appendChild(tdName);
+
+                const tdDept = document.createElement('td');
+                tdDept.textContent = student.student_department || 'N/A';
+                tr.appendChild(tdDept);
+
+                const tdPlan = document.createElement('td');
+                const spanPlan = document.createElement('span');
+                spanPlan.className = 'badge badge-warning';
+                spanPlan.style.cssText = 'background:#e0e4ff; color:#6c5ce7;';
+                spanPlan.textContent = student.meal_plan;
+                tdPlan.appendChild(spanPlan);
+                tr.appendChild(tdPlan);
+
+                const tdAttendance = document.createElement('td');
+                const divAttendance = document.createElement('div');
+                divAttendance.style.display = 'flex';
+                divAttendance.style.gap = '5px';
+                
+                const lunchSpan = document.createElement('span');
+                if (isLunchPresent) {
+                    lunchSpan.className = 'badge badge-success';
+                    lunchSpan.title = `Present at ${student.lunch_time}`;
+                    lunchSpan.textContent = 'L: ✓';
+                } else {
+                    lunchSpan.className = 'badge badge-danger';
+                    lunchSpan.textContent = 'L: ✗';
+                }
+                divAttendance.appendChild(lunchSpan);
+
+                const dinnerSpan = document.createElement('span');
+                if (isDinnerPresent) {
+                    dinnerSpan.className = 'badge badge-success';
+                    dinnerSpan.title = `Present at ${student.dinner_time}`;
+                    dinnerSpan.textContent = 'D: ✓';
+                } else {
+                    dinnerSpan.className = 'badge badge-danger';
+                    dinnerSpan.textContent = 'D: ✗';
+                }
+                divAttendance.appendChild(dinnerSpan);
+                tdAttendance.appendChild(divAttendance);
+                tr.appendChild(tdAttendance);
+
+                const tdActions = document.createElement('td');
+                const divActions = document.createElement('div');
+                divActions.style.display = 'flex';
+                divActions.style.gap = '5px';
+
+                const btnWA = document.createElement('button');
+                btnWA.className = 'btn-success';
+                btnWA.style.cssText = 'padding: 5px 10px; font-size: 0.8rem;';
+                if (hasPhone) {
+                    btnWA.textContent = '📱 WA';
+                    btnWA.addEventListener('click', () => {
+                        sendQRWhatsApp(student.student_id, student.phone_number, student.name);
+                    });
+                } else {
+                    btnWA.textContent = 'QR';
+                    btnWA.addEventListener('click', () => {
+                        viewQR(student.student_id);
+                    });
+                }
+                divActions.appendChild(btnWA);
+
+                const btnDel = document.createElement('button');
+                btnDel.className = 'btn-danger';
+                btnDel.style.cssText = 'padding: 5px 10px; font-size: 0.8rem;';
+                btnDel.textContent = 'Del';
+                btnDel.addEventListener('click', () => {
+                    deleteStudent(student.student_id);
+                });
+                divActions.appendChild(btnDel);
+
+                tdActions.appendChild(divActions);
+                tr.appendChild(tdActions);
+
+                tbody.appendChild(tr);
             });
         }
 
@@ -484,7 +548,7 @@ async function sendQRWhatsApp(studentId, phoneNumber, studentName) {
         win.document.write(`
             <html>
             <head>
-                <title>Send QR Code - ${studentId}</title>
+                <title>Send QR Code - ${escapeHtml(studentId)}</title>
                 <style>
                     body { 
                         font-family: Arial; 
@@ -533,7 +597,7 @@ async function sendQRWhatsApp(studentId, phoneNumber, studentName) {
             <body>
                 <div class="container">
                     <h1>📱 Send QR Code via WhatsApp</h1>
-                    <p class="info">Student: <strong>${studentName}</strong> (${studentId})</p>
+                    <p class="info">Student: <strong>${escapeHtml(studentName)}</strong> (${escapeHtml(studentId)})</p>
                     
                     <img src="${data.qr_code}" alt="QR Code" id="qrImage">
                     
@@ -549,7 +613,7 @@ async function sendQRWhatsApp(studentId, phoneNumber, studentName) {
                     
                     <button onclick="downloadQR()">⬇️ Download QR Code</button>
                     <br>
-                    <button onclick="window.open('${whatsappUrl}', '_blank')">💬 Open WhatsApp</button>
+                    <button onclick="window.open(${escapeHtml(JSON.stringify(whatsappUrl))}, '_blank')">💬 Open WhatsApp</button>
                     <br>
                     <button class="btn-secondary" onclick="window.close()">Close</button>
                 </div>
@@ -558,7 +622,7 @@ async function sendQRWhatsApp(studentId, phoneNumber, studentName) {
                     function downloadQR() {
                         const link = document.createElement('a');
                         link.href = document.getElementById('qrImage').src;
-                        link.download = 'QR_${studentId}_${studentName.replace(/\\s+/g, '_')}.png';
+                        link.download = 'QR_' + ${JSON.stringify(studentId)} + '_' + ${JSON.stringify(studentName)}.replace(/\\s+/g, '_') + '.png';
                         link.click();
                         alert('QR Code downloaded! Now click "Open WhatsApp" to send it.');
                     }
@@ -584,7 +648,7 @@ function showQRCode(studentId, qrDataUrl, phoneNumber = null, studentName = null
         whatsappSection = `
             <div class="whatsapp-section">
                 <h3>Has WhatsApp?</h3>
-                <button class="btn-whatsapp" onclick="window.open('${whatsappUrl}', '_blank')">💬 Open WhatsApp Chat</button>
+                <button class="btn-whatsapp" onclick="window.open(${escapeHtml(JSON.stringify(whatsappUrl))}, '_blank')">💬 Open WhatsApp Chat</button>
                 <p class="small-hint">Download QR first, then attach in chat</p>
             </div>
         `;
@@ -593,7 +657,7 @@ function showQRCode(studentId, qrDataUrl, phoneNumber = null, studentName = null
     win.document.write(`
         <html>
         <head>
-            <title>QR Code - ${studentId}</title>
+            <title>QR Code - ${escapeHtml(studentId)}</title>
             <style>
                 body { 
                     font-family: Arial; 
@@ -660,7 +724,7 @@ function showQRCode(studentId, qrDataUrl, phoneNumber = null, studentName = null
         </head>
         <body>
             <div class="container">
-                <h1>Student ID: ${studentId}</h1>
+                <h1>Student ID: ${escapeHtml(studentId)}</h1>
                 ${!phoneNumber ? '<p class="warning">⚠️ No phone number on file</p>' : ''}
                 
                 <img src="${qrDataUrl}" alt="QR Code" id="qrImage">
@@ -684,7 +748,7 @@ function showQRCode(studentId, qrDataUrl, phoneNumber = null, studentName = null
                 function downloadQR() {
                     const link = document.createElement('a');
                     link.href = document.getElementById('qrImage').src;
-                    link.download = 'QR_${studentId}.png';
+                    link.download = 'QR_' + ${JSON.stringify(studentId)} + '.png';
                     link.click();
                     alert('QR Code downloaded! You can now send it to the student via WhatsApp, Email, or any messaging app.');
                 }
@@ -767,13 +831,13 @@ function displayReport(data) {
     data.records.forEach(record => {
         html += `
             <tr style="border-bottom: 1px solid #eee;">
-                <td style="padding: 10px;">${record.date}</td>
-                <td style="padding: 10px;">${record.student_id}</td>
-                <td style="padding: 10px;">${record.name}</td>
-                <td style="padding: 10px;">${record.student_department || 'N/A'}</td>
-                <td style="padding: 10px;">${record.meal_type || 'N/A'}</td>
-                <td style="padding: 10px;">${record.scan_time || '-'}</td>
-                <td style="padding: 10px;"><span style="padding: 5px 10px; border-radius: 5px; font-weight: bold; ${record.status === 'Present' ? 'background-color: #4CAF50; color: white;' : record.status === 'Late' ? 'background-color: #FF9800; color: white;' : 'background-color: #f44336; color: white;'}">${record.status || 'Absent'}</span></td>
+                <td style="padding: 10px;">${escapeHtml(record.date)}</td>
+                <td style="padding: 10px;">${escapeHtml(record.student_id)}</td>
+                <td style="padding: 10px;">${escapeHtml(record.name)}</td>
+                <td style="padding: 10px;">${escapeHtml(record.student_department || 'N/A')}</td>
+                <td style="padding: 10px;">${escapeHtml(record.meal_type || 'N/A')}</td>
+                <td style="padding: 10px;">${escapeHtml(record.scan_time || '-')}</td>
+                <td style="padding: 10px;"><span style="padding: 5px 10px; border-radius: 5px; font-weight: bold; ${record.status === 'Present' ? 'background-color: #4CAF50; color: white;' : record.status === 'Late' ? 'background-color: #FF9800; color: white;' : 'background-color: #f44336; color: white;'}">${escapeHtml(record.status || 'Absent')}</span></td>
             </tr>
         `;
     });
@@ -1256,7 +1320,7 @@ async function loadLeaveRequests() {
                               : 'leave-status-pending';
 
             const typeLabel = r.is_half_day
-                ? `<span class="badge badge-warning">½ ${r.half_day_meal || ''}</span>`
+                ? `<span class="badge badge-warning">½ ${escapeHtml(r.half_day_meal || '')}</span>`
                 : `<span class="badge badge-success">Full</span>`;
 
             const actions = r.status === 'PENDING' ? `
@@ -1273,16 +1337,16 @@ async function loadLeaveRequests() {
                 <tr>
                     <td>${r.id}</td>
                     <td>
-                        <strong>${r.student_id}</strong>
-                        ${r.student_name ? `<br><small style="color:var(--text-secondary)">${r.student_name}</small>` : ''}
+                        <strong>${escapeHtml(r.student_id)}</strong>
+                        ${r.student_name ? `<br><small style="color:var(--text-secondary)">${escapeHtml(r.student_name)}</small>` : ''}
                     </td>
-                    <td>${r.from_date}</td>
-                    <td>${r.to_date}</td>
-                    <td><strong>${r.total_days}</strong></td>
+                    <td>${escapeHtml(r.from_date)}</td>
+                    <td>${escapeHtml(r.to_date)}</td>
+                    <td><strong>${escapeHtml(r.total_days)}</strong></td>
                     <td>${typeLabel}</td>
-                    <td>${r.month}</td>
-                    <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.reason || ''}">${r.reason || '—'}</td>
-                    <td><span class="leave-status-badge ${statusClass}">${r.status}</span></td>
+                    <td>${escapeHtml(r.month)}</td>
+                    <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(r.reason || '')}">${escapeHtml(r.reason || '—')}</td>
+                    <td><span class="leave-status-badge ${statusClass}">${escapeHtml(r.status)}</span></td>
                     <td>${actions}</td>
                 </tr>
             `;
@@ -1368,15 +1432,15 @@ async function loadCreditRecords() {
             return `
                 <tr>
                     <td>
-                        <strong>${r.student_id}</strong>
-                        ${r.student_name ? `<br><small style="color:var(--text-secondary)">${r.student_name}</small>` : ''}
+                        <strong>${escapeHtml(r.student_id)}</strong>
+                        ${r.student_name ? `<br><small style="color:var(--text-secondary)">${escapeHtml(r.student_name)}</small>` : ''}
                     </td>
-                    <td>${r.leave_month}</td>
-                    <td>${r.credit_month}</td>
-                    <td class="leave-credit-days">${r.absent_days}</td>
-                    <td class="leave-credit-days" style="color:var(--success);">${r.credit_days}</td>
-                    <td><span class="badge ${srcBadgeClass}" style="text-transform:uppercase;">${r.source}</span></td>
-                    <td><span class="leave-status-badge ${statusClass}">${r.status}</span></td>
+                    <td>${escapeHtml(r.leave_month)}</td>
+                    <td>${escapeHtml(r.credit_month)}</td>
+                    <td class="leave-credit-days">${escapeHtml(r.absent_days)}</td>
+                    <td class="leave-credit-days" style="color:var(--success);">${escapeHtml(r.credit_days)}</td>
+                    <td><span class="badge ${srcBadgeClass}" style="text-transform:uppercase;">${escapeHtml(r.source)}</span></td>
+                    <td><span class="leave-status-badge ${statusClass}">${escapeHtml(r.status)}</span></td>
                 </tr>
             `;
         }).join('');
@@ -1703,20 +1767,41 @@ async function loadUnpaidWidget() {
             return;
         }
 
-        body.innerHTML = list.map(s => {
+        body.innerHTML = '';
+        list.forEach(s => {
             const statusClass = s.status === 'DUE' ? 'pay-status-due' : 'pay-status-nobill';
             const balText = s.status === 'DUE'
                 ? fmt(s.balance)
                 : (s.current_month_bill ? fmt(-s.current_month_bill) : '—');
-            return `
-                <div class="unpaid-widget-row" onclick="openStudentProfile('${s.student_id}','${s.name.replace(/'/g,"\\'")}')">
-                    <span class="uw-name">${s.name}</span>
-                    <span class="uw-plan">${s.meal_plan}</span>
-                    <span class="uw-balance">${balText}</span>
-                    <span class="pay-status-badge ${statusClass}">${s.status}</span>
-                </div>
-            `;
-        }).join('');
+            
+            const div = document.createElement('div');
+            div.className = 'unpaid-widget-row';
+            div.addEventListener('click', () => {
+                openStudentProfile(s.student_id, s.name);
+            });
+            
+            const spanName = document.createElement('span');
+            spanName.className = 'uw-name';
+            spanName.textContent = s.name;
+            
+            const spanPlan = document.createElement('span');
+            spanPlan.className = 'uw-plan';
+            spanPlan.textContent = s.meal_plan;
+            
+            const spanBal = document.createElement('span');
+            spanBal.className = 'uw-balance';
+            spanBal.textContent = balText;
+            
+            const spanStatus = document.createElement('span');
+            spanStatus.className = `pay-status-badge ${statusClass}`;
+            spanStatus.textContent = s.status;
+            
+            div.appendChild(spanName);
+            div.appendChild(spanPlan);
+            div.appendChild(spanBal);
+            div.appendChild(spanStatus);
+            body.appendChild(div);
+        });
     } catch (e) {
         body.innerHTML = `<p style="color:red;">Error loading unpaid students: ${e.message}</p>`;
     }
@@ -1742,24 +1827,62 @@ async function loadUnpaidSummary() {
             return;
         }
 
-        tbody.innerHTML = list.map(s => {
+        tbody.innerHTML = '';
+        list.forEach(s => {
             const statusClass = s.status === 'DUE' ? 'pay-status-due' : 'pay-status-nobill';
-            return `
-                <tr>
-                    <td><strong>${s.name}</strong><br><small style="color:var(--text-secondary);">${s.student_id}</small></td>
-                    <td><span class="badge badge-warning" style="background:#e0e4ff;color:#6c5ce7;">${s.meal_plan}</span></td>
-                    <td>${s.current_month_bill != null ? fmt(s.current_month_bill) : '—'}</td>
-                    <td style="color:${s.balance < 0 ? '#d63031' : '#636e72'};font-weight:700;">${fmt(s.balance)}</td>
-                    <td><span class="pay-status-badge ${statusClass}">${s.status}</span></td>
-                    <td>
-                        <button class="btn-primary" style="padding:0.4rem 1rem;font-size:0.95rem;"
-                            onclick="openStudentProfile('${s.student_id}','${s.name.replace(/'/g,"\\'")}')">
-                            Open Account
-                        </button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+            
+            const tr = document.createElement('tr');
+            
+            const tdName = document.createElement('td');
+            const strongName = document.createElement('strong');
+            strongName.textContent = s.name;
+            const br = document.createElement('br');
+            const smallId = document.createElement('small');
+            smallId.style.color = 'var(--text-secondary)';
+            smallId.textContent = s.student_id;
+            tdName.appendChild(strongName);
+            tdName.appendChild(br);
+            tdName.appendChild(smallId);
+            tr.appendChild(tdName);
+            
+            const tdPlan = document.createElement('td');
+            const spanPlan = document.createElement('span');
+            spanPlan.className = 'badge badge-warning';
+            spanPlan.style.cssText = 'background:#e0e4ff;color:#6c5ce7;';
+            spanPlan.textContent = s.meal_plan;
+            tdPlan.appendChild(spanPlan);
+            tr.appendChild(tdPlan);
+            
+            const tdBill = document.createElement('td');
+            tdBill.textContent = s.current_month_bill != null ? fmt(s.current_month_bill) : '—';
+            tr.appendChild(tdBill);
+            
+            const tdBal = document.createElement('td');
+            tdBal.style.color = s.balance < 0 ? '#d63031' : '#636e72';
+            tdBal.style.fontWeight = '700';
+            tdBal.textContent = fmt(s.balance);
+            tr.appendChild(tdBal);
+            
+            const tdStatus = document.createElement('td');
+            const spanStatus = document.createElement('span');
+            spanStatus.className = `pay-status-badge ${statusClass}`;
+            spanStatus.textContent = s.status;
+            tdStatus.appendChild(spanStatus);
+            tr.appendChild(tdStatus);
+            
+            const tdAction = document.createElement('td');
+            const btn = document.createElement('button');
+            btn.className = 'btn-primary';
+            btn.style.cssText = 'padding:0.4rem 1rem;font-size:0.95rem;';
+            btn.textContent = 'Open Account';
+            btn.addEventListener('click', () => {
+                openStudentProfile(s.student_id, s.name);
+            });
+            tdAction.appendChild(btn);
+            tr.appendChild(tdAction);
+            
+            tbody.appendChild(tr);
+        });
     } catch (e) {
         tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="color:red;">Error: ${e.message}</td></tr>`;
     }
@@ -1986,10 +2109,10 @@ async function loadAbsentRecords() {
 
         tbody.innerHTML = rows.map(r => `
             <tr>
-                <td>${r.from_date}</td>
-                <td>${r.to_date}</td>
-                <td><strong>${r.total_leaves}</strong></td>
-                <td>${r.note || '—'}</td>
+                <td>${escapeHtml(r.from_date)}</td>
+                <td>${escapeHtml(r.to_date)}</td>
+                <td><strong>${escapeHtml(r.total_leaves)}</strong></td>
+                <td>${escapeHtml(r.note || '—')}</td>
                 <td style="color:var(--text-secondary);font-size:0.9rem;">${new Date(r.created_at).toLocaleDateString('en-IN')}</td>
             </tr>
         `).join('');
@@ -2198,13 +2321,13 @@ async function loadStudentBills() {
             return `
             <tr>
                 <td><strong>${rangeLabel}</strong></td>
-                <td style="text-align:center;">${totalDays}</td>
-                <td><span class="badge badge-warning" style="background:#e0e4ff;color:#6c5ce7;">${b.meal_plan}</span></td>
+                <td style="text-align:center;">${escapeHtml(totalDays)}</td>
+                <td><span class="badge badge-warning" style="background:#e0e4ff;color:#6c5ce7;">${escapeHtml(b.meal_plan)}</span></td>
                 <td>${fmt(b.base_fee)}</td>
-                <td>${b.absent_days}</td>
+                <td>${escapeHtml(b.absent_days)}</td>
                 <td style="color:${b.deduction > 0 ? '#d63031' : '#636e72'};">${fmt(b.deduction)}</td>
                 <td><strong>${fmt(b.final_bill)}</strong></td>
-                <td style="max-width:10rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${b.notes || ''}">${b.notes || '—'}</td>
+                <td style="max-width:10rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(b.notes || '')}">${escapeHtml(b.notes || '—')}</td>
             </tr>`;
         }).join('');
     } catch (e) {
@@ -2328,10 +2451,10 @@ async function loadPaymentHistory() {
 
         tbody.innerHTML = rows.map(p => `
             <tr>
-                <td>${p.payment_date}</td>
+                <td>${escapeHtml(p.payment_date)}</td>
                 <td><strong style="color:#00b894;">${fmt(p.amount)}</strong></td>
-                <td><span class="badge badge-success">${p.payment_mode}</span></td>
-                <td style="max-width:12rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.reference_note || ''}">${p.reference_note || '—'}</td>
+                <td><span class="badge badge-success">${escapeHtml(p.payment_mode)}</span></td>
+                <td style="max-width:12rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(p.reference_note || '')}">${escapeHtml(p.reference_note || '—')}</td>
                 <td style="color:var(--text-secondary);font-size:0.9rem;">${new Date(p.recorded_at).toLocaleDateString('en-IN')}</td>
                 <td>
                     <button class="btn-danger" style="padding:0.3rem 0.8rem;font-size:0.9rem;"
@@ -2380,25 +2503,62 @@ async function loadProfiles() {
             return;
         }
 
-        grid.innerHTML = data.students.map(st => {
+        grid.innerHTML = '';
+        data.students.forEach(st => {
             const statusClass = st.active ? 'badge-success' : 'badge-danger';
             const statusText = st.active ? 'Active' : 'Inactive';
             const photoSrc = st.photo_path ? `/uploads/photos/${st.photo_path.split(/\\|\//).pop()}` : '';
-            const photoEl = photoSrc 
-                ? `<img src="${photoSrc}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">`
-                : `<div style="width: 60px; height: 60px; border-radius: 50%; background: #e0e4ff; color: #6c5ce7; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">${st.name.charAt(0).toUpperCase()}</div>`;
             
-            return `
-                <div class="profile-card" data-search="${(st.name + ' ' + st.student_id + ' ' + (st.phone_number || '')).toLowerCase()}" onclick="openStudentProfile('${st.student_id}', '${st.name.replace(/'/g,"\\'")}')" style="background: var(--white); border-radius: 12px; padding: 1.5rem; box-shadow: var(--card-shadow); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 1rem;">
-                    ${photoEl}
-                    <div style="flex: 1; min-width: 0;">
-                        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.2rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${st.name}</h3>
-                        <p style="margin: 0 0 0.25rem 0; color: var(--text-secondary); font-size: 0.9rem;">ID: ${st.student_id} • <span class="badge ${statusClass}" style="font-size: 0.7rem; padding: 2px 6px;">${statusText}</span></p>
-                        <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem;"><span class="badge badge-warning" style="background:#f8f9ff; color:var(--accent-purple); font-size:0.75rem;">${st.meal_plan}</span></p>
-                    </div>
-                </div>
-            `;
-        }).join('');
+            const card = document.createElement('div');
+            card.className = 'profile-card';
+            card.setAttribute('data-search', (st.name + ' ' + st.student_id + ' ' + (st.phone_number || '')).toLowerCase());
+            card.style.cssText = 'background: var(--white); border-radius: 12px; padding: 1.5rem; box-shadow: var(--card-shadow); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 1rem;';
+            card.addEventListener('click', () => {
+                openStudentProfile(st.student_id, st.name);
+            });
+            
+            if (photoSrc) {
+                const img = document.createElement('img');
+                img.src = photoSrc;
+                img.style.cssText = 'width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);';
+                card.appendChild(img);
+            } else {
+                const avatar = document.createElement('div');
+                avatar.style.cssText = 'width: 60px; height: 60px; border-radius: 50%; background: #e0e4ff; color: #6c5ce7; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;';
+                avatar.textContent = st.name.charAt(0).toUpperCase();
+                card.appendChild(avatar);
+            }
+            
+            const infoDiv = document.createElement('div');
+            infoDiv.style.cssText = 'flex: 1; min-width: 0;';
+            
+            const h3 = document.createElement('h3');
+            h3.style.cssText = 'margin: 0 0 0.25rem 0; font-size: 1.2rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+            h3.textContent = st.name;
+            infoDiv.appendChild(h3);
+            
+            const p1 = document.createElement('p');
+            p1.style.cssText = 'margin: 0 0 0.25rem 0; color: var(--text-secondary); font-size: 0.9rem;';
+            p1.textContent = `ID: ${st.student_id} • `;
+            const spanStatus = document.createElement('span');
+            spanStatus.className = `badge ${statusClass}`;
+            spanStatus.style.cssText = 'font-size: 0.7rem; padding: 2px 6px;';
+            spanStatus.textContent = statusText;
+            p1.appendChild(spanStatus);
+            infoDiv.appendChild(p1);
+            
+            const p2 = document.createElement('p');
+            p2.style.cssText = 'margin: 0; color: var(--text-secondary); font-size: 0.85rem;';
+            const spanPlan = document.createElement('span');
+            spanPlan.className = 'badge badge-warning';
+            spanPlan.style.cssText = 'background:#f8f9ff; color:var(--accent-purple); font-size:0.75rem;';
+            spanPlan.textContent = st.meal_plan;
+            p2.appendChild(spanPlan);
+            infoDiv.appendChild(p2);
+            
+            card.appendChild(infoDiv);
+            grid.appendChild(card);
+        });
         
         // Add hover effect via JS since inline hover is tricky
         document.querySelectorAll('.profile-card').forEach(card => {
