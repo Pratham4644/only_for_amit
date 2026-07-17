@@ -389,6 +389,34 @@ router.put('/:id', upload.single('photo'), (req, res) => {
         });
     };
 
+    // Wraps proceedWithUpdate with a join_date consistency check.
+    // If join_date is being set to a value later than the student's earliest bill,
+    // return 409 unless ?force=true (or body.force === 'true') is explicitly passed.
+    const checkJoinDateThenUpdate = () => {
+        const newJoinDate = join_date;
+        const forceOverride = req.query.force === 'true' || req.body.force === 'true';
+
+        if (newJoinDate !== undefined && newJoinDate && !forceOverride) {
+            db.get(
+                `SELECT MIN(from_date) AS earliest_bill FROM monthly_bills WHERE student_id = ?`,
+                [targetStudentId],
+                (errBill, billRow) => {
+                    if (!errBill && billRow && billRow.earliest_bill && newJoinDate > billRow.earliest_bill) {
+                        db.close();
+                        return res.status(409).json({
+                            error: 'JOIN_DATE_CONTRADICTS_BILLS',
+                            message: `This student has a bill starting ${billRow.earliest_bill}, which is before the new join date (${newJoinDate}). Add ?force=true to the request to override anyway, or fix the bill first.`,
+                            earliest_bill_date: billRow.earliest_bill
+                        });
+                    }
+                    proceedWithUpdate();
+                }
+            );
+        } else {
+            proceedWithUpdate();
+        }
+    };
+
     if (student_id && student_id !== studentId) {
         // Check if new student_id already exists to prevent UNIQUE constraint violation
         db.get('SELECT student_id FROM students WHERE student_id = ?', [student_id], (errCheck, existingStudent) => {
@@ -430,12 +458,12 @@ router.put('/:id', upload.single('photo'), (req, res) => {
                         db.close();
                         return res.status(500).json({ error: 'Failed to re-enable foreign keys: ' + err.message });
                     }
-                    proceedWithUpdate();
+                    checkJoinDateThenUpdate();
                 });
             });
         });
     } else {
-        proceedWithUpdate();
+        checkJoinDateThenUpdate();
     }
 });
 
@@ -500,7 +528,7 @@ router.post('/:id/absent', (req, res) => {
     }
 
     const db = getDatabase();
-    
+
     // Validate student exists
     db.get('SELECT student_id FROM students WHERE student_id = ?', [studentId], (err, student) => {
         if (err) { db.close(); return res.status(500).json({ success: false, message: err.message }); }
@@ -510,7 +538,7 @@ router.post('/:id/absent', (req, res) => {
             `INSERT INTO absent_records (student_id, from_date, to_date, total_leaves, note) 
              VALUES (?, ?, ?, ?, ?)`,
             [studentId, from_date, to_date, parseFloat(total_leaves) || 0, note || null],
-            function(err2) {
+            function (err2) {
                 db.close();
                 if (err2) return res.status(500).json({ success: false, message: err2.message });
                 res.json({ success: true, message: 'Absent record saved successfully', id: this.lastID });

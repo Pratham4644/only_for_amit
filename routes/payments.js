@@ -22,7 +22,7 @@
  */
 
 const express = require('express');
-const router  = express.Router();
+const router = express.Router();
 const { getDatabase } = require('../database/db');
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -182,8 +182,17 @@ router.post('/bills/preview', (req, res) => {
     const db = getDatabase();
 
     db.get('SELECT * FROM students WHERE student_id = ?', [student_id], (err, student) => {
-        if (err)      { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err.message }); }
+        if (err) { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err.message }); }
         if (!student) { db.close(); return res.status(404).json({ success: false, error: 'STUDENT_NOT_FOUND', message: `Student ${student_id} not found` }); }
+
+        if (student.join_date && from_date < student.join_date) {
+            db.close();
+            return res.status(400).json({
+                success: false,
+                error: 'BILL_BEFORE_JOIN_DATE',
+                message: `Bill start date (${from_date}) is before this student's join date (${student.join_date}). Update the student's join date first if it's wrong, or adjust the bill's date range.`
+            });
+        }
 
         db.get('SELECT * FROM fee_settings WHERE meal_plan = ?', [student.meal_plan], (err2, fee) => {
             db.close();
@@ -246,8 +255,17 @@ router.post('/bills/generate', (req, res) => {
     const db = getDatabase();
 
     db.get('SELECT * FROM students WHERE student_id = ?', [student_id], (err, student) => {
-        if (err)      { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err.message }); }
+        if (err) { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err.message }); }
         if (!student) { db.close(); return res.status(404).json({ success: false, error: 'STUDENT_NOT_FOUND', message: `Student ${student_id} not found` }); }
+
+        if (student.join_date && from_date < student.join_date) {
+            db.close();
+            return res.status(400).json({
+                success: false,
+                error: 'BILL_BEFORE_JOIN_DATE',
+                message: `Bill start date (${from_date}) is before this student's join date (${student.join_date}). Update the student's join date first if it's wrong, or adjust the bill's date range.`
+            });
+        }
 
         db.get('SELECT * FROM fee_settings WHERE meal_plan = ?', [student.meal_plan], (err2, fee) => {
             if (err2) { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err2.message }); }
@@ -275,7 +293,7 @@ router.post('/bills/generate', (req, res) => {
                    notes                   = excluded.notes,
                    generated_at            = CURRENT_TIMESTAMP`,
                 [student_id, month, from_date, to_date, student.meal_plan, baseFee, totalDays,
-                 absent_days, threshold, 0, baseFee, notes || null],
+                    absent_days, threshold, 0, baseFee, notes || null],
                 function (err3) {
                     if (err3) { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err3.message }); }
 
@@ -323,7 +341,7 @@ router.get('/bills/:studentId/:month', (req, res) => {
     const db = getDatabase();
     db.get('SELECT * FROM monthly_bills WHERE student_id = ? AND month = ?', [studentId, month], (err, row) => {
         db.close();
-        if (err)  return res.status(500).json({ success: false, error: 'DB_ERROR', message: err.message });
+        if (err) return res.status(500).json({ success: false, error: 'DB_ERROR', message: err.message });
         if (!row) return res.status(404).json({ success: false, error: 'NOT_FOUND', message: 'Bill not found for this student and month' });
         res.json({ success: true, data: row });
     });
@@ -365,8 +383,8 @@ router.post('/add', (req, res) => {
 
     const db = getDatabase();
     db.get('SELECT student_id, name, active FROM students WHERE student_id = ?', [student_id], (err, student) => {
-        if (err)       { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err.message }); }
-        if (!student)  { db.close(); return res.status(404).json({ success: false, error: 'STUDENT_NOT_FOUND', message: `Student ${student_id} not found` }); }
+        if (err) { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err.message }); }
+        if (!student) { db.close(); return res.status(404).json({ success: false, error: 'STUDENT_NOT_FOUND', message: `Student ${student_id} not found` }); }
         if (!student.active) { db.close(); return res.status(400).json({ success: false, error: 'STUDENT_INACTIVE', message: 'Student is inactive' }); }
 
         db.run(
@@ -410,7 +428,7 @@ router.get('/history/:studentId', (req, res) => {
 router.delete('/record/:id', (req, res) => {
     const db = getDatabase();
     db.get('SELECT * FROM payment_records WHERE id = ?', [req.params.id], (err, row) => {
-        if (err)  { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err.message }); }
+        if (err) { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err.message }); }
         if (!row) { db.close(); return res.status(404).json({ success: false, error: 'NOT_FOUND', message: 'Payment record not found' }); }
 
         db.run('DELETE FROM payment_records WHERE id = ?', [req.params.id], function (err2) {
@@ -433,7 +451,7 @@ router.delete('/record/:id', (req, res) => {
  */
 router.get('/balance/:studentId', (req, res) => {
     const sid = req.params.studentId;
-    const db  = getDatabase();
+    const db = getDatabase();
 
     db.get(
         `SELECT COALESCE(SUM(final_bill), 0) AS total_billed,
@@ -451,14 +469,14 @@ router.get('/balance/:studentId', (req, res) => {
                 (err2, payRow) => {
                     if (err2) { db.close(); return res.status(500).json({ success: false, error: 'DB_ERROR', message: err2.message }); }
 
-                    const totalBilled = Math.round((billRow.total_billed  || 0) * 100) / 100;
-                    const totalPaid   = Math.round((payRow.total_paid     || 0) * 100) / 100;
-                    const balance     = Math.round((totalPaid - totalBilled) * 100) / 100;
+                    const totalBilled = Math.round((billRow.total_billed || 0) * 100) / 100;
+                    const totalPaid = Math.round((payRow.total_paid || 0) * 100) / 100;
+                    const balance = Math.round((totalPaid - totalBilled) * 100) / 100;
 
                     let status;
-                    if (balance > 0)      status = 'ADVANCE';
+                    if (balance > 0) status = 'ADVANCE';
                     else if (balance < 0) status = 'DUE';
-                    else                  status = 'SETTLED';
+                    else status = 'SETTLED';
 
                     // Fetch student + fee_settings to compute meal days and payment_upto
                     db.get(
@@ -481,18 +499,18 @@ router.get('/balance/:studentId', (req, res) => {
                                 // Logic mirrors bill generation:
                                 if (planRow.meal_plan === 'FULL') {
                                     const perPlate = planRow.effective_fee / 60;
-                                    meals_per_day  = 2;
-                                    cost_per_day   = Math.round(perPlate * meals_per_day * 100) / 100;
+                                    meals_per_day = 2;
+                                    cost_per_day = Math.round(perPlate * meals_per_day * 100) / 100;
                                 } else {
                                     const perPlate = planRow.effective_fee / 30;
-                                    meals_per_day  = 1;
-                                    cost_per_day   = Math.round(perPlate * meals_per_day * 100) / 100;
+                                    meals_per_day = 1;
+                                    cost_per_day = Math.round(perPlate * meals_per_day * 100) / 100;
                                 }
-                                
+
                                 meal_days = cost_per_day > 0
                                     ? Math.round((balance / cost_per_day) * 10) / 10
                                     : null;
-                                    
+
                                 // Calculate the exact payment_upto date
                                 if (cost_per_day > 0) {
                                     // Base Date: if bills exist, use the end date of the latest bill. Otherwise, use join_date.
@@ -501,13 +519,13 @@ router.get('/balance/:studentId', (req, res) => {
                                         // Fallback to today if missing join_date
                                         baseDateStr = new Date().toISOString().split('T')[0];
                                     }
-                                    
+
                                     try {
                                         const baseDate = new Date(baseDateStr);
                                         if (!isNaN(baseDate.getTime()) && meal_days !== null) {
                                             // Clamp meal_days to +/- 36500 days (~100 years) to prevent range errors on Date object
                                             const clampedMealDays = Math.max(-36500, Math.min(36500, Math.floor(meal_days)));
-                                            
+
                                             // Add the clamped meal_days to the base date
                                             baseDate.setDate(baseDate.getDate() + clampedMealDays);
                                             calculated_payment_upto = baseDate.toISOString().split('T')[0];
@@ -522,14 +540,14 @@ router.get('/balance/:studentId', (req, res) => {
                             res.json({
                                 success: true,
                                 data: {
-                                    student_id:        sid,
-                                    total_billed:      totalBilled,
-                                    total_paid:        totalPaid,
+                                    student_id: sid,
+                                    total_billed: totalBilled,
+                                    total_paid: totalPaid,
                                     balance,
                                     status,
                                     last_payment_date: payRow.last_payment_date || null,
                                     last_bill_to_date: billRow.last_bill_to_date || null,
-                                    join_date:         planRow.join_date || null,
+                                    join_date: planRow.join_date || null,
                                     meal_days,
                                     cost_per_day,
                                     meals_per_day,
@@ -576,44 +594,44 @@ router.get('/unpaid-current-month', (req, res) => {
                     db.close();
                     if (err4) return res.status(500).json({ success: false, error: 'DB_ERROR', message: err4.message });
 
-                    const curBillMap     = {};
+                    const curBillMap = {};
                     curBills.forEach(b => { curBillMap[b.student_id] = b; });
 
                     const totalBilledMap = {};
                     allBills.forEach(b => { totalBilledMap[b.student_id] = b.total_billed || 0; });
 
-                    const totalPaidMap   = {};
+                    const totalPaidMap = {};
                     allPayments.forEach(p => { totalPaidMap[p.student_id] = p.total_paid || 0; });
 
                     const unpaid = [];
 
                     students.forEach(s => {
-                        const curBill   = curBillMap[s.student_id];
-                        const billed    = totalBilledMap[s.student_id] || 0;
-                        const paid      = totalPaidMap[s.student_id]   || 0;
-                        const balance   = Math.round((paid - billed) * 100) / 100;
+                        const curBill = curBillMap[s.student_id];
+                        const billed = totalBilledMap[s.student_id] || 0;
+                        const paid = totalPaidMap[s.student_id] || 0;
+                        const balance = Math.round((paid - billed) * 100) / 100;
 
                         if (!curBill) {
                             // No bill generated yet for current month
                             unpaid.push({
-                                student_id:          s.student_id,
-                                name:                s.name,
-                                meal_plan:           s.meal_plan,
-                                phone_number:        s.phone_number,
-                                current_month_bill:  null,
+                                student_id: s.student_id,
+                                name: s.name,
+                                meal_plan: s.meal_plan,
+                                phone_number: s.phone_number,
+                                current_month_bill: null,
                                 balance,
-                                status:              'NO_BILL',
+                                status: 'NO_BILL',
                             });
                         } else if (balance < 0) {
                             // Bill exists, but student still owes money overall
                             unpaid.push({
-                                student_id:          s.student_id,
-                                name:                s.name,
-                                meal_plan:           s.meal_plan,
-                                phone_number:        s.phone_number,
-                                current_month_bill:  curBill.final_bill,
+                                student_id: s.student_id,
+                                name: s.name,
+                                meal_plan: s.meal_plan,
+                                phone_number: s.phone_number,
+                                current_month_bill: curBill.final_bill,
                                 balance,
-                                status:              'DUE',
+                                status: 'DUE',
                             });
                         }
                     });
@@ -635,7 +653,7 @@ router.get('/unpaid-current-month', (req, res) => {
 router.get('/absent-days/:studentId', (req, res) => {
     const studentId = req.params.studentId;
     const { from, to } = req.query;
-    
+
     if (!from || !to) {
         return res.status(400).json({ success: false, message: 'from and to dates are required' });
     }
@@ -650,26 +668,26 @@ router.get('/absent-days/:studentId', (req, res) => {
         (err, rows) => {
             db.close();
             if (err) return res.status(500).json({ success: false, error: err.message });
-            
+
             let totalOverlappingLeaves = 0;
             if (rows && rows.length > 0) {
                 rows.forEach(row => {
                     const recFrom = row.from_date;
                     const recTo = row.to_date;
                     const leaves = parseFloat(row.total_leaves) || 0;
-                    
+
                     const overlapFrom = recFrom > from ? recFrom : from;
                     const overlapTo = recTo < to ? recTo : to;
-                    
+
                     if (overlapFrom <= overlapTo) {
                         const d1 = new Date(overlapFrom + 'T00:00:00');
                         const d2 = new Date(overlapTo + 'T00:00:00');
                         const overlapDays = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                        
+
                         const rd1 = new Date(recFrom + 'T00:00:00');
                         const rd2 = new Date(recTo + 'T00:00:00');
                         const recordDays = Math.round((rd2.getTime() - rd1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                        
+
                         if (recordDays > 0) {
                             const overlappingLeaves = leaves * (overlapDays / recordDays);
                             totalOverlappingLeaves += overlappingLeaves;
@@ -677,7 +695,7 @@ router.get('/absent-days/:studentId', (req, res) => {
                     }
                 });
             }
-            
+
             totalOverlappingLeaves = Math.round(totalOverlappingLeaves * 2) / 2;
             res.json({ success: true, data: totalOverlappingLeaves });
         }
