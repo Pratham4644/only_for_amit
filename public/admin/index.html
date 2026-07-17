@@ -5,46 +5,48 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Admin Panel - Mess Attendance</title>
+        <link rel="stylesheet" href="../shared/tokens.css">
         <link rel="stylesheet" href="style.css">
+        <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     </head>
 
     <body>
         <div class="admin-container">
             <aside class="sidebar">
                 <div class="logo">
-                    <h2>🍽️ Buddy's Kitchen</h2>
+                    <h2>Buddy's Kitchen</h2>
                 </div>
                 <nav class="nav-menu">
                     <a href="#dashboard" class="nav-item active" data-page="dashboard">
-                        <span class="icon">📊</span>
+                        <span class="icon"><i data-lucide="layout-dashboard"></i></span>
                         <span>Dashboard</span>
                     </a>
                     <a href="#students" class="nav-item" data-page="students">
-                        <span class="icon">👥</span>
+                        <span class="icon"><i data-lucide="users"></i></span>
                         <span>Students</span>
                     </a>
                     <a href="#reports" class="nav-item" data-page="reports">
-                        <span class="icon">📈</span>
+                        <span class="icon"><i data-lucide="trending-up"></i></span>
                         <span>Reports</span>
                     </a>
                     <a href="#reminders" class="nav-item" data-page="reminders">
-                        <span class="icon">📱</span>
+                        <span class="icon"><i data-lucide="smartphone"></i></span>
                         <span>Reminders</span>
                     </a>
                     <a href="#leave" class="nav-item" data-page="leave">
-                        <span class="icon">🗓️</span>
+                        <span class="icon"><i data-lucide="calendar-days"></i></span>
                         <span>Leave Credits</span>
                     </a>
                     <a href="#payments" class="nav-item" data-page="payments">
-                        <span class="icon">₹</span>
+                        <span class="icon"><i data-lucide="indian-rupee"></i></span>
                         <span>Payments</span>
                     </a>
                     <a href="#profiles" class="nav-item" data-page="profiles">
-                        <span class="icon">👤</span>
+                        <span class="icon"><i data-lucide="user"></i></span>
                         <span>Profiles</span>
                     </a>
                     <a href="#settings" class="nav-item" data-page="settings">
-                        <span class="icon">⚙️</span>
+                        <span class="icon"><i data-lucide="settings"></i></span>
                         <span>Settings</span>
                     </a>
                 </nav>
@@ -65,14 +67,14 @@
 
                     <div class="stats-overview">
                         <div class="stat-box">
-                            <div class="stat-icon">👥</div>
+                            <div class="stat-icon"><i data-lucide="users"></i></div>
                             <div class="stat-content">
                                 <h3 id="totalStudents">0</h3>
                                 <p>Total Students</p>
                             </div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-icon">🍲</div>
+                            <div class="stat-icon"><i data-lucide="utensils"></i></div>
                             <div class="stat-content">
                                 <h3 id="lunchPresent">0</h3>
                                 <p>Lunch Present</p>
@@ -81,7 +83,7 @@
                             </div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-icon">🍽️</div>
+                            <div class="stat-icon"><i data-lucide="utensils"></i></div>
                             <div class="stat-content">
                                 <h3 id="dinnerPresent">0</h3>
                                 <p>Dinner Present</p>
@@ -108,7 +110,9 @@
                     <!-- Pending Payments Widget -->
                     <div class="unpaid-widget" id="unpaidWidget">
                         <div class="unpaid-widget-header">
-                            <span>⚠️ Pending Payments — Current Month</span>
+                            <span><i data-lucide="alert-triangle"
+                                    style="color:var(--color-warning);vertical-align:middle;"></i> Pending Payments —
+                                Current Month</span>
                             <span class="unpaid-count-badge" id="unpaidCountBadge" style="display:none;"></span>
                         </div>
                         <div id="unpaidWidgetBody">
@@ -290,35 +294,37 @@
                         <div style="display:flex;gap:1rem;flex-wrap:wrap;">
                             <button class="btn-primary" id="btnNewLeaveRequest" onclick="showLeaveRequestModal()">+ New
                                 Leave Request</button>
-                            <button class="btn-secondary" onclick="showComputeModal()">⚙️ Compute Credits</button>
+                            <button class="btn-secondary" onclick="showComputeModal()"><i data-lucide="settings"
+                                    style="vertical-align:middle;"></i> Compute Credits</button>
                         </div>
                     </header>
 
                     <!-- Stats row -->
                     <div class="leave-stats-row" id="leaveStatsRow">
                         <div class="leave-stat-card" id="leaveStat_pending">
-                            <div class="lsc-icon">⏳</div>
+                            <div class="lsc-icon"><i data-lucide="clock"></i></div>
                             <div class="lsc-body">
                                 <div class="lsc-num" id="leaveStatPending">—</div>
                                 <div class="lsc-label">Pending Requests</div>
                             </div>
                         </div>
                         <div class="leave-stat-card" id="leaveStat_approved">
-                            <div class="lsc-icon">✅</div>
+                            <div class="lsc-icon"><i data-lucide="check-circle" style="color:var(--color-success);"></i>
+                            </div>
                             <div class="lsc-body">
                                 <div class="lsc-num" id="leaveStatApproved">—</div>
                                 <div class="lsc-label">Approved Requests</div>
                             </div>
                         </div>
                         <div class="leave-stat-card" id="leaveStat_credits">
-                            <div class="lsc-icon">💰</div>
+                            <div class="lsc-icon"><i data-lucide="wallet"></i></div>
                             <div class="lsc-body">
                                 <div class="lsc-num" id="leaveStatCredits">—</div>
                                 <div class="lsc-label">Credits Computed</div>
                             </div>
                         </div>
                         <div class="leave-stat-card" id="leaveStat_applied">
-                            <div class="lsc-icon">🏦</div>
+                            <div class="lsc-icon"><i data-lucide="landmark"></i></div>
                             <div class="lsc-body">
                                 <div class="lsc-num" id="leaveStatApplied">—</div>
                                 <div class="lsc-label">Credits Applied</div>
@@ -329,8 +335,10 @@
                     <!-- Tabs -->
                     <div class="leave-tabs">
                         <button class="leave-tab-btn active" id="leaveTab_requests"
-                            onclick="switchLeaveTab('requests')">📋 Leave Requests</button>
-                        <button class="leave-tab-btn" id="leaveTab_credits" onclick="switchLeaveTab('credits')">💰
+                            onclick="switchLeaveTab('requests')"><i data-lucide="list"
+                                style="vertical-align:middle;"></i> Leave Requests</button>
+                        <button class="leave-tab-btn" id="leaveTab_credits" onclick="switchLeaveTab('credits')"><i
+                                data-lucide="wallet" style="vertical-align:middle;"></i>
                             Credit Records</button>
                     </div>
 
@@ -350,7 +358,8 @@
                                 <label>Month</label>
                                 <input type="month" id="leaveFilterMonth" onchange="loadLeaveRequests()">
                             </div>
-                            <button class="btn-secondary" onclick="loadLeaveRequests()">🔄 Refresh</button>
+                            <button class="btn-secondary" onclick="loadLeaveRequests()"><i data-lucide="refresh-cw"
+                                    style="vertical-align:middle;"></i> Refresh</button>
                         </div>
                         <div class="table-container" style="margin-top:1rem;">
                             <table id="leaveRequestsTable">
@@ -392,7 +401,8 @@
                                     <option value="APPLIED">Applied</option>
                                 </select>
                             </div>
-                            <button class="btn-secondary" onclick="loadCreditRecords()">🔄 Refresh</button>
+                            <button class="btn-secondary" onclick="loadCreditRecords()"><i data-lucide="refresh-cw"
+                                    style="vertical-align:middle;"></i> Refresh</button>
                         </div>
                         <div class="table-container" style="margin-top:1rem;">
                             <table id="creditRecordsTable">
@@ -452,16 +462,18 @@
                 <!-- Payments Page -->
                 <div id="page-payments" class="page">
                     <header class="page-header">
-                        <h1>💰 Payments</h1>
-                        <button class="btn-primary" onclick="openPayStudentSearch()">🔍 Open Student Account</button>
+                        <h1><i data-lucide="wallet" style="vertical-align:middle;"></i> Payments</h1>
+                        <button class="btn-primary" onclick="openPayStudentSearch()"><i data-lucide="search"
+                                style="vertical-align:middle;"></i> Open Student Account</button>
                     </header>
 
                     <!-- Fee Settings Card -->
                     <div class="pay-section-card">
                         <div class="pay-section-header">
-                            <h2>⚙️ Fee Settings</h2>
+                            <h2><i data-lucide="settings" style="vertical-align:middle;"></i> Fee Settings</h2>
                             <button class="btn-primary" style="padding:0.6rem 1.4rem;font-size:1rem;"
-                                onclick="saveFeeSettings()">💾 Save All</button>
+                                onclick="saveFeeSettings()"><i data-lucide="save" style="vertical-align:middle;"></i>
+                                Save All</button>
                         </div>
                         <div class="table-container" style="margin-top:1rem;">
                             <table id="feeSettingsTable">
@@ -484,9 +496,12 @@
                     <!-- Unpaid Summary Card -->
                     <div class="pay-section-card" style="margin-top:1.5rem;">
                         <div class="pay-section-header">
-                            <h2>⚠️ Pending Payments — Current Month</h2>
+                            <h2><i data-lucide="alert-triangle"
+                                    style="color:var(--color-warning);vertical-align:middle;"></i> Pending Payments —
+                                Current Month</h2>
                             <button class="btn-secondary" style="padding:0.6rem 1.2rem;font-size:1rem;"
-                                onclick="loadUnpaidSummary()">🔄 Refresh</button>
+                                onclick="loadUnpaidSummary()"><i data-lucide="refresh-cw"
+                                    style="vertical-align:middle;"></i> Refresh</button>
                         </div>
                         <div class="table-container" style="margin-top:1rem;">
                             <table id="unpaidSummaryTable">
@@ -515,7 +530,7 @@
             <div id="payStudentSearchModal" class="modal">
                 <div class="modal-content" style="max-width:28rem;">
                     <span class="close" onclick="closePayStudentSearch()">×</span>
-                    <h2>🔍 Open Student Account</h2>
+                    <h2><i data-lucide="search" style="vertical-align:middle;"></i> Open Student Account</h2>
                     <div class="form-group">
                         <label>Student ID</label>
                         <input type="text" id="paySearchStudentId" placeholder="e.g. 101"
@@ -677,7 +692,7 @@
         <div id="leaveRequestModal" class="modal">
             <div class="modal-content" style="max-width:40rem;">
                 <span class="close" onclick="closeLeaveRequestModal()">&times;</span>
-                <h2>🗓️ New Leave Request</h2>
+                <h2><i data-lucide="calendar-days" style="vertical-align:middle;"></i> New Leave Request</h2>
                 <form id="leaveRequestForm" onsubmit="submitLeaveRequest(event)">
                     <div class="form-group">
                         <label>Student ID *</label>
@@ -722,16 +737,20 @@
         <div id="computeModal" class="modal">
             <div class="modal-content" style="max-width:36rem;">
                 <span class="close" onclick="closeComputeModal()">&times;</span>
-                <h2>⚙️ Compute / Apply Credits</h2>
+                <h2><i data-lucide="settings" style="vertical-align:middle;"></i> Compute / Apply Credits</h2>
                 <div class="form-group">
                     <label>Month (YYYY-MM)</label>
                     <input type="month" id="computeMonth">
                 </div>
                 <div class="compute-actions">
-                    <button class="btn-primary" onclick="triggerCompute('auto')">🔍 Auto Compute</button>
-                    <button class="btn-primary" onclick="triggerCompute('manual')">📋 Manual Compute</button>
-                    <button class="btn-primary" onclick="triggerCompute('merged')">🔀 Merged Compute</button>
-                    <button class="btn-success" style="width:100%;margin-top:0.5rem;" onclick="triggerApply()">💰 Apply
+                    <button class="btn-primary" onclick="triggerCompute('auto')"><i data-lucide="search"
+                            style="vertical-align:middle;"></i> Auto Compute</button>
+                    <button class="btn-primary" onclick="triggerCompute('manual')"><i data-lucide="list"
+                            style="vertical-align:middle;"></i> Manual Compute</button>
+                    <button class="btn-primary" onclick="triggerCompute('merged')"><i data-lucide="git-merge"
+                            style="vertical-align:middle;"></i> Merged Compute</button>
+                    <button class="btn-success" style="width:100%;margin-top:0.5rem;" onclick="triggerApply()"><i
+                            data-lucide="wallet" style="vertical-align:middle;"></i> Apply
                         Credits to Next Month</button>
                 </div>
                 <div id="computeResult" style="margin-top:1.5rem;"></div>
@@ -1011,6 +1030,7 @@
         </div>
 
         <script src="app.js"></script>
+        <script>document.addEventListener('DOMContentLoaded', function () { if (typeof lucide !== 'undefined') lucide.createIcons(); });</script>
         <!-- Bill Preview Modal -->
         <div class="modal" id="billPreviewModal">
             <div class="modal-content pay-student-modal-content">

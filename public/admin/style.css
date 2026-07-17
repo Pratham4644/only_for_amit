@@ -1,16 +1,17 @@
+/* Local aliases — all values resolved from shared tokens.css */
 :root {
-    --primary-gradient: linear-gradient(135deg, #f0f2ff 0%, #e0e4ff 100%);
-    --accent-purple: #6c5ce7;
-    --sidebar-bg: #f8f9ff;
-    --secondary-bg: #f0f2f5;
-    --text-primary: #2d3436;
-    --text-secondary: #636e72;
-    --white: #ffffff;
-    --success: #00b894;
-    --danger: #d63031;
-    --warning: #fdcb6e;
-    --border-color: #dfe6e9;
-    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    --primary-gradient: linear-gradient(135deg, var(--color-primary-faint) 0%, var(--color-primary-faint) 100%);
+    --accent-purple: var(--color-primary);
+    --sidebar-bg: var(--color-bg);
+    --secondary-bg: var(--color-surface-muted);
+    --text-primary: var(--color-text-primary);
+    --text-secondary: var(--color-text-secondary);
+    --white: var(--color-surface);
+    --success: var(--color-success);
+    --danger: var(--color-danger);
+    --warning: var(--color-warning);
+    --border-color: var(--color-border);
+    --card-shadow: var(--shadow-card);
 }
 
 * {
@@ -19,10 +20,28 @@
     box-sizing: border-box;
 }
 
-html {
-    font-size: 25px;
-    /* Base font size (increased 25% from 16px) */
+/* Lucide icon sizing */
+.nav-item .icon svg,
+.nav-item .icon i svg {
+    width: 1.4rem;
+    height: 1.4rem;
+    vertical-align: middle;
+    stroke-width: 2;
 }
+
+.stat-icon svg,
+.stat-icon i svg {
+    width: 2rem;
+    height: 2rem;
+    color: var(--color-primary);
+}
+
+.lsc-icon svg,
+.lsc-icon i svg {
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -171,7 +190,6 @@ body {
 
 .page-header h1 {
     font-size: 2.75rem;
-    /* 40px - Page Title (Dominant) */
     color: var(--text-primary);
     font-weight: 700;
     line-height: 1.2;
@@ -521,7 +539,6 @@ tbody tr:hover {
     font-weight: 600;
     color: var(--text-primary);
     font-size: 1.125rem;
-    /* Meta text */
 }
 
 .filter-group input,
@@ -543,7 +560,6 @@ tbody tr:hover {
 
 .report-results h3 {
     font-size: 1.75rem;
-    /* Card Title */
     color: var(--text-primary);
     margin-bottom: 1rem;
     font-weight: 700;
@@ -565,10 +581,9 @@ tbody tr:hover {
 }
 
 .settings-section h2 {
-    color: #667eea;
+    color: var(--color-primary);
     margin-bottom: 1.5625rem;
     font-size: 2.25rem;
-    /* Section Heading */
     font-weight: 700;
 }
 
@@ -589,7 +604,6 @@ tbody tr:hover {
     margin-bottom: 1.25rem;
     color: var(--text-primary);
     font-size: 1.75rem;
-    /* Card Title */
     font-weight: 700;
 }
 
@@ -687,7 +701,6 @@ tbody tr:hover {
     padding: 0.375rem 0.75rem;
     border-radius: 1.5625rem;
     font-size: 1.125rem;
-    /* Meta text size */
     font-weight: 600;
     display: inline-block;
 }
@@ -889,10 +902,28 @@ tbody tr:hover {
     font-size: 0.95rem;
 }
 
-/* Responsive */
-@media (max-width: 48rem) {
+/* Tablet breakpoint */
+@media (max-width: 64rem) {
+    .sidebar {
+        width: 13rem;
+    }
 
-    /* 768px */
+    .main-panel {
+        margin-left: 13rem;
+    }
+
+    .stats-overview {
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    }
+
+    .nav-item {
+        font-size: 1.1rem;
+        padding: 0.875rem 1rem;
+    }
+}
+
+/* Mobile breakpoint */
+@media (max-width: 48rem) {
     .sidebar {
         width: 5rem;
     }
@@ -1416,9 +1447,23 @@ tbody tr:hover {
     white-space: nowrap;
 }
 
-.pay-balance-chip.chip-due      { background: #fff0f0; color: #d63031; border: 2px solid #ffbcbc; }
-.pay-balance-chip.chip-advance  { background: #e0e4ff; color: #6c5ce7; border: 2px solid #b2b8ff; }
-.pay-balance-chip.chip-settled  { background: #e6fffa; color: #00b894; border: 2px solid #b2f5ea; }
+.pay-balance-chip.chip-due {
+    background: #fff0f0;
+    color: #d63031;
+    border: 2px solid #ffbcbc;
+}
+
+.pay-balance-chip.chip-advance {
+    background: #e0e4ff;
+    color: #6c5ce7;
+    border: 2px solid #b2b8ff;
+}
+
+.pay-balance-chip.chip-settled {
+    background: #e6fffa;
+    color: #00b894;
+    border: 2px solid #b2f5ea;
+}
 
 /* ── Balance Cards Row ──────────────────────────────────────── */
 .pay-balance-cards {
@@ -1451,9 +1496,17 @@ tbody tr:hover {
     color: var(--accent-purple);
 }
 
-.pay-bal-card-balance .pay-bal-val.val-due     { color: #d63031; }
-.pay-bal-card-balance .pay-bal-val.val-advance { color: #00b894; }
-.pay-bal-card-balance .pay-bal-val.val-settled { color: #636e72; }
+.pay-bal-card-balance .pay-bal-val.val-due {
+    color: #d63031;
+}
+
+.pay-bal-card-balance .pay-bal-val.val-advance {
+    color: #00b894;
+}
+
+.pay-bal-card-balance .pay-bal-val.val-settled {
+    color: #636e72;
+}
 
 /* ── Payment Modal Tabs ──────────────────────────────────────── */
 .pay-modal-tabs {
@@ -1536,4 +1589,3 @@ tbody tr:hover {
         align-items: flex-start;
     }
 }
-

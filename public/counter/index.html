@@ -5,13 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mess Counter - Attendance System</title>
+    <link rel="stylesheet" href="../shared/tokens.css">
     <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 
 <body>
     <div class="container">
         <header class="header">
-            <h1>🍽️ MESS ATTENDANCE SYSTEM</h1>
+            <h1><i data-lucide="utensils" style="vertical-align:middle;"></i> MESS ATTENDANCE SYSTEM</h1>
             <div class="header-info">
                 <div class="date-time">
                     <div class="date" id="currentDate"></div>
@@ -29,7 +31,7 @@
                 <h2>Scan QR Code</h2>
                 <div id="qr-reader"></div>
                 <div class="scanner-status" id="scannerStatus">
-                    <p>📱 Ready to scan...</p>
+                    <p><i data-lucide="smartphone" style="vertical-align:middle;"></i> Ready to scan...</p>
                 </div>
 
                 <div class="live-session-stats" id="liveSessionStats"
@@ -86,7 +88,7 @@
             <h3>Today's Count</h3>
             <div class="stats-grid">
                 <div class="stat-card lunch">
-                    <div class="stat-icon">🍛</div>
+                    <div class="stat-icon"><i data-lucide="utensils"></i></div>
                     <div class="stat-info">
                         <h4>Lunch</h4>
                         <p class="stat-count">P: <span id="lunchPresent">0</span> | A: <span id="lunchAbsent">0</span>
@@ -95,7 +97,7 @@
                     </div>
                 </div>
                 <div class="stat-card dinner">
-                    <div class="stat-icon">🍜</div>
+                    <div class="stat-icon"><i data-lucide="utensils"></i></div>
                     <div class="stat-info">
                         <h4>Dinner</h4>
                         <p class="stat-count">P: <span id="dinnerPresent">0</span> | A: <span id="dinnerAbsent">0</span>
@@ -110,6 +112,7 @@
     <!-- Include Html5-QRCode library -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="scanner.js"></script>
+    <script>document.addEventListener('DOMContentLoaded', function () { if (typeof lucide !== 'undefined') lucide.createIcons(); });</script>
 </body>
 
 </html>
